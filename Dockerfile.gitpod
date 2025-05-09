@@ -29,7 +29,7 @@ COPY lean-toolchain lake-manifest.json lakefile.toml .
 # once dependencies are updated, the elan will be reinstalled too
 RUN curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
 
-RUN . ~/.profile && lake exe cache get- && rm -r .lake/packages/*/*/
+RUN . ~/.profile && lake exe cache get && rm -r .lake/packages/*/*/ ~/.cache
 
 # install neovim (for any lean.nvim user), via tarball since the appimage doesn't work for some reason, and jammy's version is ancient
 RUN curl -s -L https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.tar.gz | tar xzf - && sudo mv nvim-linux-x86_64 /opt/nvim
