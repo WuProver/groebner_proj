@@ -69,7 +69,7 @@ Let $p \in R[\mathbf{X}]$, $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials
         is bounded by $\deg_m(p)$
   4. No term of $r$ is divisible by any leading term of non-zero elements in $G''$
 -/
-lemma IsRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
+lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔ (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
       ↑g.support ⊆ B ∧
       p = Finsupp.linearCombination _ id g + r ∧
@@ -135,14 +135,14 @@ We say that $r$ is a _generalized remainder_ of $p$ upon division by $G'$ if the
           p = \sum_{g \in G'} q(g)g + r.
           $$
 -/
-lemma IsRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
+lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔
   (∃ (g : MvPolynomial σ R → MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)),
       ↑B' ⊆ B ∧
       p = B'.sum (fun x => g x * x) + r ∧
       ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c) := by
-  rw [IsRemainder_def']
+  rw [isRemainder_def']
   constructor
   · intro ⟨⟨g, h₁, h₂, h₃⟩, h₄⟩
     refine ⟨?_, h₄⟩
@@ -239,7 +239,7 @@ lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
   m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
   constructor
   · by_cases hB : 0 ∈ B; simp only [Set.insert_eq_of_mem hB, imp_self]
-    rw [IsRemainder_def'', IsRemainder_def'']
+    rw [isRemainder_def'', isRemainder_def'']
     intro ⟨⟨g, B', hB', h₁, h₂⟩, h₃⟩
     split_ands
     · use g, (B'.erase 0)
@@ -257,7 +257,7 @@ lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
         exact h₂ b' hb'.2
     · intro c hc b hbB hb
       exact h₃ c hc b (by simp [hbB]) hb
-  · rw [IsRemainder_def', IsRemainder_def']
+  · rw [isRemainder_def', isRemainder_def']
     intro ⟨⟨g, hg, h₁, h₂⟩, h₃⟩
     split_ands
     · use g
