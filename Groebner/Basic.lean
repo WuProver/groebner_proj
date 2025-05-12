@@ -343,7 +343,7 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
       exact not_mem_support_iff.mpr this
     have hleq: (m.degree (h₁ - m.leadingTerm h₁)) ≼[m]  m.degree (h₁) := by
       sorry
-
+    sorry
 
   have : (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
     sorry
