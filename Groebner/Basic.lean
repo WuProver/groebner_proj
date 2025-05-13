@@ -316,31 +316,25 @@ lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
     ∃ (c': MvPolynomial σ k → MvPolynomial σ k → k), f = ∑ b₁ ∈  B, ∑ b₂ ∈  B, (c' b₁ b₂) • m.sPolynomial b₁ b₂ := by
   sorry
 
+lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 :=
+  sorry
+
+lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
+    (0 < (m.toSyn <| m.degree f)) ∧ (0 < (m.toSyn <| m.degree g)) := by
+  sorry
+
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
 -/
-lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ = m.degree h₂) (hs : m.sPolynomial h₁ h₂ ≠ 0) : m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
+lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) : m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
   classical
   unfold MonomialOrder.sPolynomial
   simp [h]
   apply sPolynomial_ne_zero at hs
-  simp [h] at hs
-
-  have h1: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₁) := by
-    unfold leadingTerm
-    have : (h₁ - (monomial (m.degree h₁)) (m.leadingCoeff h₁)).coeff (m.degree h₁) = 0 := by
-      simp [coeff_sub]
-      simp [leadingCoeff]
-    have h: m.degree h₁ ∉ (h₁ - (monomial (m.degree h₁)) (m.leadingCoeff h₁)).support := by
-      exact not_mem_support_iff.mpr this
-    sorry
 
   have h2: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
     refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_sPolynomial _
     simp_intro' hLT [hs.2]
-
-  have h3: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₁) := by
-    sorry
 
   have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
     refine (or_iff_left_iff_imp.mpr ?_).mp <| h ▸ m.degree_sub_sPolynomial _
@@ -355,30 +349,11 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
       simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul,
         C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
     _ ≤ m.toSyn (m.degree _) ⊔ m.toSyn (m.degree _) := degree_sub_le
-    simp [MonomialOrder.degree_neg]
-    have eq1: m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁) = -C (m.leadingCoeff h₂)* h₁ + C (m.leadingCoeff h₁)*h₂ := by
-      simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul, C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
-      ring
-    have h: (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = (m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂)) := by
-      exact congrArg m.degree eq1
-    rw [h]
-    have eq2: -C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂ = -(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂) := by
-      ring
-    rw [eq2]
-    have: m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂) = m.degree (-(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
     _ < m.toSyn (m.degree h₂) := by
       simp
       constructor
       · exact lt_of_le_of_lt degree_smul_le h2
       · exact lt_of_le_of_lt degree_smul_le h4
-
-
-
-
-
-  -- have hl: max (m.toSyn (m.degree (C (m.leadingCoeff h₂) * h₁))) (m.toSyn (m.degree (C (m.leadingCoeff h₁) * h₂))) < m.toSyn (m.degree h₂) := by
-
-  -- exact lt_of_le_of_lt this hl
 
 
 /--
