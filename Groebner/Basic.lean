@@ -344,22 +344,6 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
   have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
     sorry
 
-  have h': (m.degree ((m.leadingCoeff h₁)•(h₂ - m.leadingTerm h₂) - (m.leadingCoeff h₂)•(h₁ - m.leadingTerm h₁))) ≺[m]  m.degree (h₁) := by
-    have ieq1:  m.toSyn (m.degree ((m.leadingCoeff h₁)•(h₂ - m.leadingTerm h₂) - (m.leadingCoeff h₂)•(h₁ - m.leadingTerm h₁))) ≤   m.toSyn (m.degree ((m.leadingCoeff h₁)•(h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂)•(h₁ - m.leadingTerm h₁))) := by
-      simp_rw[MvPolynomial.smul_eq_C_mul]
-      exact degree_sub_le (f:=(C (m.leadingCoeff h₁) * (h₂ - m.leadingTerm h₂))) (g:=(C (m.leadingCoeff h₂) * (h₁ - m.leadingTerm h₁)))
-    have ieq2: (m.degree ((m.leadingCoeff h₁)•(h₂ - m.leadingTerm h₂))) ≼[m] m.degree ((h₂ - m.leadingTerm h₂)) := by
-      simp [degree_smul_le]
-    have ieq3: (m.degree ((m.leadingCoeff h₂)•(h₁ - m.leadingTerm h₁))) ≼[m] m.degree ((h₁ - m.leadingTerm h₁)) := by
-      simp [degree_smul_le]
-    apply lt_of_le_of_lt ieq1
-    apply max_lt
-    · apply lt_of_le_of_lt ieq2
-      exact h3
-    · apply lt_of_le_of_lt ieq3
-      exact h1
-  simp at h'
-
   have: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) ≤ m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) := by
     exact degree_sub_le
 
