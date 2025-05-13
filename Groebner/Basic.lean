@@ -364,13 +364,11 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
       ring
     rw [eq2]
     have: m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂) = m.degree (-(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
-      exact congrArg m.degree eq2
-    exact degree_neg
-  have hle: m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) <  m.toSyn (m.degree h₂) := by
-    simp
-    constructor
-    · have l1: m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ≤ m.toSyn (m.degree (h₂ - m.leadingTerm h₂)) := by
-        exact degree_smul_le
+    _ < m.toSyn (m.degree h₂) := by
+      simp
+      constructor
+      · exact lt_of_le_of_lt degree_smul_le h2
+      · exact lt_of_le_of_lt degree_smul_le h4
       exact lt_of_le_of_lt l1 h2
     · have l2: m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) ≤ m.toSyn (m.degree (h₁ - m.leadingTerm h₁)) := by
         exact degree_smul_le
