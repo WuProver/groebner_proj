@@ -344,10 +344,15 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
   have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
     sorry
 
-  have: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) ≤ m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) := by
-    exact degree_sub_le
-
-  have heq: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = m.toSyn (m.degree (C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
+  calc
+    _ = m.toSyn (m.degree <|
+        m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) -
+        m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁)) := by
+      rw [←degree_neg]
+      congr
+      simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul,
+        C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
+    _ ≤ m.toSyn (m.degree _) ⊔ m.toSyn (m.degree _) := degree_sub_le
     simp [MonomialOrder.degree_neg]
     have eq1: m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁) = -C (m.leadingCoeff h₂)* h₁ + C (m.leadingCoeff h₁)*h₂ := by
       simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul, C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
