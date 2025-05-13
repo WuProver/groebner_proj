@@ -14,7 +14,7 @@ variable {R : Type*} [CommSemiring R]
 variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
 /--
-a \in Partially Ordered Set, a \geq 0
+0 is less then any `σ →₀ ℕ` w.r.t. monomial order.
 -/
 @[simp]
 lemma zero_le (a : m.syn) : 0 ≤ a := bot_le
@@ -23,27 +23,25 @@ lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support 
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
 /--
-Given a nonzero polynomial $f \in k[x]$, let
-  $$
-  f = c_0 x^m + c_1 x^{m-1} + \cdots + c_m,
-  $$
-  where $c_i \in k$ and $c_0 \neq 0$ [thus, $m = \deg(f)$]. Then we say that $c_0 x^m$ is the **leading term** of $f$, written
-  $$
-  \operatorname{LT}(f) = c_0 x^m.
-  $$
+The leading term in a non-zero multivariate polynomial is the term of the polynomial's degree in
+the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
 noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
 
 /--
-Fix a monomial order $>$ on $\mathbb{Z}_{\geq 0}^n$, and let
-  $F = (f_1, \ldots, f_s)$ be an ordered $s$-tuple of polynomials in $k[x_1, \ldots, x_n]$.
-  Then every $f \in k[x_1, \ldots, x_n]$ can be written as
-  $$
-  f = a_1 f_1 + \cdots + a_s f_s + r,
-  $$
-  where $a_i, r \in k[x_1, \ldots, x_n]$, and either $r = 0$ or $r$ is a linear combination, with coefficients in $k$, of monomials, none of which is divisible by any of $\mathrm{LT}(f_1), \ldots, \mathrm{LT}(f_s)$.
-  We will call $r$ a **remainder** of $f$ on division by $F$.
+Given a multivariate polynomial $p$ and a set $B$ of multivariate polynomials over a commutative
+semiring $R$, and a monomial order. If there exists a $g : B \to R[X]$ with finite support, and a
+multivriate polynomial $r$, such that
+
+1. $p = \sum_{b\in B} g(b)b + r,$
+2. degree of any non-zero $g(b)b$ where b\in B is less than or equal to the degree of $p$,
+3. none of terms of $r$ is divisible by leading monomial of a non-zero elements of $B$,
+
+then $r$ is called a **remainder** of $p$ on division by "divisors" $B$.
+
+A statement that `r` is a remainder of `p` on division by `B` w.r.t. a monomial order `m` is
+denoted as `m.IsRemainder p B r`.
 -/
 def IsRemainder :=
   (∃ (g : B →₀ MvPolynomial σ R),
@@ -56,18 +54,8 @@ open Classical
 -- it may free you from coercion between different kinds of "sets",
 -- "finite subsets", "finite subsets" of "sets", ...,
 -- when you are dealing with different G''
-
 /--
-Let $p \in R[\mathbf{X}]$, $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials,
-  and $r \in R[\mathbf{X}]$. Then $r$ is a remainder of $p$ modulo $G''$ with respect to
-  monomial order $m$ if and only if there exists a finite linear combination from $G''$
-  such that:
-
-  1. The support of the combination is contained in $G''$
-  2. $p$ decomposes as the sum of this combination and $r$
-  3. For each $g' \in G''$, the degree of $g' \cdot (coefficient\ of\ g')$
-        is bounded by $\deg_m(p)$
-  4. No term of $r$ is divisible by any leading term of non-zero elements in $G''$
+A variant of `IsRemainder` without coercion of a `Set (MvPolynomial σ R)`.
 -/
 lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔ (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
@@ -116,24 +104,8 @@ lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r 
     · exact h₃
 
 /--
-Let $p, r \in k[x_i : i \in \sigma]$, and let $G' \subseteq k[x_i : i \in \sigma]$ be a finite set.
-We say that $r$ is a _generalized remainder_ of $p$ upon division by $G'$ if the following two conditions hold:
-
-  1. For every nonzero $g \in G'$ and every monomial $x^s \in \operatorname{supp}(r)$,
-        there exists some component $j \in \sigma$ such that
-        $$
-        \operatorname{multideg}(g)_j > s_j.
-        $$
-  2. There exists a function $q : G' \to k[x_i : i \in \sigma]$ such that:
-
-    - For every $g \in G'$,
-          $$
-          \operatorname{multideg}''(q(g)g) \leq \operatorname{multideg}''(p);
-          $$
-    - The decomposition holds:
-          $$
-          p = \sum_{g \in G'} q(g)g + r.
-          $$
+A variant of `IsRemainder` where `g : MvPolynomial σ R →₀ MvPolynomial σ R` is replaced with a
+function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its support.
 -/
 lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔
@@ -187,52 +159,7 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
     · exact h₄
 
 /--
-Let $p \in R[\mathbf{X}]$ be a multivariate polynomial. Then the leading term of $p$
-  vanishes with respect to monomial order $m$ if and only if $p$ is the zero polynomial:
-  $$
-    \LT_m(p) = 0 \iff p = 0
-  $$
--/
-lemma lm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
-  simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
-
-/--
-For any set of polynomials $G'' \subseteq R[\mathbf{X}]$ and monomial order $m$,
-  the image of leading terms on the nonzero elements of $G''$ equals the image on all
-  elements minus zero:
-  $$
-    \LT_m(G'' \setminus \{0\}) = \LT_m(G'') \setminus \{0\}
-  $$
--/
-lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
-  m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
-  apply subset_antisymm
-  · intro p
-    simp
-    intro q hq hq' hpq
-    exact ⟨⟨q, hq, hpq⟩, hpq ▸ (m.lm_eq_zero_iff _).not.mpr hq'⟩
-  · intro p
-    simp
-    intro q hq hpq hp
-    rw [←hpq, MonomialOrder.lm_eq_zero_iff] at hp
-    exact ⟨q, ⟨hq, hp⟩, hpq⟩
-
-lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
-  m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
-  unfold leadingTerm
-  apply subset_antisymm
-  · simp_intro' p hp
-    rwa [Eq.comm (a := p) (b := 0)]
-  · simp_intro' p hp
-    rwa [Eq.comm (a := 0) (b := p)]
-
-/--
-Let $p \in R[\mathbf{X}]$ be a polynomial, $G'' \subseteq R[\mathbf{X}]$ a set of polynomials,
-  and $r \in R[\mathbf{X}]$ a remainder. Then the remainder property is invariant under
-  inserting the zero polynomial:
-  $$
-    \mathsf{IsRemainder}_m\,p\,(G'' \cup \{0\})\,r \iff \mathsf{IsRemainder}_m\,p\,G''\,r
-  $$
+Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
 lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
   (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
@@ -272,12 +199,7 @@ lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
       exact h₃ c hc b ((Set.mem_insert_iff.mp hb).resolve_left hbne0) hbne0
 
 /--
-  Let $p \in R[\mathbf{X}]$ be a polynomial, $G'' \subseteq R[\mathbf{X}]$ a set of polynomials,
-  and $r \in R[\mathbf{X}]$ a remainder. Then the remainder property is invariant under
-  removal of the zero polynomial:
-  $$
-    \mathsf{IsRemainder}_m\,p\,(G'' \setminus \{0\})\,r \iff \mathsf{IsRemainder}_m\,p\,G''\,r
-  $$
+Remainders are preserved with the zero polynomial removed from the set of divisors.
 -/
 lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
@@ -285,6 +207,34 @@ lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   by_cases h : 0 ∈ B
   · rw [←isRemainder_of_insert_zero_iff_isRemainder, show insert 0 (B \ {0}) = B by simp [h]]
   · simp [h]
+
+/--
+The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
+-/
+lemma lm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
+  simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
+
+lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
+  m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
+  apply subset_antisymm
+  · intro p
+    simp
+    intro q hq hq' hpq
+    exact ⟨⟨q, hq, hpq⟩, hpq ▸ (m.lm_eq_zero_iff _).not.mpr hq'⟩
+  · intro p
+    simp
+    intro q hq hpq hp
+    rw [←hpq, MonomialOrder.lm_eq_zero_iff] at hp
+    exact ⟨q, ⟨hq, hp⟩, hpq⟩
+
+lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
+  m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
+  unfold leadingTerm
+  apply subset_antisymm
+  · simp_intro' p hp
+    rwa [Eq.comm (a := p) (b := 0)]
+  · simp_intro' p hp
+    rwa [Eq.comm (a := 0) (b := p)]
 
 -- @[reducible]
 -- def leading_term_ideal : Ideal (MvPolynomial σ R) := Ideal.span (leadingTerm m '' (G' : Set (MvPolynomial σ R)))
