@@ -280,7 +280,6 @@ theorem isGroebnerBasis_iff :
 Let $G = \{g_1, \ldots, g_t\}$ be a Gröbner basis for an ideal $I \subseteq k[x_1, \ldots, x_n]$. Then $G$ is a basis for the vector space $I$ over $k$.
 -/
 theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := by
-  have _uses := @IsGroebnerBasis_iff.{0,0,0}
   apply le_antisymm
   · intro p hp
     have h_remainder: m.IsRemainder p G' 0 := by
@@ -353,28 +352,19 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
     exact degree_sub_le
 
   have heq: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = m.toSyn (m.degree (C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
-    have : m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁) = -C (m.leadingCoeff h₂)* h₁ + C (m.leadingCoeff h₁)*h₂ := by
-      simp only[HSMul.hSMul]
-      have r1: SMul.smul (m.leadingCoeff h₁) (h₂ - m.leadingTerm h₂) = C (m.leadingCoeff h₁)*(h₂ - m.leadingTerm h₂)  := by
-        apply MvPolynomial.smul_eq_C_mul
-      have r2: SMul.smul (m.leadingCoeff h₂) (h₁ - m.leadingTerm h₁) = C (m.leadingCoeff h₂)*(h₁ - m.leadingTerm h₁)  := by
-        apply MvPolynomial.smul_eq_C_mul
-      rw [r1, r2]
-      simp [leadingCoeff]
-      simp [coeff]
-      ring_nf
-      sorry
-    have h: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = m.toSyn (m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂)) := by
-      exact congrArg (⇑m.toSyn) (congrArg m.degree this)
-    rw[h]
-    have: -C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂ = -(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂) := by
+    simp[MonomialOrder.degree_neg]
+    have eq1: m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁) = -C (m.leadingCoeff h₂)* h₁ + C (m.leadingCoeff h₁)*h₂ := by
+      simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul, C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
       ring
-    rw[this]
+    have h: (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = (m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂)) := by
+      exact congrArg m.degree eq1
+    rw[h]
+    have eq2: -C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂ = -(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂) := by
+      ring
+    rw[eq2]
     have: m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂) = m.degree (-(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
-      exact congrArg m.degree this
-
-    sorry
-
+      exact congrArg m.degree eq2
+    exact degree_neg
   have hle: m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) <  m.toSyn (m.degree h₂) := by
     simp
     constructor
