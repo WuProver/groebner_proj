@@ -354,7 +354,7 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
       ring
     have h: (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = (m.degree (-C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂)) := by
       exact congrArg m.degree eq1
-    rw[h]
+    rw [h]
     have eq2: -C (m.leadingCoeff h₂) * h₁ + C (m.leadingCoeff h₁) * h₂ = -(C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂) := by
       ring
     rw [eq2]
