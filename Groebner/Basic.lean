@@ -323,7 +323,7 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
   classical
   unfold MonomialOrder.sPolynomial
   simp [h]
-  unfold MonomialOrder.sPolynomial at hs
+  apply sPolynomial_ne_zero at hs
   simp [h] at hs
 
   have h1: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₁) := by
