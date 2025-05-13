@@ -23,8 +23,8 @@ lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support 
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
 /--
-the term of a multivariate polynomial with the degree of the polynomial as the term's exponents (if
-the polynomial is a non-zero polynomial), or otherwise the zero polynomial
+The leading term in a non-zero multivariate polynomial is the term of the polynomial's degree in
+the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
 noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
@@ -209,7 +209,7 @@ lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   · simp [h]
 
 /--
-The leading term of a multivariate polynomial is zero if and only if this polynomial is zero.
+The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
 lemma lm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
