@@ -320,8 +320,27 @@ lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingT
   sorry
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
-    (0 < (m.toSyn <| m.degree f)) ∧ (0 < (m.toSyn <| m.degree g)) := by
-  sorry
+    (0 < (m.toSyn <| m.degree f)) ∨  (0 < (m.toSyn <| m.degree g)) := by
+    simp [MonomialOrder.sPolynomial] at h
+    by_contra h_neg
+    push_neg at h_neg
+    rcases h_neg with ⟨h₁, h₂⟩
+    have h2: m.toSyn (m.degree f) ≥  0 := by
+      exact zero_le m (m.toSyn (m.degree f))
+    have h0: m.toSyn (m.degree f) = 0 := by
+      exact le_antisymm h₁ h2
+    have h0': m.degree f = 0 := by
+      exact (AddEquiv.map_eq_zero_iff m.toSyn).mp h0
+    have h3:  m.toSyn (m.degree g) ≥  0 := by
+      exact zero_le m (m.toSyn (m.degree g))
+    have h4: m.toSyn (m.degree g) = 0 := by
+      exact le_antisymm h₂ h3
+    have h4': m.degree g = 0 := by
+      exact (AddEquiv.map_eq_zero_iff m.toSyn).mp h4
+    simp [h0', h4'] at h
+    have: C (m.leadingCoeff g) * f - C (m.leadingCoeff f) * g = 0 := by
+      sorry
+    ring
 
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
@@ -331,14 +350,15 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
   unfold MonomialOrder.sPolynomial
   simp [h]
   apply sPolynomial_ne_zero at hs
+  simp [h] at hs
 
   have h2: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
     refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_sPolynomial _
-    simp_intro' hLT [hs.2]
+    simp_intro' hLT [hs]
 
   have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
     refine (or_iff_left_iff_imp.mpr ?_).mp <| h ▸ m.degree_sub_sPolynomial _
-    simp_intro' hLT [hs.2]
+    simp_intro' hLT [hs]
 
   calc
     _ = m.toSyn (m.degree <|
