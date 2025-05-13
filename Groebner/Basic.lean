@@ -348,7 +348,7 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
     exact degree_sub_le
 
   have heq: m.toSyn (m.degree (m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁))) = m.toSyn (m.degree (C (m.leadingCoeff h₂) * h₁ - C (m.leadingCoeff h₁) * h₂)) := by
-    simp[MonomialOrder.degree_neg]
+    simp [MonomialOrder.degree_neg]
     have eq1: m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) - m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁) = -C (m.leadingCoeff h₂)* h₁ + C (m.leadingCoeff h₁)*h₂ := by
       simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul, C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
       ring
