@@ -370,7 +370,7 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
     · have l2: m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) ≤ m.toSyn (m.degree (h₁ - m.leadingTerm h₁)) := by
         exact degree_smul_le
       exact lt_of_le_of_lt l2 h4
-  rw[heq] at this
+  rw [heq] at this
   apply lt_of_le_of_lt this hle
 
 
