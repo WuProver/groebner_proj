@@ -9,7 +9,9 @@ FROM ubuntu:jammy
 USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install sudo git curl git bash-completion python3 python3-pip python3-requests -y && apt-get clean
+RUN apt-get update \
+    && apt-get install sudo git curl git bash-completion python3 python3-pip python3-requests --no-install-suggests --no-install-recommends -y \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -l -u 33333 -G sudo -md /home/gitpod -s /bin/bash -p gitpod gitpod \
     # passwordless sudo for users in the 'sudo' group
@@ -29,7 +31,7 @@ COPY lean-toolchain lake-manifest.json lakefile.toml .
 # once dependencies are updated, the elan will be reinstalled too
 RUN curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
 
-RUN . ~/.profile && lake exe cache get- && rm -r .lake/packages/*/*/
+RUN . ~/.profile && lake exe cache get && rm -r .lake/packages/*/*/ ~/.cache
 
 # install neovim (for any lean.nvim user), via tarball since the appimage doesn't work for some reason, and jammy's version is ancient
 RUN curl -s -L https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.tar.gz | tar xzf - && sudo mv nvim-linux-x86_64 /opt/nvim
@@ -38,9 +40,6 @@ ENV PATH="/home/gitpod/.local/bin:/home/gitpod/.elan/bin:/opt/nvim/bin:${PATH}"
 
 # fix the infoview when the container is used on gitpod:
 ENV VSCODE_API_VERSION="1.50.0"
-
-# ssh to github once to bypass the unknown fingerprint warning
-RUN ssh -o StrictHostKeyChecking=no github.com || true
 
 # run sudo once to suppress usage info
 RUN sudo echo finished

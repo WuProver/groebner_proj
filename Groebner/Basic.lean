@@ -163,7 +163,7 @@ lemma groebner_basis_zero_isRemainder_iff_mem_span' {p : MvPolynomial σ k}
 lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomial σ k))
   (h : m.IsRemainder p B 0) : ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree p := by
   classical
-  rw [IsRemainder_def''] at h
+  rw [isRemainder_def''] at h
   rcases h with ⟨⟨g, B', h₁, hsum, h₃⟩, h₄⟩
   simp at hsum
   have : m.degree p ∈ p.support := m.degree_mem_support hp
@@ -189,7 +189,7 @@ lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomi
 --   (m.degree r ≠ m.degree p ∨ r = 0) ↔ ∃ b ∈ B, m.degree b ≤ m.degree p := by
 --   constructor
 --   · intro h
---     rw [IsRemainder_def''] at hr
+--     rw [isRemainder_def''] at hr
 --     rcases hr with ⟨⟨g, B', h₁, hsum, h₃⟩, h₄⟩
 --     --
 --     rw [hsum] at h
@@ -203,7 +203,7 @@ lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomi
 /--
 Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$. Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if  for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
 -/
-theorem IsGroebnerBasis_iff :
+theorem isGroebnerBasis_iff :
   m.IsGroebnerBasis G' I ↔ G'.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G' 0 := by
   -- uses groebner_basis_zero_isRemainder_iff_mem_span'
   have _uses := @groebner_basis_zero_isRemainder_iff_mem_span'.{0,0,0}
@@ -271,7 +271,7 @@ theorem IsGroebnerBasis_iff :
 
 
 
--- theorem IsGroebnerBasis_iff' :
+-- theorem isGroebnerBasis_iff' :
 --   m.IsGroebnerBasis G' I ↔
 --   G'.toSet ⊆ I ∧ ∀ p ∈ I, ∀ r, m.IsRemainder p G' r → r = 0 := by
 --   sorry
@@ -403,7 +403,7 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
   (hG: ∀ (g₁ g₂: G'), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G' 0) :
   m.IsGroebnerBasis G' (Ideal.span G') := by
   have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
-  have _uses := @IsGroebnerBasis_iff.{0,0,0}
+  have _uses := @isGroebnerBasis_iff.{0,0,0}
   have _uses := @sPolynomial_decomposition.{0,0,0}
   have _uses := @sPolynomial_degree_lt.{0,0,0}
   sorry
