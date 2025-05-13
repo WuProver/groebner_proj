@@ -369,9 +369,6 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
       constructor
       · exact lt_of_le_of_lt degree_smul_le h2
       · exact lt_of_le_of_lt degree_smul_le h4
-      exact lt_of_le_of_lt l2 h4
-  rw [heq] at this
-  apply lt_of_le_of_lt this hle
 
 
 
