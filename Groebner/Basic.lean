@@ -336,7 +336,8 @@ lemma sPolynomial_degree_lt (h₁ h₂ : MvPolynomial σ k) (h : m.degree h₁ =
     sorry
 
   have h2: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
-    sorry
+    refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_sPolynomial _
+    simp_intro' hLT [hs.2]
 
   have h3: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₁) := by
     sorry
