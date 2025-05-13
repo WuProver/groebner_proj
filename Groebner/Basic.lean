@@ -134,9 +134,6 @@ lemma groebner_basis_zero_isRemainder_iff_mem_span' {p : MvPolynomial σ k}
   (h : m.IsGroebnerBasis G' I) :
   p ∈ I ↔ m.IsRemainder p G' 0 := by
   classical
-  -- have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
-  -- have _uses := @IsGroebnerBasis_erase_zero.{0,0,0}
-  -- have _uses := @isRemainder_sdiff_singleton_zero_iff_isRemainder.{0,0,0}
   have h_unit: ∀ g ∈ ↑(G'\{0}), IsUnit (m.leadingCoeff g) := by
       intro g hg
       rw [Finset.mem_sdiff] at hg
@@ -283,7 +280,6 @@ theorem IsGroebnerBasis_iff :
 Let $G = \{g_1, \ldots, g_t\}$ be a Gröbner basis for an ideal $I \subseteq k[x_1, \ldots, x_n]$. Then $G$ is a basis for the vector space $I$ over $k$.
 -/
 theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := by
-  -- uses IsGroebnerBasis_iff
   have _uses := @IsGroebnerBasis_iff.{0,0,0}
   apply le_antisymm
   · intro p hp
@@ -296,8 +292,6 @@ theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := 
     apply Ideal.sum_mem
     intro g hg
     rcases g with ⟨g, gG'⟩
-    -- have hG' : G'.toSet ⊆ I := by
-    --   exact h.1
     simp
     have : g ∈ Ideal.span G':= by
       apply Ideal.subset_span
@@ -380,7 +374,6 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
       exact congrArg m.degree this
 
     sorry
-
 
   have hle: m.toSyn (m.degree ((m.leadingCoeff h₁) • (h₂ - m.leadingTerm h₂))) ⊔  m.toSyn (m.degree ((m.leadingCoeff h₂) • (h₁ - m.leadingTerm h₁))) <  m.toSyn (m.degree h₂) := by
     simp

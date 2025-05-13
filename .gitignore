@@ -4,6 +4,7 @@ curl
 *.txt
 *.json
 *.ipynb
+*.log
 
 # Python env
 venv/
