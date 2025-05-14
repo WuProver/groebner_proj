@@ -319,6 +319,14 @@ lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
 lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 :=
   sorry
 
+@[simp]
+theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
+    m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
+    constructor
+    · sorry
+    · intro h
+      sorry
+
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
     (0 < (m.toSyn <| m.degree f)) ∨  (0 < (m.toSyn <| m.degree g)) := by
     simp [MonomialOrder.sPolynomial] at h
@@ -338,8 +346,13 @@ lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0
     have h4': m.degree g = 0 := by
       exact (AddEquiv.map_eq_zero_iff m.toSyn).mp h4
     simp [h0', h4'] at h
+    have h5: f = C (m.leadingCoeff f) := by
+      exact degree_eq_zero_iff.mp h0'
+    have h5': g = C (m.leadingCoeff g) := by
+      exact degree_eq_zero_iff.mp h4'
     have: C (m.leadingCoeff g) * f - C (m.leadingCoeff f) * g = 0 := by
-      sorry
+      simp [←h5, ←h5']
+      ring
     ring
 
 /--
