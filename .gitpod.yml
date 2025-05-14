@@ -1,5 +1,5 @@
 image:
-  file: .docker/gitpod/Dockerfile
+  file: Dockerfile.gitpod
 
 vscode:
   extensions:
@@ -7,5 +7,8 @@ vscode:
 
 tasks:
   - init: |
-      elan self update
-      lake exe cache get
+      ln -s ~/.lake/
+      for i in .lake/packages/*/; do
+        git --git-dir=$i.git --work-tree=$i checkout -- .
+      done
+      curl https://WuProver.github.io/groebner_proj/$(git rev-parse --short HEAD)-cache.tar -L -o .cache.tar --fail && tar -xf .cache.tar || lake build

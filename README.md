@@ -4,6 +4,10 @@ The goal of this project is formalization of Gröbner basis theory in the Lean 4
 
 This project is still work in process. There are some errors and out-of-date information on our documents and maybe even unproved statements. Any fix and suggestions will be welcomed.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/WuProver/groebner_proj)
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/WuProver/groebner_proj)
+
 ## Introduction
 
 ### Definitions
@@ -53,7 +57,7 @@ lake build
 The blueprint can be generated as following:
 ```bash
 pip install https://github.com/WuProver/plastexdepgraph/archive/refs/heads/settitle.zip leanblueprint
-./generate-content.sh
+
 leanblueprint pdf
 leanblueprint web
 ```

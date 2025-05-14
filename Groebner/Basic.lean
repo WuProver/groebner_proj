@@ -134,9 +134,6 @@ lemma groebner_basis_zero_isRemainder_iff_mem_span' {p : MvPolynomial σ k}
   (h : m.IsGroebnerBasis G' I) :
   p ∈ I ↔ m.IsRemainder p G' 0 := by
   classical
-  -- have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
-  -- have _uses := @IsGroebnerBasis_erase_zero.{0,0,0}
-  -- have _uses := @isRemainder_sdiff_singleton_zero_iff_isRemainder.{0,0,0}
   have h_unit: ∀ g ∈ ↑(G'\{0}), IsUnit (m.leadingCoeff g) := by
       intro g hg
       rw [Finset.mem_sdiff] at hg
@@ -166,7 +163,7 @@ lemma groebner_basis_zero_isRemainder_iff_mem_span' {p : MvPolynomial σ k}
 lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomial σ k))
   (h : m.IsRemainder p B 0) : ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree p := by
   classical
-  rw [IsRemainder_def''] at h
+  rw [isRemainder_def''] at h
   rcases h with ⟨⟨g, B', h₁, hsum, h₃⟩, h₄⟩
   simp at hsum
   have : m.degree p ∈ p.support := m.degree_mem_support hp
@@ -192,7 +189,7 @@ lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomi
 --   (m.degree r ≠ m.degree p ∨ r = 0) ↔ ∃ b ∈ B, m.degree b ≤ m.degree p := by
 --   constructor
 --   · intro h
---     rw [IsRemainder_def''] at hr
+--     rw [isRemainder_def''] at hr
 --     rcases hr with ⟨⟨g, B', h₁, hsum, h₃⟩, h₄⟩
 --     --
 --     rw [hsum] at h
@@ -206,7 +203,7 @@ lemma remainder_zero (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomi
 /--
 Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$. Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if  for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
 -/
-theorem IsGroebnerBasis_iff :
+theorem isGroebnerBasis_iff :
   m.IsGroebnerBasis G' I ↔ G'.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G' 0 := by
   -- uses groebner_basis_zero_isRemainder_iff_mem_span'
   have _uses := @groebner_basis_zero_isRemainder_iff_mem_span'.{0,0,0}
@@ -274,7 +271,7 @@ theorem IsGroebnerBasis_iff :
 
 
 
--- theorem IsGroebnerBasis_iff' :
+-- theorem isGroebnerBasis_iff' :
 --   m.IsGroebnerBasis G' I ↔
 --   G'.toSet ⊆ I ∧ ∀ p ∈ I, ∀ r, m.IsRemainder p G' r → r = 0 := by
 --   sorry
@@ -283,8 +280,6 @@ theorem IsGroebnerBasis_iff :
 Let $G = \{g_1, \ldots, g_t\}$ be a Gröbner basis for an ideal $I \subseteq k[x_1, \ldots, x_n]$. Then $G$ is a basis for the vector space $I$ over $k$.
 -/
 theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := by
-  -- uses IsGroebnerBasis_iff
-  have _uses := @IsGroebnerBasis_iff.{0,0,0}
   apply le_antisymm
   · intro p hp
     have h_remainder: m.IsRemainder p G' 0 := by
@@ -296,8 +291,6 @@ theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := 
     apply Ideal.sum_mem
     intro g hg
     rcases g with ⟨g, gG'⟩
-    -- have hG' : G'.toSet ⊆ I := by
-    --   exact h.1
     simp
     have : g ∈ Ideal.span G':= by
       apply Ideal.subset_span
@@ -319,15 +312,68 @@ theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := 
 Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and suppose $$f = c_1 h_1 + \cdots + c_m h_m, \quad \text{with } c_i \in k.$$ If $$\mathrm{lm}(h_1) = \mathrm{lm}(h_2) = \cdots = \mathrm{lm}(h_i) > \mathrm{lm}(f),$$ then $$f = \sum_{1 \leq i < j \leq m} c_{i,j} S(h_i, h_j), \quad c_{i,j} \in k.$$ Furthermore, if $S(h_i, h_j) \ne 0$, then $\mathrm{lm}(h_i) > \mathrm{lm}(S(h_i, h_j))$.
 -/
 lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
-    (B: Finset (MvPolynomial σ k)) (c: MvPolynomial σ k → k) (hd: ∀ b ∈ B, (m.degree b) = d) (hfd: m.degree f ≺[m] d) (hf : f = ∑ b in B, c b • b):
-    ∃ (c': MvPolynomial σ k → MvPolynomial σ k → k), f = ∑ b₁ in B, ∑ b₂ in B, (c' b₁ b₂) • m.sPolynomial b₁ b₂ := by
+    (B: Finset (MvPolynomial σ k)) (c: MvPolynomial σ k → k) (hd: ∀ b ∈ B, (m.degree b) = d) (hfd: m.degree f ≺[m] d) (hf : f = ∑ b ∈  B, c b • b):
+    ∃ (c': MvPolynomial σ k → MvPolynomial σ k → k), f = ∑ b₁ ∈  B, ∑ b₂ ∈  B, (c' b₁ b₂) • m.sPolynomial b₁ b₂ := by
   sorry
+
+lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 :=
+  sorry
+
+@[simp]
+theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
+    m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
+  constructor
+  · intro h
+    sorry
+  · intro h
+    rw [h]
+    simp [leadingCoeff]
+
+lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
+    (0 < (m.toSyn <| m.degree f)) ∨ (0 < (m.toSyn <| m.degree g)) := by
+  simp [MonomialOrder.sPolynomial] at h
+  contrapose! h
+  rcases h with ⟨h₁, h₂⟩
+  rw [← eq_zero_iff, EmbeddingLike.map_eq_zero_iff] at h₁ h₂
+  simp [h₁, h₂]
+  rw [degree_eq_zero_iff] at h₁ h₂
+  nth_rewrite 1 [h₁]
+  nth_rewrite 2 [h₂]
+  ring
 
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
+$h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
 -/
-lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁= m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) : m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
-  sorry
+lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) : m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
+  classical
+  unfold MonomialOrder.sPolynomial
+  simp [h]
+  apply sPolynomial_ne_zero at hs
+  simp [h] at hs
+
+  have h2: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
+    refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_sPolynomial _
+    simp_intro' hLT [hs]
+
+  have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
+    refine (or_iff_left_iff_imp.mpr ?_).mp <| h ▸ m.degree_sub_sPolynomial _
+    simp_intro' hLT [hs]
+
+  calc
+    _ = m.toSyn (m.degree <|
+        m.leadingCoeff h₁ • (h₂ - m.leadingTerm h₂) -
+        m.leadingCoeff h₂ • (h₁ - m.leadingTerm h₁)) := by
+      rw [←degree_neg]
+      congr
+      simp [leadingTerm, mul_sub_left_distrib, MvPolynomial.smul_eq_C_mul,
+        C_mul_monomial, h, mul_comm (m.leadingCoeff h₂)]
+    _ ≤ m.toSyn (m.degree _) ⊔ m.toSyn (m.degree _) := degree_sub_le
+    _ < m.toSyn (m.degree h₂) := by
+      simp
+      constructor
+      · exact lt_of_le_of_lt degree_smul_le h2
+      · exact lt_of_le_of_lt degree_smul_le h4
 
 
 /--
@@ -337,7 +383,7 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
   (hG: ∀ (g₁ g₂: G'), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G' 0) :
   m.IsGroebnerBasis G' (Ideal.span G') := by
   have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
-  have _uses := @IsGroebnerBasis_iff.{0,0,0}
+  have _uses := @isGroebnerBasis_iff.{0,0,0}
   have _uses := @sPolynomial_decomposition.{0,0,0}
   have _uses := @sPolynomial_degree_lt.{0,0,0}
   sorry

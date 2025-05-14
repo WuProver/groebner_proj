@@ -1,4 +1,4 @@
-name: Compile blueprint
+name: Compile blueprint and cache
 
 on:
   push:
@@ -35,6 +35,11 @@ jobs:
 
       - name: Build project
         run: ~/.elan/bin/lake build Groebner
+
+      - name: cache binary
+        run: |
+          commit_id=$(git rev-parse --short HEAD)
+          tar -cf "home_page/${commit_id}-cache.tar" .lake/build/{ir,lib}
 
       - name: Cache mathlib API docs
         uses: actions/cache@v4

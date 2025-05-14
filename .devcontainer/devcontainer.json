@@ -1,0 +1,19 @@
+{
+  "name": "Dev container",
+
+  "build": {
+    "dockerfile": "../Dockerfile.devcontainer"
+  },
+
+  "onCreateCommand": "ln -s ~/.lake/ && lake exe cache unpack && lake build",
+
+  "hostRequirements": {
+     "cpus": 4
+  },
+
+  "customizations": {
+    "vscode" : {
+      "extensions" : [ "leanprover.lean4" ]
+    }
+  }
+}
