@@ -19,6 +19,20 @@ variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial
 @[simp]
 lemma zero_le (a : m.syn) : 0 ≤ a := bot_le
 
+-- #check Polynomial.degree_add_eq_left_of_degree_lt
+
+lemma degree_add_eq_left_of_degree_lt
+  (h : m.degree p ≺[m] m.degree f) : m.degree (f + p) = m.degree f := by
+  sorry
+
+lemma degree_add_eq_right_of_degree_lt
+  (h : m.degree f ≺[m] m.degree p) : m.degree (f + p) = m.degree p := by
+  sorry
+
+lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} :
+    (m.toSyn <| m.degree <| ∑ x ∈ s, f x) ≤ s.sup fun x => (m.toSyn <| m.degree <| f x) := by
+  sorry
+
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
@@ -243,6 +257,9 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
   · simp_intro' p hp
     rwa [Eq.comm (a := 0) (b := p)]
 
+@[simp]
+lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := sorry
+
 -- @[reducible]
 -- def leading_term_ideal : Ideal (MvPolynomial σ R) := Ideal.span (leadingTerm m '' (G' : Set (MvPolynomial σ R)))
 
@@ -356,6 +373,15 @@ theorem div_set' {B : Set (MvPolynomial σ R)}
   split_ands
   · use g
   · exact h₃
+
+lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
+    (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ (f - m.leadingTerm f = 0) := by
+  sorry
+
+variable {m} in
+lemma degree_sub_leadingTerm' {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
+    m.degree (f - m.leadingTerm f) ≺[m] m.degree f :=
+  (or_iff_left h).mp <| m.degree_sub_leadingTerm f
 
 end CommRing
 
