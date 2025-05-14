@@ -322,12 +322,12 @@ lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingT
 @[simp]
 theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
     m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
-    constructor
-    · intro h
-      sorry
-    · intro h
-      rw [h]
-      simp [leadingCoeff]
+  constructor
+  · intro h
+    sorry
+  · intro h
+    rw [h]
+    simp [leadingCoeff]
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
     (0 < (m.toSyn <| m.degree f)) ∨  (0 < (m.toSyn <| m.degree g)) := by
