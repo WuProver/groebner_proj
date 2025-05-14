@@ -323,9 +323,11 @@ lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingT
 theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
     m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
     constructor
-    · sorry
     · intro h
       sorry
+    · intro h
+      rw [h]
+      simp [leadingCoeff]
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
     (0 < (m.toSyn <| m.degree f)) ∨  (0 < (m.toSyn <| m.degree g)) := by
@@ -353,7 +355,7 @@ lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0
     have: C (m.leadingCoeff g) * f - C (m.leadingCoeff f) * g = 0 := by
       simp [←h5, ←h5']
       ring
-    ring
+    ring_nf
 
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
