@@ -316,10 +316,6 @@ lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
     ∃ (c': MvPolynomial σ k → MvPolynomial σ k → k), f = ∑ b₁ ∈  B, ∑ b₂ ∈  B, (c' b₁ b₂) • m.sPolynomial b₁ b₂ := by
   sorry
 
-lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 :=
-  sorry
-
-
 @[simp]
 theorem toSyn_eq_iff (σ: Type*) (m : MonomialOrder σ) (a: σ →₀ ℕ) :
     m.toSyn a =0 ↔ a = 0 := by
@@ -339,6 +335,56 @@ theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
   · intro h
     rw [h]
     simp [leadingCoeff]
+
+lemma leadingTerm_degree_eq_f (f : MvPolynomial σ R) :
+  m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
+  classical
+  by_cases h : f = 0 <;> simp [leadingTerm,h]
+  have : m.leadingCoeff f != 0 := by
+    simp [leadingCoeff, h]
+  simp [MonomialOrder.degree_monomial]
+  exact fun a ↦ False.elim (h a)
+
+lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 := by
+  classical
+  by_contra h_neg
+  push_neg at h_neg
+  rcases h_neg with ⟨h₁, h₂⟩
+  have h₃: m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) := by
+    have h₃': m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) := by
+      apply degree_sub_le
+    have h₃'':  m.toSyn (m.degree f) = m.toSyn (m.degree (m.leadingTerm f)) := by
+      exact Eq.symm (leadingTerm_degree_eq_f f)
+    have h3:  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
+      simp [max_le_iff, h₃'']
+    exact le_of_le_of_eq h₃' h3
+  have h₄: m.toSyn (m.degree (f - m.leadingTerm f)) =  m.toSyn (m.degree f) := by
+    apply le_antisymm
+    · exact h₃
+    · exact h₁
+  by_cases hd: m.degree f= 0
+  ·
+    rw [degree_eq_zero_iff] at hd
+    rw [hd] at h₂
+    simp [MonomialOrder.leadingTerm] at h₂
+    simp [leadingCoeff] at h₂
+  ·
+    have hc : (f - m.leadingTerm f).coeff (m.degree f) = 0 := by
+      rw [coeff_sub]
+      simp [coeff_monomial, leadingTerm]
+      simp [leadingCoeff]
+    have h₅: m.toSyn ( m.degree (f - m.leadingTerm f)) ≠  m.toSyn (m.degree f) := by
+      simp [degree_eq_zero_iff]
+      by_contra h
+      have hin: m.degree (f - m.leadingTerm f) ∈ (f - m.leadingTerm f).support := by
+        exact degree_mem_support h₂
+      rw [h] at hin
+      have : (f - m.leadingTerm f).coeff (m.degree f) ≠  0 := by
+        refine mem_support_iff.mp ?_
+        exact hin
+      exact this hc
+    simp [h₄] at h₅
+
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
     (0 < (m.toSyn <| m.degree f)) ∨ (0 < (m.toSyn <| m.degree g)) := by
