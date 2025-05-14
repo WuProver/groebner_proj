@@ -334,7 +334,8 @@ theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
     m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
   constructor
   · intro h
-    sorry
+    simp [leadingCoeff]
+    apply MonomialOrder.eq_C_of_degree_eq_zero h
   · intro h
     rw [h]
     simp [leadingCoeff]
