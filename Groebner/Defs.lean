@@ -158,6 +158,13 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
         · simp [hbB']
     · exact h₄
 
+lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R)
+  : m.IsRemainder p B' r ↔
+  (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+      p = B'.sum (fun x => g x * x) + r ∧
+      ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by sorry
+
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
@@ -306,6 +313,20 @@ lemma sPolynomial_eq_zero_of_right_eq_zero' (f : MvPolynomial σ R) :
   m.sPolynomial f 0 = 0 := by
   rw [sPolynomial_antisymm, sPolynomial_eq_zero_of_left_eq_zero, neg_zero]
 
+lemma sPolynomial_def (f g : MvPolynomial σ R) :
+    m.sPolynomial f g =
+      monomial (m.degree f ⊔ m.degree g - m.degree f) (m.leadingCoeff g) * f -
+      monomial (m.degree f ⊔ m.degree g - m.degree g) (m.leadingCoeff f) * g := by
+  rw [sPolynomial]
+  congr 4
+  <;> rw [Finsupp.ext_iff]
+  <;> simp_intro' a
+  <;> by_cases h : (m.degree f) a ≤ (m.degree g) a
+  ·simp [h]
+  ·simp [le_of_lt (not_le.mp h)]
+  ·simp [h]
+  ·simp [le_of_lt (not_le.mp h)]
+
 /--
   Let $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials where every nonzero element has a unit leading coefficient:
   $$
@@ -340,15 +361,22 @@ end CommRing
 
 section Field
 
+variable {k : Type*} [Field k]
+
 /--
 Let $k$ be a field, and let $G'' \subseteq k[x_i : i \in \sigma]$ be a set of polynomials.
 Then for any $p \in k[x_i : i \in \sigma]$, there exists a generalized remainder $r$ of $p$ upon division by $G''$.
 -/
-theorem div_set'' {k : Type*} [Field k] {B : Set (MvPolynomial σ k)}
+theorem div_set'' (B : Set (MvPolynomial σ k))
     (p : MvPolynomial σ k) :
     ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
   apply div_set'
   simp [em']
 
+lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : k) :
+    m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
+      monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
+      m.sPolynomial p₁ p₂ := by
+  sorry
 
 end Field

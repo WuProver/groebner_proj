@@ -12,7 +12,7 @@ namespace MonomialOrder
 open MvPolynomial
 section Field
 
-set_option linter.unusedTactic false
+-- set_option linter.unusedTactic false
 
 variable {σ : Type*} {m : MonomialOrder σ}
 variable {s : σ →₀ ℕ} {k : Type*} [Field k] {R : Type*} [CommRing R]
@@ -308,14 +308,6 @@ theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := 
       exact hG' hp'
     exact hI hp
 
-/--
-Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and suppose $$f = c_1 h_1 + \cdots + c_m h_m, \quad \text{with } c_i \in k.$$ If $$\mathrm{lm}(h_1) = \mathrm{lm}(h_2) = \cdots = \mathrm{lm}(h_i) > \mathrm{lm}(f),$$ then $$f = \sum_{1 \leq i < j \leq m} c_{i,j} S(h_i, h_j), \quad c_{i,j} \in k.$$ Furthermore, if $S(h_i, h_j) \ne 0$, then $\mathrm{lm}(h_i) > \mathrm{lm}(S(h_i, h_j))$.
--/
-lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
-    (B: Finset (MvPolynomial σ k)) (c: MvPolynomial σ k → k) (hd: ∀ b ∈ B, (m.degree b) = d) (hfd: m.degree f ≺[m] d) (hf : f = ∑ b ∈  B, c b • b):
-    ∃ (c': MvPolynomial σ k → MvPolynomial σ k → k), f = ∑ b₁ ∈  B, ∑ b₂ ∈  B, (c' b₁ b₂) • m.sPolynomial b₁ b₂ := by
-  sorry
-
 @[simp]
 theorem toSyn_eq_iff (σ: Type*) (m : MonomialOrder σ) (a: σ →₀ ℕ) :
     m.toSyn a =0 ↔ a = 0 := by
@@ -432,6 +424,15 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
       · exact lt_of_le_of_lt degree_smul_le h2
       · exact lt_of_le_of_lt degree_smul_le h4
 
+/--
+Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and suppose $$f = c_1 h_1 + \cdots + c_m h_m, \quad \text{with } c_i \in k.$$ If $$\mathrm{lm}(h_1) = \mathrm{lm}(h_2) = \cdots = \mathrm{lm}(h_i) > \mathrm{lm}(f),$$ then $$f = \sum_{1 \leq i < j \leq m} c_{i,j} S(h_i, h_j), \quad c_{i,j} \in k.$$ Furthermore, if $S(h_i, h_j) \ne 0$, then $\mathrm{lm}(h_i) > \mathrm{lm}(S(h_i, h_j))$.
+-/
+lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
+    {B: Finset ι} (g : ι → MvPolynomial σ k)
+    (hd: ∀ b ∈ B, (m.toSyn <| m.degree <| g b) = d ∨ g b = 0) (hfd: (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d):
+    ∃ (c : ι → ι → k),
+      ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
+  sorry
 
 /--
 A basis $G = \{ g_1, \ldots, g_t \}$ for an ideal $I$ is a Gröbner basis if and only if $S(g_i, g_j) \to_G 0$ for all $i \neq j$.
@@ -441,6 +442,89 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
   m.IsGroebnerBasis G' (Ideal.span G') := by
   have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
   have _uses := @isGroebnerBasis_iff.{0,0,0}
-  have _uses := @sPolynomial_decomposition.{0,0,0}
+  have _uses := @sPolynomial_decomposition.{0,0,0,0}
   have _uses := @sPolynomial_degree_lt.{0,0,0}
-  sorry
+  clear_
+  classical
+  rw [isGroebnerBasis_iff]
+  refine ⟨Ideal.subset_span, ?_⟩
+  intro p hp
+  simp_rw [isRemainder_finset, add_zero]
+  refine ⟨?_, by simp⟩
+  apply Submodule.mem_span_finset.mp at hp
+  obtain ⟨f, ⟨-, hf⟩⟩ := hp
+  refine WellFoundedLT.induction
+      (C := fun (a : m.syn) ↦
+        (∃ (g : MvPolynomial σ k → MvPolynomial σ k),
+          p = ∑ g' ∈ G', (g g') * g' ∧
+          ∀ g' ∈ G', (m.toSyn <| m.degree <| g' * g g') ≤ a) →
+        ∃ (g : MvPolynomial σ k → MvPolynomial σ k),
+          p = ∑ g' ∈ G', (g g') * g' ∧
+          ∀ g' ∈ G', (m.toSyn <| m.degree <| g' * g g') ≤ m.toSyn (m.degree p))
+      (G'.sup fun g' ↦ (m.toSyn <| m.degree <| g' * (f g'))) ?_ ?_
+  · intro a h ⟨g, hg, hg₂⟩
+    by_cases ha : m.toSyn (m.degree p) < a
+    · simp_rw [← and_imp, ← exists_imp] at h
+      apply h
+      clear h
+      let gg'deg := fun g' ↦ m.toSyn <| m.degree <| g g' * g'
+      -- let gg'maxdeg := G'.sup gg'deg
+      have hp :=
+        calc
+          p = ∑ g' ∈ G', g g' * g' := hg
+          _ = ∑ g' ∈ G',
+                (if gg'deg g' = a then m.leadingTerm (g g') else 0) * g' +
+              ∑ g' ∈ G',
+                (if gg'deg g' = a then g g' - m.leadingTerm (g g') else g g') * g' := by
+            simp_rw [← Finset.sum_add_distrib, ← add_mul, ite_add_ite]
+            simp
+          _ = ∑ g' ∈ G',
+                monomial (m.degree (g g')) (if gg'deg g' = a then m.leadingCoeff (g g') else 0) * g' +
+              _ := by
+            congr 2
+            rw [funext_iff]
+            intro x
+            by_cases h : gg'deg x = a <;> simp [h, leadingTerm]
+      obtain ⟨c, hc⟩ := sPolynomial_decomposition (m:=m) (ι:=MvPolynomial σ k) (d:=a) (B:=G')
+        (fun g' ↦ monomial (m.degree (g g')) (if gg'deg g' = a then m.leadingCoeff (g g') else 0) * g')
+        sorry sorry
+      simp_rw [hc, m.sPolynomial_mul_monomial] at hp
+      rw [← Finset.sum_coe_sort] at hp
+      conv at hp =>
+        rhs
+        arg 1
+        arg 2
+        intro g'
+        rw [← Finset.sum_coe_sort]
+      simp_rw [isRemainder_finset] at hG
+      simp [-Subtype.forall] at hG
+      let q' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose
+      have hq' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose_spec
+      simp_rw [show ∀ (g'₁ g'₂), (hG g'₁ g'₂).choose = q' g'₁ g'₂ by intros; rfl] at hq'
+      simp_rw [(hq' _ _).1] at hp
+      clear_value q'
+      clear hG hq'
+
+      simp_rw [Finset.mul_sum, ← mul_assoc, Finset.smul_sum,
+        ←smul_mul_assoc, smul_monomial, Finset.sum_comm (t:=G'),
+        ← Finset.sum_mul, ← Finset.sum_add_distrib,
+        ← add_mul] at hp
+      letI g₂ := (?_ : MvPolynomial σ k → MvPolynomial σ k)
+      obtain hp : p = ∑ g' ∈ G', g₂ g' * g' := by
+        exact hp
+
+      refine ⟨(G'.sup fun g' ↦ m.toSyn <| m.degree <| g₂ g' * g'), ⟨?_, ⟨g₂, ⟨hp, ?_⟩⟩⟩⟩
+
+      ·
+        simp [g₂, Finset.sup_lt_iff (bot_lt_of_lt ha)]
+        intro b hb
+        sorry
+      ·
+        sorry
+
+    · refine ⟨g, hg, ?_⟩
+      intro g' hg'
+      exact le_trans (hg₂ g' hg') (not_lt.mp ha)
+  · refine ⟨f, hf.symm, ?_⟩
+    intro g' hg'
+    apply Finset.le_sup hg'
