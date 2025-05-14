@@ -324,7 +324,7 @@ lemma sPolynomial_decomposition (f: MvPolynomial σ k) (d: σ →₀ ℕ)
   sorry
 
 /--
-h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0, then lm(S(h_1, h_2)) < lm(h_1).
+$h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
 -/
 lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁= m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) : m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
   sorry
