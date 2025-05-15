@@ -64,7 +64,10 @@ lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} 
 
 variable {m} in
 lemma ne_zero_of_degree_ne_zero {f : MvPolynomial σ R} (h : m.degree f ≠ 0) : f ≠ 0 := by
-  sorry
+  by_contra h'
+  have: m.degree f = 0 := by
+    simp [h']
+  exact h this
 
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
@@ -499,20 +502,53 @@ lemma degree_sPolynomial_lt_sup_degre_lt_degree {f : MvPolynomial σ R} (h : f -
 
 lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f ↔ m.degree f ≠ 0 := by
-  sorry
+  classical
+  constructor
+  · intro h
+    by_contra h'
+    simp [h'] at h
+    have : m.toSyn (m.degree (f - m.leadingTerm f)) ≥ 0 := by
+      exact zero_le m (m.toSyn (m.degree (f - m.leadingTerm f)))
+    apply not_le_of_lt h this
+  · intro h
+    by_cases hl: f - m.leadingTerm f = 0
+    · simp [hl]
+      have h1: m.toSyn (m.degree f) ≥ 0 := by
+        exact zero_le m (m.toSyn (m.degree f))
+      have h2: m.toSyn (m.degree f) ≠ 0 := by
+        exact (AddEquiv.map_ne_zero_iff m.toSyn).mpr h
+      exact lt_of_le_of_ne h1 (id (Ne.symm h2))
+    · exact degree_sPolynomial_lt_sup_degre_lt_degree hl
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
   sorry
+
 
 variable {m} in
 lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
 
-lemma degree_sPolynomial_lt_sup_degree_iff [NoZeroDivisors R] (f g : MvPolynomial σ R) :
-    (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ↔ m.degree f ≠ 0 ∨ m.degree g ≠ 0 := by
-  sorry
+-- lemma degree_sPolynomial_lt_sup_degree_iff [NoZeroDivisors R] (f g : MvPolynomial σ R) :
+--     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ↔ m.degree f ≠ 0 ∨ m.degree g ≠ 0 := by
+--   constructor
+--   · intro h
+--     by_contra h'
+--     simp [h'] at h
+--     have : m.toSyn (m.degree (m.sPolynomial f g)) ≥ 0 := by
+--       exact zero_le m (m.toSyn (m.degree (m.sPolynomial f g)))
+--     push_neg at h'
+--     rcases h' with ⟨h1, h2⟩
+--     simp [h1, h2] at h
+--     apply not_le_of_lt h this
+--   · intro h
+--     have: m.sPolynomial f g ≠ 0 := by
+--       by_contra h'
+--       simp [sPolynomial_def] at h'
+
+--       sorry
+--     exact degree_sPolynomial_lt_sup_degree this
 
 /-- Monomial degree of product -/
 lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0) :
