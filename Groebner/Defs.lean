@@ -228,7 +228,8 @@ lemma isRemainder_finset' (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ 
         ∀ b' ∈ B', (m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
         (p = 0 → g = 0)
         ) ∧
-      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by sorry
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+      sorry
 
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
@@ -522,33 +523,19 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
-  sorry
+  by_cases hf : m.degree f = 0
+
+
+  · by_cases hg: m.degree g = 0
+    · sorry
+    · sorry
+
 
 
 variable {m} in
 lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
-
--- lemma degree_sPolynomial_lt_sup_degree_iff [NoZeroDivisors R] (f g : MvPolynomial σ R) :
---     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ↔ m.degree f ≠ 0 ∨ m.degree g ≠ 0 := by
---   constructor
---   · intro h
---     by_contra h'
---     simp [h'] at h
---     have : m.toSyn (m.degree (m.sPolynomial f g)) ≥ 0 := by
---       exact zero_le m (m.toSyn (m.degree (m.sPolynomial f g)))
---     push_neg at h'
---     rcases h' with ⟨h1, h2⟩
---     simp [h1, h2] at h
---     apply not_le_of_lt h this
---   · intro h
---     have: m.sPolynomial f g ≠ 0 := by
---       by_contra h'
---       simp [sPolynomial_def] at h'
-
---       sorry
---     exact degree_sPolynomial_lt_sup_degree this
 
 /-- Monomial degree of product -/
 lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0) :
@@ -576,6 +563,7 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
       m.sPolynomial p₁ p₂ := by
+  classical
   simp only [sPolynomial_def]
   by_cases hc1 : c₁ = 0
   · by_cases hc2 : c₂ = 0
@@ -600,18 +588,22 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
           have eq3: m.degree ((monomial d₁) c₁ * p₁) = d₁ + m.degree p₁ := by
             rw [MonomialOrder.degree_mul]
             simp
-            · sorry
+            ·
+              simp [degree_monomial]
+              exact fun a ↦ False.elim (hc1 a)
             · simp [hc1]
             · exact hp1
           have eq4: m.degree ((monomial d₂) c₂ * p₂) = d₂ + m.degree p₂ := by
             rw [MonomialOrder.degree_mul]
             simp
-            · sorry
+            · simp [degree_monomial]
+              exact fun a ↦ False.elim (hc2 a)
             · simp [hc2]
             · exact hp2
           simp_rw [eq1, eq2, eq3, eq4]
           have : monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) (c₂ * m.leadingCoeff p₂) = (c₂ * m.leadingCoeff p₂) • monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) 1:= by
             sorry
+          simp [this]
           ring_nf
           sorry
 
