@@ -163,7 +163,13 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
   (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
       p = B'.sum (fun x => g x * x) + r ∧
       ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
-      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by sorry
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+  constructor
+  · sorry
+  · simp [isRemainder_def'']
+    sorry
+
+
 
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
@@ -377,6 +383,13 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
       m.sPolynomial p₁ p₂ := by
-  sorry
+  simp only [sPolynomial_def]
+  by_cases hc1 : c₁ = 0
+  · by_cases hc2 : c₂ = 0
+    · simp [hc1, hc2]
+    · simp [hc1]
+  · by_cases hc2 : c₂ = 0
+    · simp [hc2]
+    · sorry
 
 end Field
