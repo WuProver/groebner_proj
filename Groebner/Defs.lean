@@ -515,22 +515,32 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
       · simp [hp1]
       · by_cases hp2 : p₂ = 0
         · simp [hp2]
-        · have : m.leadingCoeff ((monomial d₁) c₁ * p₁) =  c₁ * m.leadingCoeff p₁ := by
+        · have eq1: m.leadingCoeff ((monomial d₁) c₁ * p₁) =  c₁ * m.leadingCoeff p₁ := by
             rw [MonomialOrder.leadingCoeff_mul]
             simp
-            · sorry
+            · simp [hc1]
             · exact hp1
+          have eq2: m.leadingCoeff ((monomial d₂) c₂ * p₂) =  c₂ * m.leadingCoeff p₂ := by
+            rw [MonomialOrder.leadingCoeff_mul]
+            simp
+            · simp [hc2]
+            · exact hp2
+          have eq3: m.degree ((monomial d₁) c₁ * p₁) = d₁ + m.degree p₁ := by
+            rw [MonomialOrder.degree_mul]
+            simp
+            · sorry
+            · simp [hc1]
+            · exact hp1
+          have eq4: m.degree ((monomial d₂) c₂ * p₂) = d₂ + m.degree p₂ := by
+            rw [MonomialOrder.degree_mul]
+            simp
+            · sorry
+            · simp [hc2]
+            · exact hp2
+          simp_rw [eq1, eq2, eq3, eq4]
+          have : monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) (c₂ * m.leadingCoeff p₂) = (c₂ * m.leadingCoeff p₂) • monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) 1:= by
+            sorry
+          ring_nf
           sorry
-    -- · by_cases hd1: m.degree ((monomial d₁) c₁ * p₁) ≺[m] m.degree ((monomial d₂) c₂ * p₂)
-    --   · have: m.degree ((monomial d₁) c₁ * p₁) ⊔ m.degree ((monomial d₂) c₂ * p₂) = m.degree ((monomial d₂) c₂ * p₂) := by
-    --       sorry
-    --     simp [this]
-    --     by_cases hd2: m.degree p₁ ≺[m] m.degree p₂
-    --     · have: m.degree p₁ ⊔ m.degree p₂ = m.degree p₂ := by
-    --         sorry
-    --       rw [this]
-    --       simp [hd2]
-    --       sorry
-    --     · sorry
-    --   sorry
+
 end Field
