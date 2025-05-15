@@ -607,10 +607,14 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     · exact m.degree_sub_leadingTerm_lt_degree hl
 
 lemma degree_f_sup_g_sub_degree_f {f g : MvPolynomial σ R} : m.toSyn (m.degree f ⊔ m.degree g - m.degree f) + m.toSyn (m.degree f) =  m.toSyn (m.degree f ⊔ m.degree g) := by
-  sorry
+  simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff]
+  intro a
+  exact Nat.sub_add_cancel <| by simp
 
 lemma degree_f_sup_g_sub_degree_f' {f g : MvPolynomial σ R} : m.toSyn (m.degree f ⊔ m.degree g - m.degree g) + m.toSyn (m.degree g) =  m.toSyn (m.degree f ⊔ m.degree g) := by
-  sorry
+  simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff]
+  intro a
+  exact Nat.sub_add_cancel <| by simp
 
 lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≼[m] m.degree f ⊔ m.degree g) := by
@@ -645,6 +649,21 @@ lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
       · exact le_of_eq l5
       · exact le_of_eq l6
 
+lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) : (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
+  by_cases hf0 : f = 0
+  · simp [hf0]
+  by_cases hg0 : g = 0
+  · simp [hg0]
+  rw [sPolynomial_def]
+  suffices hdeg1 : m.degree f ⊔ m.degree g = m.degree (monomial (m.degree f ⊔ m.degree g - m.degree f) (m.leadingCoeff g) * f)
+  suffices hdeg2 : m.degree f ⊔ m.degree g = m.degree (monomial (m.degree f ⊔ m.degree g - m.degree g) (m.leadingCoeff f) * g)
+  rw [hdeg1, hdeg2]
+  sorry
+  sorry
+  sorry
+
+
+
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
     classical
@@ -665,16 +684,13 @@ lemma degree_sPolynomial (f g : MvPolynomial σ R) :
       left
       have h1: m.toSyn (m.degree (m.sPolynomial f g)) ≤  m.toSyn (m.degree f ⊔ m.degree g) := by
         exact degree_sPolynomial_le m f g
-      have h2: (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
-        simp [sPolynomial_def]
-        sorry
       have h3: m.toSyn (m.degree (m.sPolynomial f g)) ≠ m.toSyn (m.degree f ⊔ m.degree g):= by
         simp [degree_eq_zero_iff]
         by_contra h
         have: coeff (m.degree (m.sPolynomial f g)) (m.sPolynomial f g) ≠  0 := by
           exact coeff_degree_ne_zero_iff.mpr hs
         rw [h] at this
-        exact this h2
+        exact this (m.coeff_sPolynomial_sup_eq_zero _ _)
       exact lt_of_le_of_ne h1 h3
 
 
