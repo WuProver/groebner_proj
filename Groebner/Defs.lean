@@ -62,9 +62,6 @@ lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} 
     · exact haA
     · exact haA
 
-
-
-
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
@@ -413,9 +410,74 @@ theorem div_set' {B : Set (MvPolynomial σ R)}
   · use g
   · exact h₃
 
+-- this part is some lemma about leadingTerm
+theorem toSyn_eq_zero_iff (σ: Type*) (m : MonomialOrder σ) (a: σ →₀ ℕ) :
+    m.toSyn a =0 ↔ a = 0 := by
+  constructor
+  · intro h
+    exact (AddEquiv.map_eq_zero_iff m.toSyn).mp h
+  · intro h
+    exact (AddEquiv.map_eq_zero_iff m.toSyn).mpr h
+
+theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
+    m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
+  constructor
+  · intro h
+    simp [leadingCoeff]
+    apply MonomialOrder.eq_C_of_degree_eq_zero h
+  · intro h
+    rw [h]
+    simp [leadingCoeff]
+
+lemma leadingTerm_degree_eq (f : MvPolynomial σ R) :
+  m.degree (m.leadingTerm f) = m.degree f := by
+    classical
+    by_cases h : f = 0 <;> simp [leadingTerm,h]
+    have : m.leadingCoeff f != 0 := by
+      simp [leadingCoeff, h]
+    simp [MonomialOrder.degree_monomial]
+    exact fun a ↦ False.elim (h a)
+
+lemma leadingTerm_degree_eq' (f : MvPolynomial σ R) :
+  m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
+    classical
+    by_cases h : f = 0 <;> simp [leadingTerm,h]
+    have : m.leadingCoeff f != 0 := by
+      simp [leadingCoeff, h]
+    simp [MonomialOrder.degree_monomial]
+    exact fun a ↦ False.elim (h a)
+
 lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
     (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ (f - m.leadingTerm f = 0) := by
-  sorry
+  by_cases h : f - m.leadingTerm f = 0
+  · right
+    exact h
+  · left
+    push_neg at h
+    have hc : (f - m.leadingTerm f).coeff (m.degree f) = 0 := by
+      rw [coeff_sub]
+      simp [coeff_monomial, leadingTerm]
+      simp [leadingCoeff]
+    have h1: m.toSyn ( m.degree (f - m.leadingTerm f)) ≠  m.toSyn (m.degree f) := by
+      simp [degree_eq_zero_iff]
+      by_contra h
+      have hin: m.degree (f - m.leadingTerm f) ∈ (f - m.leadingTerm f).support := by
+        (expose_names; exact (degree_mem_support_iff m (f - m.leadingTerm f)).mpr h_1)
+      rw [h] at hin
+      have : (f - m.leadingTerm f).coeff (m.degree f) ≠  0 := by
+        refine mem_support_iff.mp ?_
+        exact hin
+      exact this hc
+    have h₃: m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) := by
+      have h₃': m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) := by
+        apply degree_sub_le
+      have h₃'':  m.toSyn (m.degree f) = m.toSyn (m.degree (m.leadingTerm f)) := by
+        exact Eq.symm (leadingTerm_degree_eq' m f)
+      have h3:  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
+        simp [max_le_iff, h₃'']
+      exact le_of_le_of_eq h₃' h3
+    exact lt_of_le_of_ne h₃ h1
+
 
 variable {m} in
 lemma degree_sub_leadingTerm' {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
@@ -459,13 +521,6 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
             · sorry
             · exact hp1
           sorry
-            · sorry
-
-        sorry
-
-
-
-      sorry
     -- · by_cases hd1: m.degree ((monomial d₁) c₁ * p₁) ≺[m] m.degree ((monomial d₂) c₂ * p₂)
     --   · have: m.degree ((monomial d₁) c₁ * p₁) ⊔ m.degree ((monomial d₂) c₂ * p₂) = m.degree ((monomial d₂) c₂ * p₂) := by
     --       sorry

@@ -308,74 +308,46 @@ theorem span_groebner_basis (h : m.IsGroebnerBasis G' I) : I = Ideal.span G' := 
       exact hG' hp'
     exact hI hp
 
-@[simp]
-theorem toSyn_eq_iff (σ: Type*) (m : MonomialOrder σ) (a: σ →₀ ℕ) :
-    m.toSyn a =0 ↔ a = 0 := by
-  constructor
-  · intro h
-    exact (AddEquiv.map_eq_zero_iff m.toSyn).mp h
-  · intro h
-    exact (AddEquiv.map_eq_zero_iff m.toSyn).mpr h
-
-@[simp]
-theorem degree_eq_zero_iff{f : MvPolynomial σ R} :
-    m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
-  constructor
-  · intro h
-    simp [leadingCoeff]
-    apply MonomialOrder.eq_C_of_degree_eq_zero h
-  · intro h
-    rw [h]
-    simp [leadingCoeff]
-
-lemma leadingTerm_degree_eq_f (f : MvPolynomial σ R) :
-  m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
-  classical
-  by_cases h : f = 0 <;> simp [leadingTerm,h]
-  have : m.leadingCoeff f != 0 := by
-    simp [leadingCoeff, h]
-  simp [MonomialOrder.degree_monomial]
-  exact fun a ↦ False.elim (h a)
-
-lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 := by
-  classical
-  by_contra h_neg
-  push_neg at h_neg
-  rcases h_neg with ⟨h₁, h₂⟩
-  have h₃: m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) := by
-    have h₃': m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) := by
-      apply degree_sub_le
-    have h₃'':  m.toSyn (m.degree f) = m.toSyn (m.degree (m.leadingTerm f)) := by
-      exact Eq.symm (leadingTerm_degree_eq_f f)
-    have h3:  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
-      simp [max_le_iff, h₃'']
-    exact le_of_le_of_eq h₃' h3
-  have h₄: m.toSyn (m.degree (f - m.leadingTerm f)) =  m.toSyn (m.degree f) := by
-    apply le_antisymm
-    · exact h₃
-    · exact h₁
-  by_cases hd: m.degree f= 0
-  ·
-    rw [degree_eq_zero_iff] at hd
-    rw [hd] at h₂
-    simp [MonomialOrder.leadingTerm] at h₂
-    simp [leadingCoeff] at h₂
-  ·
-    have hc : (f - m.leadingTerm f).coeff (m.degree f) = 0 := by
-      rw [coeff_sub]
-      simp [coeff_monomial, leadingTerm]
-      simp [leadingCoeff]
-    have h₅: m.toSyn ( m.degree (f - m.leadingTerm f)) ≠  m.toSyn (m.degree f) := by
-      simp [degree_eq_zero_iff]
-      by_contra h
-      have hin: m.degree (f - m.leadingTerm f) ∈ (f - m.leadingTerm f).support := by
-        exact degree_mem_support h₂
-      rw [h] at hin
-      have : (f - m.leadingTerm f).coeff (m.degree f) ≠  0 := by
-        refine mem_support_iff.mp ?_
-        exact hin
-      exact this hc
-    simp [h₄] at h₅
+--WARNING: THE LEMMA SHOULD BE REWRITTEN
+-- lemma degree_sub_sPolynomial (f : MvPolynomial σ R) : (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ f - m.leadingTerm f = 0 := by
+--   classical
+--   by_contra h_neg
+--   push_neg at h_neg
+--   rcases h_neg with ⟨h₁, h₂⟩
+--   have h₃: m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) := by
+--     have h₃': m.toSyn (m.degree (f - m.leadingTerm f)) ≤  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) := by
+--       apply degree_sub_le
+--     have h₃'':  m.toSyn (m.degree f) = m.toSyn (m.degree (m.leadingTerm f)) := by
+--       exact Eq.symm (leadingTerm_degree_eq' m f)
+--     have h3:  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
+--       simp [max_le_iff, h₃'']
+--     exact le_of_le_of_eq h₃' h3
+--   have h₄: m.toSyn (m.degree (f - m.leadingTerm f)) =  m.toSyn (m.degree f) := by
+--     apply le_antisymm
+--     · exact h₃
+--     · exact h₁
+--   by_cases hd: m.degree f= 0
+--   ·
+--     rw [degree_eq_zero_iff] at hd
+--     rw [hd] at h₂
+--     simp [MonomialOrder.leadingTerm] at h₂
+--     simp [leadingCoeff] at h₂
+--   ·
+--     have hc : (f - m.leadingTerm f).coeff (m.degree f) = 0 := by
+--       rw [coeff_sub]
+--       simp [coeff_monomial, leadingTerm]
+--       simp [leadingCoeff]
+--     have h₅: m.toSyn ( m.degree (f - m.leadingTerm f)) ≠  m.toSyn (m.degree f) := by
+--       simp [degree_eq_zero_iff]
+--       by_contra h
+--       have hin: m.degree (f - m.leadingTerm f) ∈ (f - m.leadingTerm f).support := by
+--         exact degree_mem_support h₂
+--       rw [h] at hin
+--       have : (f - m.leadingTerm f).coeff (m.degree f) ≠  0 := by
+--         refine mem_support_iff.mp ?_
+--         exact hin
+--       exact this hc
+--     simp [h₄] at h₅
 
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
@@ -402,11 +374,11 @@ lemma sPolynomial_degree_lt (h₁ h₂: MvPolynomial σ k) (h: m.degree h₁ = m
   simp [h] at hs
 
   have h2: (m.degree (h₂ - m.leadingTerm h₂)) ≺[m]  m.degree (h₂) := by
-    refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_sPolynomial _
+    refine (or_iff_left_iff_imp.mpr ?_).mp <| m.degree_sub_leadingTerm _
     simp_intro' hLT [hs]
 
   have h4: (m.degree (h₁ - m.leadingTerm h₁)) ≺[m]  m.degree (h₂) := by
-    refine (or_iff_left_iff_imp.mpr ?_).mp <| h ▸ m.degree_sub_sPolynomial _
+    refine (or_iff_left_iff_imp.mpr ?_).mp <| h ▸ m.degree_sub_leadingTerm _
     simp_intro' hLT [hs]
 
   calc
@@ -503,7 +475,7 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
           simp [this]
         ·
           contrapose! ha
-          rw [hp, m.degree_add_eq_left_of_degree_lt]
+          rw [hp, m.degree_add_of_lt]
           ·exact ha
           refine lt_of_lt_of_le ?_ ha
           apply lt_of_le_of_lt m.degree_sum_le
