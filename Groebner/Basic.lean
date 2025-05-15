@@ -545,7 +545,7 @@ theorem buchberger_criterion
         arg 2
         intro g'
         rw [← Finset.sum_coe_sort]
-      simp_rw [isRemainder_finset'] at hG
+      simp_rw [isRemainder_finset₀] at hG
       simp [-Subtype.forall] at hG
       let q' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose
       have hq' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose_spec
@@ -576,13 +576,17 @@ theorem buchberger_criterion
           refine lt_of_le_of_lt m.degree_sum_le <| (Finset.sup_lt_iff a_gt_zero).mpr ?_
           simp
           intro g'₂ hg'₂
-          specialize hq' ⟨g'₁, hg'₁⟩ ⟨g'₂, hg'₂⟩ g' hg'
+          obtain ⟨hq', hq'0⟩ := hq' ⟨g'₁, hg'₁⟩ ⟨g'₂, hg'₂⟩
+          replace hq' := hq' g' hg'
           by_cases hgg'₂ : gg'deg g'₂ ≠ a
           · simp [hgg'₂, a_gt_zero]
           by_cases hgg'₁ : gg'deg g'₁ ≠ a
           · simp [hgg'₁, a_gt_zero]
-          by_cases hspoly : m.sPolynomial g'₁ g'₂ = 0 <;> simp [hspoly] at hq'
-          · simp [hq'.2, a_gt_zero]
+          by_cases hspoly : m.sPolynomial g'₁ g'₂ = 0
+          · simp [hspoly] at hq'0
+            simp [hq'0, a_gt_zero]
+          simp [hspoly] at hq'
+          simp [hq', a_gt_zero]
           rw [mul_assoc]
           apply lt_of_le_of_lt degree_mul_le
           rw [AddEquiv.map_add]
