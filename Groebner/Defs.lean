@@ -649,20 +649,26 @@ lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
       · exact le_of_eq l5
       · exact le_of_eq l6
 
-lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) : (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
+lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
+    (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
   by_cases hf0 : f = 0
   · simp [hf0]
   by_cases hg0 : g = 0
   · simp [hg0]
-  rw [sPolynomial_def]
-  suffices hdeg1 : m.degree f ⊔ m.degree g = m.degree (monomial (m.degree f ⊔ m.degree g - m.degree f) (m.leadingCoeff g) * f)
-  suffices hdeg2 : m.degree f ⊔ m.degree g = m.degree (monomial (m.degree f ⊔ m.degree g - m.degree g) (m.leadingCoeff f) * g)
-  rw [hdeg1, hdeg2]
-  sorry
-  sorry
-  sorry
-
-
+  classical
+  rw [sPolynomial_def, coeff_sub]
+  have : m.degree f ⊔ m.degree g = m.degree f ⊔ m.degree g - m.degree f + m.degree f := by
+    rw [Finsupp.ext_iff]
+    intro _
+    exact (Nat.sub_add_cancel <| by simp).symm
+  nth_rewrite 1 [this, coeff_monomial_mul]
+  have : m.degree f ⊔ m.degree g = m.degree f ⊔ m.degree g - m.degree g + m.degree g := by
+    rw [Finsupp.ext_iff]
+    intro _
+    exact (Nat.sub_add_cancel <| by simp).symm
+  nth_rewrite 1 [this, coeff_monomial_mul]
+  unfold leadingCoeff
+  ring
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
@@ -767,11 +773,25 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
               exact fun a ↦ False.elim (hc2 a)
             · simp [hc2]
             · exact hp2
-          simp_rw [eq1, eq2, eq3, eq4]
-          have : monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) (c₂ * m.leadingCoeff p₂) = (c₂ * m.leadingCoeff p₂) • monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - (d₁ + m.degree p₁)) 1:= by
-            sorry
-          simp [this]
-          ring_nf
-          sorry
+          simp_rw [eq1, eq2, eq3, eq4, mul_sub]
+          simp_rw [← mul_assoc _ _ p₁, ← mul_assoc _ _ p₂]
+          simp_rw [monomial_mul]
+          congr 3
+          · congr 1
+            simp [Finsupp.ext_iff]
+            intro a
+            rw [Nat.sub_add_sub_cancel (by rw [Nat.max_le]; simp) (by simp)]
+            rw [← Nat.sub_add_comm (by simp)]
+            nth_rewrite 2 [add_comm <| d₁ a]
+            rw [Nat.add_sub_add_right]
+          · ring
+          · congr 1
+            simp [Finsupp.ext_iff]
+            intro a
+            rw [Nat.sub_add_sub_cancel (by rw [Nat.max_le]; simp) (by simp)]
+            rw [← Nat.sub_add_comm (by simp)]
+            nth_rewrite 2 [add_comm <| d₂ a]
+            rw [Nat.add_sub_add_right]
+          · ring
 
 end Field
