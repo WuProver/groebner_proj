@@ -21,17 +21,49 @@ lemma zero_le (a : m.syn) : 0 ≤ a := bot_le
 
 -- #check Polynomial.degree_add_eq_left_of_degree_lt
 
-lemma degree_add_eq_left_of_degree_lt
-  (h : m.degree p ≺[m] m.degree f) : m.degree (f + p) = m.degree f := by
-  sorry
+-- lemma degree_add_eq_left_of_degree_lt
+--   (h : m.degree p ≺[m] m.degree f) : m.degree (f + p) = m.degree f := by
+--   exact degree_add_of_lt h
 
 lemma degree_add_eq_right_of_degree_lt
   (h : m.degree f ≺[m] m.degree p) : m.degree (f + p) = m.degree p := by
-  sorry
+  rw [add_comm]
+  exact degree_add_of_lt h
 
 lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} :
     (m.toSyn <| m.degree <| ∑ x ∈ s, f x) ≤ s.sup fun x => (m.toSyn <| m.degree <| f x) := by
-  sorry
+  classical
+  induction' s using Finset.induction_on with a A haA h
+  · simp
+  · simp
+    by_contra h_neg
+    push_neg at h_neg
+    rcases h_neg with ⟨h1, h2⟩
+    rw [Finset.sum_insert] at h2
+    rw [Finset.sum_insert] at h1
+    · have h3: m.toSyn (m.degree (f a + ∑ x ∈ A, f x)) ≤  m.toSyn (m.degree (f a)) ⊔ m.toSyn (m.degree (∑ x ∈ A, f x)) := by
+        exact degree_add_le
+      have h3': m.toSyn (m.degree (f a)) <  m.toSyn (m.degree (f a)) ⊔ m.toSyn (m.degree (∑ x ∈ A, f x)) := by
+        exact gt_of_ge_of_gt h3 h1
+      simp [lt_sup_iff] at h3'
+      have h4: m.toSyn (m.degree (f a)) ⊔ m.toSyn (m.degree (∑ x ∈ A, f x)) ≤  m.toSyn (m.degree (∑ x ∈ A, f x)):=by
+        simp [le_sup_iff]
+        apply le_of_lt h3'
+      have : m.toSyn (m.degree (f a + ∑ x ∈ A, f x)) ≤  m.toSyn (m.degree (∑ x ∈ A, f x)) := by
+        exact
+            Preorder.le_trans (m.toSyn (m.degree (f a + ∑ x ∈ A, f x)))
+              (max (m.toSyn (m.degree (f a))) (m.toSyn (m.degree (∑ x ∈ A, f x))))
+              (m.toSyn (m.degree (∑ x ∈ A, f x))) h3 h4
+      have h5: (A.sup fun x ↦ m.toSyn (m.degree (f x))) < m.toSyn (m.degree (∑ x ∈ A, f x)) := by
+        exact gt_of_ge_of_gt this h2
+      have :  m.toSyn (m.degree (∑ x ∈ A, f x)) <  m.toSyn (m.degree (∑ x ∈ A, f x)):= by
+        exact lt_of_le_of_lt h h5
+      exact (lt_self_iff_false (m.toSyn (m.degree (∑ x ∈ A, f x)))).mp this
+    · exact haA
+    · exact haA
+
+
+
 
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
@@ -264,7 +296,8 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
     rwa [Eq.comm (a := 0) (b := p)]
 
 @[simp]
-lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := sorry
+lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
+  rw [lm_eq_zero_iff]
 
 -- @[reducible]
 -- def leading_term_ideal : Ideal (MvPolynomial σ R) := Ideal.span (leadingTerm m '' (G' : Set (MvPolynomial σ R)))
@@ -416,6 +449,33 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
     · simp [hc1]
   · by_cases hc2 : c₂ = 0
     · simp [hc2]
-    · sorry
+    · by_cases hp1 : p₁ = 0
+      · simp [hp1]
+      · by_cases hp2 : p₂ = 0
+        · simp [hp2]
+        · have : m.leadingCoeff ((monomial d₁) c₁ * p₁) =  c₁ * m.leadingCoeff p₁ := by
+            rw [MonomialOrder.leadingCoeff_mul]
+            simp
+            · sorry
+            · exact hp1
+          sorry
+            · sorry
 
+        sorry
+
+
+
+      sorry
+    -- · by_cases hd1: m.degree ((monomial d₁) c₁ * p₁) ≺[m] m.degree ((monomial d₂) c₂ * p₂)
+    --   · have: m.degree ((monomial d₁) c₁ * p₁) ⊔ m.degree ((monomial d₂) c₂ * p₂) = m.degree ((monomial d₂) c₂ * p₂) := by
+    --       sorry
+    --     simp [this]
+    --     by_cases hd2: m.degree p₁ ≺[m] m.degree p₂
+    --     · have: m.degree p₁ ⊔ m.degree p₂ = m.degree p₂ := by
+    --         sorry
+    --       rw [this]
+    --       simp [hd2]
+    --       sorry
+    --     · sorry
+    --   sorry
 end Field
