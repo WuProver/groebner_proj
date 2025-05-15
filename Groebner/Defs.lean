@@ -523,12 +523,7 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
-  by_cases hf : m.degree f = 0
-
-
-  · by_cases hg: m.degree g = 0
-    · sorry
-    · sorry
+  by_cases hf : m.degree f = 0 
 
 
 
