@@ -429,7 +429,8 @@ Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and suppose $$f = c_
 -/
 lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
     {B: Finset ι} (g : ι → MvPolynomial σ k)
-    (hd: ∀ b ∈ B, (m.toSyn <| m.degree <| g b) = d ∨ g b = 0) (hfd: (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d):
+    (hd: ∀ b ∈ B, (m.toSyn <| m.degree <| g b) = d ∨ g b = 0)
+    (hfd: (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d):
     ∃ (c : ι → ι → k),
       ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
   sorry
@@ -468,7 +469,6 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
       apply h
       clear h
       let gg'deg := fun g' ↦ m.toSyn <| m.degree <| g g' * g'
-      -- let gg'maxdeg := G'.sup gg'deg
       have hp :=
         calc
           p = ∑ g' ∈ G', g g' * g' := hg
@@ -485,9 +485,46 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
             rw [funext_iff]
             intro x
             by_cases h : gg'deg x = a <;> simp [h, leadingTerm]
-      obtain ⟨c, hc⟩ := sPolynomial_decomposition (m:=m) (ι:=MvPolynomial σ k) (d:=a) (B:=G')
-        (fun g' ↦ monomial (m.degree (g g')) (if gg'deg g' = a then m.leadingCoeff (g g') else 0) * g')
-        sorry sorry
+
+      have a_gt_zero : 0 < a := bot_lt_of_lt ha
+
+      obtain ⟨c, hc⟩ := by
+        apply sPolynomial_decomposition (m:=m) (ι:=MvPolynomial σ k) (d:=a) (B:=G')
+          (fun g' ↦ monomial (m.degree (g g')) (if gg'deg g' = a then m.leadingCoeff (g g') else 0) * g')
+        · intro g' hg'
+          simp [hg']
+          by_cases hg'₂ : g' = 0 <;> simp [hg'₂]
+          by_cases hg'₃ : g g' = 0 <;> simp [hg'₃]
+          by_cases hg'₄ : gg'deg g' = a <;> simp [hg'₃, hg'₄]
+          have := m.leadingCoeff_ne_zero_iff.mpr hg'₃
+          rw [← hg'₄, EmbeddingLike.apply_eq_iff_eq,
+            degree_mul (monomial_eq_zero.not.mpr this) hg'₂,
+            degree_mul hg'₃ hg'₂, degree_monomial]
+          simp [this]
+        ·
+          contrapose! ha
+          rw [hp, m.degree_add_eq_left_of_degree_lt]
+          ·exact ha
+          refine lt_of_lt_of_le ?_ ha
+          apply lt_of_le_of_lt m.degree_sum_le
+          rw [Finset.sup_lt_iff a_gt_zero]
+          intro g' hg'
+          by_cases hg'₂ : g' = 0
+          · simp [hg'₂, a_gt_zero]
+          by_cases hg'₃ : g g' = 0
+          · simp [hg'₃, a_gt_zero]
+          by_cases hg'₄ : gg'deg g' = a
+          · simp [hg'₄, a_gt_zero]
+            by_cases h : g g' - m.leadingTerm (g g') = 0
+            · simp [h, a_gt_zero]
+            refine lt_of_lt_of_le ?_ (hg₂ g' hg')
+            rw [degree_mul h hg'₂, degree_mul hg'₂ hg'₃, add_comm,
+              AddEquiv.map_add, AddEquiv.map_add, add_lt_add_iff_left]
+            exact m.degree_sub_leadingTerm' h
+          · simp [hg'₄, a_gt_zero]
+            apply lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg')
+            exact hg'₄
+
       simp_rw [hc, m.sPolynomial_mul_monomial] at hp
       rw [← Finset.sum_coe_sort] at hp
       conv at hp =>
@@ -516,7 +553,7 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
       refine ⟨(G'.sup fun g' ↦ m.toSyn <| m.degree <| g₂ g' * g'), ⟨?_, ⟨g₂, ⟨hp, ?_⟩⟩⟩⟩
 
       ·
-        simp [g₂, Finset.sup_lt_iff (bot_lt_of_lt ha)]
+        simp [g₂, Finset.sup_lt_iff a_gt_zero]
         intro b hb
         sorry
       ·
