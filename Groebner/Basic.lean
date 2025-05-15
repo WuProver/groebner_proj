@@ -407,12 +407,13 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
       ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
   sorry
 
+set_option maxHeartbeats 400000 in
 /--
 A basis $G = \{ g_1, \ldots, g_t \}$ for an ideal $I$ is a Gröbner basis if and only if $S(g_i, g_j) \to_G 0$ for all $i \neq j$.
 -/
-theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
-  (hG: ∀ (g₁ g₂: G'), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G' 0) :
-  m.IsGroebnerBasis G' (Ideal.span G') := by
+theorem buchberger_criterion
+    (hG: ∀ (g₁ g₂: G'), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G' 0) :
+    m.IsGroebnerBasis G' (Ideal.span G') := by
   have _uses := @groebner_basis_isRemainder_zero_iff_mem_span.{0,0,0}
   have _uses := @isGroebnerBasis_iff.{0,0,0}
   have _uses := @sPolynomial_decomposition.{0,0,0,0}
@@ -492,7 +493,7 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
             refine lt_of_lt_of_le ?_ (hg₂ g' hg')
             rw [degree_mul h hg'₂, degree_mul hg'₂ hg'₃, add_comm,
               AddEquiv.map_add, AddEquiv.map_add, add_lt_add_iff_left]
-            exact m.degree_sub_leadingTerm' h
+            exact m.degree_sPolynomial_lt_sup_degre_lt_degree h
           · simp [hg'₄, a_gt_zero]
             apply lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg')
             exact hg'₄
@@ -505,32 +506,91 @@ theorem buchberger_criterion {g₁ g₂ : MvPolynomial σ k}
         arg 2
         intro g'
         rw [← Finset.sum_coe_sort]
-      simp_rw [isRemainder_finset] at hG
+      simp_rw [isRemainder_finset'] at hG
       simp [-Subtype.forall] at hG
       let q' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose
       have hq' (g'₁ g'₂ : G') := (hG g'₁ g'₂).choose_spec
       simp_rw [show ∀ (g'₁ g'₂), (hG g'₁ g'₂).choose = q' g'₁ g'₂ by intros; rfl] at hq'
       simp_rw [(hq' _ _).1] at hp
       clear_value q'
-      clear hG hq'
+      replace hq' (g'₁ g'₂ : ↑G') := (hq' g'₁ g'₂).2
+      clear hG
 
       simp_rw [Finset.mul_sum, ← mul_assoc, Finset.smul_sum,
         ←smul_mul_assoc, smul_monomial, Finset.sum_comm (t:=G'),
         ← Finset.sum_mul, ← Finset.sum_add_distrib,
         ← add_mul] at hp
       letI g₂ := (?_ : MvPolynomial σ k → MvPolynomial σ k)
-      obtain hp : p = ∑ g' ∈ G', g₂ g' * g' := by
-        exact hp
+      replace hp : p = ∑ g' ∈ G', g₂ g' * g' := by exact hp
 
       refine ⟨(G'.sup fun g' ↦ m.toSyn <| m.degree <| g₂ g' * g'), ⟨?_, ⟨g₂, ⟨hp, ?_⟩⟩⟩⟩
-
       ·
-        simp [g₂, Finset.sup_lt_iff a_gt_zero]
-        intro b hb
-        sorry
-      ·
-        sorry
-
+        simp [g₂, Finset.sup_lt_iff a_gt_zero, add_mul]
+        clear hp g₂
+        intro g' hg'
+        apply lt_of_le_of_lt degree_add_le
+        apply max_lt
+        · simp_rw [Finset.sum_mul]
+          refine lt_of_le_of_lt m.degree_sum_le <| (Finset.sup_lt_iff a_gt_zero).mpr ?_
+          simp
+          intro g'₁ hg'₁
+          refine lt_of_le_of_lt m.degree_sum_le <| (Finset.sup_lt_iff a_gt_zero).mpr ?_
+          simp
+          intro g'₂ hg'₂
+          specialize hq' ⟨g'₁, hg'₁⟩ ⟨g'₂, hg'₂⟩ g' hg'
+          by_cases hgg'₂ : gg'deg g'₂ ≠ a
+          · simp [hgg'₂, a_gt_zero]
+          by_cases hgg'₁ : gg'deg g'₁ ≠ a
+          · simp [hgg'₁, a_gt_zero]
+          by_cases hspoly : m.sPolynomial g'₁ g'₂ = 0 <;> simp [hspoly] at hq'
+          · simp [hq'.2, a_gt_zero]
+          rw [mul_assoc]
+          apply lt_of_le_of_lt degree_mul_le
+          rw [AddEquiv.map_add]
+          refine add_lt_of_add_lt_right ?_ (degree_monomial_le _)
+          apply lt_of_le_of_lt (add_le_add_left (mul_comm g' (q' _ _ g') ▸ hq') _)
+          refine lt_of_lt_of_le (add_lt_add_left (m.degree_sPolynomial_lt_sup_degree hspoly) _) ?_
+          ·
+            push_neg at hgg'₁ hgg'₂
+            unfold gg'deg at hgg'₁ hgg'₂
+            rw [← AddEquiv.map_add]
+            have :
+                (m.degree (g g'₁) + m.degree g'₁) ⊔ (m.degree (g g'₂) + m.degree g'₂)
+                  - m.degree g'₁ ⊔ m.degree g'₂
+                  + m.degree g'₁ ⊔ m.degree g'₂
+                = (m.degree (g g'₁) + m.degree g'₁) ⊔ (m.degree (g g'₂) + m.degree g'₂) := by
+              rw [Finsupp.ext_iff]
+              intro x
+              simp
+              apply Nat.sub_add_cancel
+              apply max_le_max <;> simp
+            rw [this]
+            rw [m.degree_mul'] at hgg'₁ hgg'₂
+            rw [← hgg'₁, m.toSyn.injective.eq_iff] at hgg'₂
+            simp [← hgg'₁, hgg'₂]
+            · contrapose! hgg'₂
+              simp [hgg'₂, ne_of_lt a_gt_zero]
+            · contrapose! hgg'₁
+              simp [hgg'₁, ne_of_lt a_gt_zero]
+        · by_cases h : gg'deg g' = a
+          · simp [h]
+            by_cases hLTgg' : g g' - m.leadingTerm (g g') = 0
+            · simp [hLTgg', a_gt_zero]
+            unfold gg'deg at h
+            rw [← h]
+            rw [← h] at a_gt_zero
+            apply ne_of_lt at a_gt_zero
+            rw [ne_eq, eq_comm, toSyn_eq_zero_iff] at a_gt_zero
+            obtain ⟨gg'_ne_zero, g_ne_zero⟩ := mul_ne_zero_iff.mp <| m.ne_zero_of_degree_ne_zero a_gt_zero
+            rw [degree_mul hLTgg' g_ne_zero, AddEquiv.map_add,
+              degree_mul gg'_ne_zero g_ne_zero, AddEquiv.map_add]
+            simp
+            exact degree_sPolynomial_lt_sup_degre_lt_degree hLTgg'
+          · simp [h]
+            exact lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg') h
+      · intro g'
+        rw [mul_comm]
+        exact Finset.le_sup (α:=m.syn) (f:=fun g' ↦ m.toSyn <| m.degree <| g₂ g' * g')
     · refine ⟨g, hg, ?_⟩
       intro g' hg'
       exact le_trans (hg₂ g' hg') (not_lt.mp ha)

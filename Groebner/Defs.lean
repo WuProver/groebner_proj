@@ -62,6 +62,10 @@ lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} 
     · exact haA
     · exact haA
 
+variable {m} in
+lemma ne_zero_of_degree_ne_zero {f : MvPolynomial σ R} (h : m.degree f ≠ 0) : f ≠ 0 := by
+  sorry
+
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
@@ -213,6 +217,15 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
     sorry
 
 
+
+lemma isRemainder_finset' (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R)
+    : m.IsRemainder p B' r ↔
+      (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+        p = B'.sum (fun x => g x * x) + r ∧
+        ∀ b' ∈ B', (m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+        (p = 0 → g = 0)
+        ) ∧
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by sorry
 
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
@@ -480,9 +493,32 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
 
 
 variable {m} in
-lemma degree_sub_leadingTerm' {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
+lemma degree_sPolynomial_lt_sup_degre_lt_degree {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f :=
   (or_iff_left h).mp <| m.degree_sub_leadingTerm f
+
+lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
+    m.degree (f - m.leadingTerm f) ≺[m] m.degree f ↔ m.degree f ≠ 0 := by
+  sorry
+
+lemma degree_sPolynomial (f g : MvPolynomial σ R) :
+    ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
+  sorry
+
+variable {m} in
+lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
+    (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
+  (or_iff_left h).mp <| m.degree_sPolynomial f g
+
+lemma degree_sPolynomial_lt_sup_degree_iff [NoZeroDivisors R] (f g : MvPolynomial σ R) :
+    (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ↔ m.degree f ≠ 0 ∨ m.degree g ≠ 0 := by
+  sorry
+
+/-- Monomial degree of product -/
+lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0) :
+    m.degree (f * g) = m.degree f + m.degree g := by
+  rw [mul_ne_zero_iff] at hf
+  exact m.degree_mul hf.1 hf.2
 
 end CommRing
 
