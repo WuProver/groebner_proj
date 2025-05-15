@@ -365,7 +365,8 @@ lemma sPolynomial_antisymm (f g : MvPolynomial σ R) :
     \Sph{0}{g} = 0
   $$
 -/
-lemma sPolynomial_eq_zero_of_left_eq_zero (g : MvPolynomial σ R) :
+@[simp]
+lemma sPolynomial_left_zero (g : MvPolynomial σ R) :
   m.sPolynomial 0 g = 0 := by
   unfold sPolynomial
   simp only [zero_mul, sub_zero, leadingCoeff_zero, monomial_zero]
@@ -378,9 +379,10 @@ lemma sPolynomial_eq_zero_of_left_eq_zero (g : MvPolynomial σ R) :
     \Sph{f}{0} = 0
   $$
 -/
-lemma sPolynomial_eq_zero_of_right_eq_zero' (f : MvPolynomial σ R) :
+@[simp]
+lemma sPolynomial_right_zero (f : MvPolynomial σ R) :
   m.sPolynomial f 0 = 0 := by
-  rw [sPolynomial_antisymm, sPolynomial_eq_zero_of_left_eq_zero, neg_zero]
+  rw [sPolynomial_antisymm, sPolynomial_left_zero, neg_zero]
 
 lemma sPolynomial_def (f g : MvPolynomial σ R) :
     m.sPolynomial f g =
@@ -395,6 +397,9 @@ lemma sPolynomial_def (f g : MvPolynomial σ R) :
   ·simp [le_of_lt (not_le.mp h)]
   ·simp [h]
   ·simp [le_of_lt (not_le.mp h)]
+
+@[simp]
+lemma sPolynomial_self (f : MvPolynomial σ R) : m.sPolynomial f f = 0 := sub_self _
 
 /--
   Let $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials where every nonzero element has a unit leading coefficient:
@@ -496,7 +501,7 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
 
 
 variable {m} in
-lemma degree_sPolynomial_lt_sup_degre_lt_degree {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
+lemma degree_sub_leadingTerm_lt_degree {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f :=
   (or_iff_left h).mp <| m.degree_sub_leadingTerm f
 
@@ -518,7 +523,7 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
       have h2: m.toSyn (m.degree f) ≠ 0 := by
         exact (AddEquiv.map_ne_zero_iff m.toSyn).mpr h
       exact lt_of_le_of_ne h1 (id (Ne.symm h2))
-    · exact degree_sPolynomial_lt_sup_degre_lt_degree hl
+    · exact m.degree_sub_leadingTerm_lt_degree hl
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
@@ -555,6 +560,10 @@ lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0
     m.degree (f * g) = m.degree f + m.degree g := by
   rw [mul_ne_zero_iff] at hf
   exact m.degree_mul hf.1 hf.2
+
+lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺[m] m.degree g) :
+    m.degree g ∉ f.support := by
+  sorry
 
 end CommRing
 

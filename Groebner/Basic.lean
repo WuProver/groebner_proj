@@ -405,7 +405,46 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
     (hfd: (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d):
     ∃ (c : ι → ι → k),
       ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
-  sorry
+  classical
+  induction B using Finset.induction_on with
+  | empty => simp
+  | insert b B hb h =>
+    by_cases hb0 : g b = 0
+    · simp [Finset.sum_insert hb, hb0] at hd hfd
+      simp [Finset.sum_insert hb, hb0]
+      exact h hd hfd
+    use fun b₁ b₂ ↦ if b₂ = b then (m.leadingCoeff <| g b)⁻¹ else 0
+    simp [Finset.sum_insert hb, hb, hb0] at hfd hd
+    simp [Finset.sum_insert hb, hb, hb0]
+    simp [← hd.1] at *
+    clear d
+    trans ∑ b' ∈ B, (g b' - (m.leadingCoeff (g b') * (m.leadingCoeff (g b))⁻¹) • g b)
+    ·
+      rw [Finset.sum_sub_distrib, add_comm, sub_eq_add_neg,
+        ← Finset.sum_smul, ← Finset.sum_mul, ← neg_smul]
+      nth_rewrite 1 [← one_smul k <| g b]
+      congr
+      rw [← neg_mul, eq_comm]
+      convert mul_inv_cancel₀ (m.leadingCoeff_ne_zero_iff.mpr hb0)
+      rw [← add_eq_zero_iff_neg_eq']
+      trans (g b).coeff (m.degree <| g b) + ∑ i ∈ B, (g i).coeff (m.degree <| g b)
+      · unfold leadingCoeff
+        congr 1
+        apply Finset.sum_congr rfl
+        intro b' hb'
+        rcases hd b' hb' with h | h <;> simp [h]
+      · rw [← coeff_sum, ← coeff_add, ← not_mem_support_iff]
+        exact m.not_mem_support_of_degree_lt hfd
+    · apply Finset.sum_congr rfl
+      intro b' hb'
+      rw [sPolynomial]
+      by_cases h : g b' = 0
+      · simp [h]
+      have := hd b' hb'
+      simp [h] at this
+      simp [this, smul_eq_C_mul, mul_sub, ← mul_assoc _ _ (g b), ← mul_assoc _ _ (g b'), ]
+      simp_rw [← C_mul, inv_mul_cancel₀ (m.leadingCoeff_ne_zero_iff.mpr hb0)]
+      simp [hb0, mul_comm]
 
 set_option maxHeartbeats 400000 in
 /--
@@ -493,7 +532,7 @@ theorem buchberger_criterion
             refine lt_of_lt_of_le ?_ (hg₂ g' hg')
             rw [degree_mul h hg'₂, degree_mul hg'₂ hg'₃, add_comm,
               AddEquiv.map_add, AddEquiv.map_add, add_lt_add_iff_left]
-            exact m.degree_sPolynomial_lt_sup_degre_lt_degree h
+            exact m.degree_sub_leadingTerm_lt_degree h
           · simp [hg'₄, a_gt_zero]
             apply lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg')
             exact hg'₄
@@ -585,7 +624,7 @@ theorem buchberger_criterion
             rw [degree_mul hLTgg' g_ne_zero, AddEquiv.map_add,
               degree_mul gg'_ne_zero g_ne_zero, AddEquiv.map_add]
             simp
-            exact degree_sPolynomial_lt_sup_degre_lt_degree hLTgg'
+            exact m.degree_sub_leadingTerm_lt_degree hLTgg'
           · simp [h]
             exact lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg') h
       · intro g'
