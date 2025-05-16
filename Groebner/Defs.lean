@@ -772,6 +772,6 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
             sorry
           simp [this]
           ring_nf
-          simp []
+          simp [smul_eq_mul]
 
 end Field
