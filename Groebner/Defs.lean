@@ -502,7 +502,7 @@ lemma leadingTerm_degree_eq' (f : MvPolynomial σ R) :
     exact fun a ↦ False.elim (h a)
 
 lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
-    (m.degree (f - m.leadingTerm f) ≺[m] m.degree f) ∨ (f - m.leadingTerm f = 0) := by
+    m.degree (f - m.leadingTerm f) ≺[m] m.degree f ∨ f - m.leadingTerm f = 0 := by
   by_cases h : f - m.leadingTerm f = 0
   · right
     exact h
@@ -605,7 +605,7 @@ lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
   ring
 
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
-    ((m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g) ∨ m.sPolynomial f g = 0 := by
+    (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ∨ m.sPolynomial f g = 0 := by
     classical
     by_cases hf : m.degree f = 0 ∧ m.degree g = 0
     · rcases hf with ⟨h₁, h₂⟩
