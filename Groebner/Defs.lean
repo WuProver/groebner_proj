@@ -650,23 +650,7 @@ lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺
   simp
   exact coeff_eq_zero_of_lt h
 
-end CommRing
-
-section Field
-
-variable {k : Type*} [Field k]
-
-/--
-Let $k$ be a field, and let $G'' \subseteq k[x_i : i \in \sigma]$ be a set of polynomials.
-Then for any $p \in k[x_i : i \in \sigma]$, there exists a generalized remainder $r$ of $p$ upon division by $G''$.
--/
-theorem div_set'' (B : Set (MvPolynomial σ k))
-    (p : MvPolynomial σ k) :
-    ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
-  apply div_set'
-  simp [em']
-
-lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : k) :
+lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : R) :
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
       m.sPolynomial p₁ p₂ := by
@@ -704,5 +688,21 @@ lemma sPolynomial_mul_monomial (p₁ p₂ : MvPolynomial σ k) (d₁ d₂ : σ �
     nth_rewrite 2 [add_comm <| d₂ a]
     rw [Nat.add_sub_add_right]
   · ring
+
+end CommRing
+
+section Field
+
+variable {k : Type*} [Field k]
+
+/--
+Let $k$ be a field, and let $G'' \subseteq k[x_i : i \in \sigma]$ be a set of polynomials.
+Then for any $p \in k[x_i : i \in \sigma]$, there exists a generalized remainder $r$ of $p$ upon division by $G''$.
+-/
+theorem div_set'' (B : Set (MvPolynomial σ k))
+    (p : MvPolynomial σ k) :
+    ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
+  apply div_set'
+  simp [em']
 
 end Field
