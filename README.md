@@ -57,7 +57,7 @@ lake build
 The blueprint can be generated as following:
 ```bash
 pip install https://github.com/WuProver/plastexdepgraph/archive/refs/heads/settitle.zip leanblueprint
-
+./generate-content.sh
 leanblueprint pdf
 leanblueprint web
 ```
