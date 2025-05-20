@@ -66,4 +66,10 @@ theorem fg_span_iff_fg_span_finset_subset (s : Set M) :
   · intro ⟨s', _, h⟩
     exact ⟨s', h.symm⟩
 
+theorem mem_of_mem_of_le {x : M} {s t : Submodule R M} (hx : x ∈ s) (h : s ≤ t) : x ∈ t :=
+  Set.mem_of_mem_of_subset hx h
+
+theorem mem_span_of_mem {x : M} {s : Set M} (hx : x ∈ s) : x ∈ span R s :=
+  mem_span.mpr fun _ h ↦ h hx
+
 end Submodule

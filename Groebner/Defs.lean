@@ -180,56 +180,6 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
         · simp [hbB']
     · exact h₄
 
--- variable {B} in
--- lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, (IsUnit (m.leadingCoeff b) ∨ b = 0))
---     (h : m.IsRemainder 0 B r) : r = 0 := by
---   simp [IsRemainder] at h
---   obtain ⟨⟨g, h0sumg, hg⟩, hr⟩ := h
---   conv at hg =>
---     intro _ _
---     rw [← m.eq_zero_iff, AddEquiv.map_eq_zero_iff]
---   sorry
-
--- lemma degree_mul_eq_zero {p q : MvPolynomial σ R} (h : IsUnit (m.leadingCoeff p)) (hpq : m.degree (p * q) = 0) :
---     m.degree p = 0 ∨ m.degree q = 0 := by
---   sorry
-lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRemainder 0 B r) :
-    r = 0 := by
-  unfold IsRemainder at h
-  obtain ⟨⟨g, h0sumg, hg⟩, hr⟩ := h
-  conv at hg =>
-    intro b
-    simp
-    rw [← m.eq_zero_iff, AddEquiv.map_eq_zero_iff, mul_comm]
-  simp [Finsupp.linearCombination_apply, Finsupp.sum] at h0sumg
-  have rdeg0 : m.degree r = 0 := by
-    apply congrArg m.degree at h0sumg
-    contrapose! h0sumg
-    simp [-ne_eq]
-    rw [ne_comm, ← AddEquiv.map_ne_zero_iff m.toSyn, ← m.toSyn_lt_iff_ne_zero, add_comm]
-    rw [← AddEquiv.map_ne_zero_iff m.toSyn, ← m.toSyn_lt_iff_ne_zero] at h0sumg
-    rwa [degree_add_of_lt]
-    apply lt_of_le_of_lt m.degree_sum_le
-    simp [hg]
-    exact lt_of_le_of_lt Finset.sup_const_le h0sumg
-  contrapose! hr
-  use 0
-  split_ands
-  · rw [m.degree_eq_zero_iff.mp rdeg0]; simp [hr]
-  contrapose! h0sumg
-  simp [hg] at h0sumg
-  suffices (b : B) : g b * ↑b = 0
-  simp [this]
-  exact ne_comm.mp hr
-  apply show g b = 0 ∨ b.1 = 0 → g b * b.1 = 0 by by_cases h : g b = 0 <;> simp_intro h' [h]
-  rw [or_iff_not_imp_right]
-  intro hb
-  specialize hg b
-  specialize h0sumg b b.2 hb
-  contrapose! hg
-  rw [m.degree_mul hg hb]
-  simp [h0sumg]
-
 lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B' r ↔
   (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
@@ -258,28 +208,6 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
     · rfl
     · simp [hsum]
     · simp_intro' .. [hg]
-
-lemma isRemainder_finset₀ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R) :
-    m.IsRemainder p B' r ↔
-      (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
-        p = B'.sum (fun x => g x * x) + r ∧
-        (∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
-        (p = 0 → g = 0)
-        ) ∧
-      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
-  constructor
-  · by_cases hp0 : p = 0
-    · rw [hp0]
-      intro h
-      apply m.isRemainder_zero' at h
-      simp [h]
-    rw [isRemainder_finset]
-    rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
-    exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
-  ·
-    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
-    rw [isRemainder_finset]
-    exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
@@ -330,10 +258,140 @@ lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   · rw [←isRemainder_of_insert_zero_iff_isRemainder, show insert 0 (B \ {0}) = B by simp [h]]
   · simp [h]
 
+-- theorem degree_mul_of_isUnit_left {f g : MvPolynomial σ R}
+--     (hf : ∀ b ∈ B, IsUnit (m.leadingCoeff f)) (hg : g ≠ 0) :
+--     m.degree (f * g) = m.degree f + m.degree g := degree_mul_of_isRegular_left (IsUnit.isRegular hf) hg
+
+variable {m B} in
+lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b))
+    (h : m.IsRemainder 0 B r) : r = 0 := by
+  unfold IsRemainder at h
+  obtain ⟨⟨g, h0sumg, hg⟩, hr⟩ := h
+  conv at hg =>
+    intro b
+    simp
+    rw [← m.eq_zero_iff, AddEquiv.map_eq_zero_iff, mul_comm]
+  simp [Finsupp.linearCombination_apply, Finsupp.sum] at h0sumg
+  have rdeg0 : m.degree r = 0 := by
+    apply congrArg m.degree at h0sumg
+    contrapose! h0sumg
+    simp [-ne_eq]
+    rw [ne_comm, ← AddEquiv.map_ne_zero_iff m.toSyn, ← m.toSyn_lt_iff_ne_zero, add_comm]
+    rw [← AddEquiv.map_ne_zero_iff m.toSyn, ← m.toSyn_lt_iff_ne_zero] at h0sumg
+    rwa [degree_add_of_lt]
+    apply lt_of_le_of_lt m.degree_sum_le
+    simp [hg]
+    exact lt_of_le_of_lt Finset.sup_const_le h0sumg
+  contrapose! hr
+  use 0
+  split_ands
+  · rw [m.degree_eq_zero_iff.mp rdeg0]; simp [hr]
+  contrapose! h0sumg
+  simp [hg] at h0sumg
+  suffices (b : B) : g b * ↑b = 0
+  simp [this]
+  exact ne_comm.mp hr
+  apply show g b = 0 ∨ b.1 = 0 → g b * b.1 = 0 by by_cases h : g b = 0 <;> simp_intro h' [h]
+  rw [or_iff_not_imp_right]
+  intro hb
+  specialize hg b
+  specialize h0sumg b b.2 hb
+  contrapose! hg
+  rw [m.degree_mul_of_isRegular_right hg <| hB ↑b (by simp)]
+  simp [h0sumg]
+
+variable {m B} in
+lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b) ∨ b = 0)
+    (h : m.IsRemainder 0 B r) : r = 0 := by
+  rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
+  refine m.isRemainder_zero ?_ h
+  simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+
+lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRemainder 0 B r) :
+    r = 0 := by
+  refine isRemainder_zero₀ ?_ h
+  intro b _
+  rw [or_iff_not_imp_right]
+  intro hb
+  exact isRegular_of_ne_zero <| leadingCoeff_ne_zero_iff.mpr hb
+
+
+
+lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+    (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b'))
+    (r : MvPolynomial σ R) :
+    m.IsRemainder p B' r ↔
+      (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+        p = B'.sum (fun x => g x * x) + r ∧
+        (∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+        (p = 0 → g = 0)
+      ) ∧
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+  constructor
+  · by_cases hp0 : p = 0
+    · rw [hp0]
+      intro h
+      apply m.isRemainder_zero hB' at h
+      simp [h]
+    rw [isRemainder_finset]
+    rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
+  ·
+    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+    rw [isRemainder_finset]
+    exact ⟨⟨g, h₁, h₂⟩, h₃⟩
+
+lemma isRemainder_finset₀₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+    (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b') ∨ b' = 0)
+    (r : MvPolynomial σ R) :
+    m.IsRemainder p B' r ↔
+      (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+        p = B'.sum (fun x => g x * x) + r ∧
+        (∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+        (p = 0 → g = 0)
+      ) ∧
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+  constructor
+  · by_cases hp0 : p = 0
+    · rw [hp0]
+      intro h
+      apply m.isRemainder_zero₀ hB' at h
+      simp [h]
+    rw [isRemainder_finset]
+    rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
+  ·
+    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+    rw [isRemainder_finset]
+    exact ⟨⟨g, h₁, h₂⟩, h₃⟩
+
+lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+    (r : MvPolynomial σ R) :
+    m.IsRemainder p B' r ↔
+      (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+        p = B'.sum (fun x => g x * x) + r ∧
+        (∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+        (p = 0 → g = 0)
+      ) ∧
+      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+  constructor
+  · by_cases hp0 : p = 0
+    · rw [hp0]
+      intro h
+      apply m.isRemainder_zero' at h
+      simp [h]
+    rw [isRemainder_finset]
+    rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
+  ·
+    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+    rw [isRemainder_finset]
+    exact ⟨⟨g, h₁, h₂⟩, h₃⟩
+
 /--
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
-lemma lm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
+lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
 
 lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
@@ -342,11 +400,11 @@ lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
   · intro p
     simp
     intro q hq hq' hpq
-    exact ⟨⟨q, hq, hpq⟩, hpq ▸ (m.lm_eq_zero_iff _).not.mpr hq'⟩
+    exact ⟨⟨q, hq, hpq⟩, hpq ▸ (m.leadingTerm_eq_zero_iff _).not.mpr hq'⟩
   · intro p
     simp
     intro q hq hpq hp
-    rw [←hpq, MonomialOrder.lm_eq_zero_iff] at hp
+    rw [←hpq, MonomialOrder.leadingTerm_eq_zero_iff] at hp
     exact ⟨q, ⟨hq, hp⟩, hpq⟩
 
 lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
@@ -360,7 +418,7 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
 
 @[simp]
 lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
-  rw [lm_eq_zero_iff]
+  rw [leadingTerm_eq_zero_iff]
 
 -- @[reducible]
 -- def leading_term_ideal : Ideal (MvPolynomial σ R) := Ideal.span (leadingTerm m '' (G' : Set (MvPolynomial σ R)))
@@ -440,16 +498,26 @@ lemma sPolynomial_def (f g : MvPolynomial σ R) :
       monomial (m.degree f ⊔ m.degree g - m.degree g) (m.leadingCoeff f) * g := by
   rw [sPolynomial]
   congr 4
-  <;> rw [Finsupp.ext_iff]
-  <;> simp_intro' a
-  <;> by_cases h : (m.degree f) a ≤ (m.degree g) a
-  ·simp [h]
-  ·simp [le_of_lt (not_le.mp h)]
-  ·simp [h]
-  ·simp [le_of_lt (not_le.mp h)]
+  all_goals
+    rw [Finsupp.ext_iff]
+    simp_intro' a
+    by_cases h : (m.degree f) a ≤ (m.degree g) a
+    ·simp [h]
+    ·simp [le_of_lt (not_le.mp h)]
 
 @[simp]
 lemma sPolynomial_self (f : MvPolynomial σ R) : m.sPolynomial f f = 0 := sub_self _
+
+theorem div_set' {B : Set (MvPolynomial σ R)}
+    (hB : ∀ b ∈ B, IsUnit <| m.leadingCoeff b) (p : MvPolynomial σ R) :
+    ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
+  obtain ⟨g, r, h⟩ := MonomialOrder.div_set hB p
+  use r
+  split_ands
+  · use g
+    exact ⟨h.1, h.2.1⟩
+  · intro c hc b hb _
+    exact h.2.2 c hc b hb
 
 /--
   Let $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials where every nonzero element has a unit leading coefficient:
@@ -462,24 +530,14 @@ lemma sPolynomial_self (f : MvPolynomial σ R) : m.sPolynomial f f = 0 := sub_se
   $$
   where $\LC_m(g)$ denotes the leading coefficient of $g$ under monomial order $m$.
 -/
-theorem div_set' {B : Set (MvPolynomial σ R)}
+theorem div_set'₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, (IsUnit (m.leadingCoeff b) ∨ b = 0)) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
   have hB₁ : ∀ b ∈ B \ {0}, IsUnit (m.leadingCoeff b) := by
-    intro b hb
-    obtain ⟨hb₁, hb₂⟩ := hb
-    obtain (h1 | h2) := hB b hb₁
-    · exact h1
-    · contradiction
-  obtain ⟨g, r, h⟩ := MonomialOrder.div_set hB₁ p
+    simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+  obtain ⟨r, h⟩ := m.div_set' hB₁ p
   exists r
-  refine (isRemainder_sdiff_singleton_zero_iff_isRemainder m p B r).mp ?_
-  rcases h with ⟨h₁, h₂, h₃⟩
-  unfold IsRemainder
-  simp at *
-  split_ands
-  · use g
-  · exact h₃
+  rwa [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
 
 -- this part is some lemma about leadingTerm
 
@@ -565,23 +623,22 @@ lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
     by_cases hg_zero: g = 0; simp [hg_zero]
     simp [sPolynomial_def]
     calc
-    _ ≤ _ ⊔ _ := by
-      exact degree_sub_le
-    _ ≤  m.toSyn (m.degree _ + m.degree _) ⊔ m.toSyn (m.degree _ + m.degree _) := by
-      exact sup_le_sup degree_mul_le degree_mul_le
-    _ ≤ (m.toSyn <| m.degree f ⊔ m.degree g - m.degree f + m.degree f) ⊔
-          (m.toSyn <| m.degree f ⊔ m.degree g - m.degree g + m.degree g) := by
-      simp_rw [degree_monomial]
-      simp [hg_zero, hf_zero]
-    _ ≤ m.toSyn (m.degree f ⊔ m.degree g) := by
-      simp
-      constructor
-      all_goals {
-        apply le_of_eq;
-        simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff];
-        intro a;
-        exact Nat.sub_add_cancel <| by simp
-      }
+      _ ≤ _ ⊔ _ := by
+        exact degree_sub_le
+      _ ≤  m.toSyn (m.degree _ + m.degree _) ⊔ m.toSyn (m.degree _ + m.degree _) := by
+        exact sup_le_sup degree_mul_le degree_mul_le
+      _ ≤ (m.toSyn <| m.degree f ⊔ m.degree g - m.degree f + m.degree f) ⊔
+            (m.toSyn <| m.degree f ⊔ m.degree g - m.degree g + m.degree g) := by
+        simp_rw [degree_monomial]
+        simp [hg_zero, hf_zero]
+      _ ≤ m.toSyn (m.degree f ⊔ m.degree g) := by
+        simp
+        constructor
+        all_goals
+          apply le_of_eq
+          simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff]
+          intro a
+          exact Nat.sub_add_cancel <| by simp
 
 lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
     (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
@@ -639,6 +696,15 @@ lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
 
+/--
+$h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
+-/
+lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {h₁ h₂: MvPolynomial σ R}
+    (h: m.degree h₁ = m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) :
+    m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
+  convert m.degree_sPolynomial h₁ h₂
+  simp [h, hs]
+
 /-- Monomial degree of product -/
 lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0) :
     m.degree (f * g) = m.degree f + m.degree g := by
@@ -671,23 +737,17 @@ lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ 
     m.leadingCoeff_mul hm1 hp1, m.leadingCoeff_mul hm2 hp2, m.leadingCoeff_monomial,
     degree_monomial]
   simp [hc1, hc2]
-  congr 3
-  · congr 1
-    simp [Finsupp.ext_iff]
-    intro a
-    rw [Nat.sub_add_sub_cancel (by rw [Nat.max_le]; simp) (by simp)]
-    rw [← Nat.sub_add_comm (by simp)]
-    nth_rewrite 2 [add_comm <| d₁ a]
-    rw [Nat.add_sub_add_right]
-  · ring
-  · congr 1
-    simp [Finsupp.ext_iff]
-    intro a
-    rw [Nat.sub_add_sub_cancel (by rw [Nat.max_le]; simp) (by simp)]
-    rw [← Nat.sub_add_comm (by simp)]
-    nth_rewrite 2 [add_comm <| d₂ a]
-    rw [Nat.add_sub_add_right]
-  · ring
+  congr 2
+  all_goals
+    congr 1
+    · congr 1
+      simp [Finsupp.ext_iff]
+      intro a
+      rw [Nat.sub_add_sub_cancel (by rw [Nat.max_le]; simp) (by simp)]
+      rw [← Nat.sub_add_comm (by simp)]
+      nth_rewrite 3 [add_comm _ <| (m.degree _) a]
+      rw [Nat.add_sub_add_right]
+    · ring
 
 end CommRing
 
@@ -702,7 +762,7 @@ Then for any $p \in k[x_i : i \in \sigma]$, there exists a generalized remainder
 theorem div_set'' (B : Set (MvPolynomial σ k))
     (p : MvPolynomial σ k) :
     ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
-  apply div_set'
+  apply div_set'₀
   simp [em']
 
 end Field
