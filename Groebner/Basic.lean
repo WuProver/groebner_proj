@@ -22,7 +22,7 @@ variable (G: Finset (MvPolynomial σ k)) (I : Ideal (MvPolynomial σ k))
 /--
 Let $I \subseteq k[x_1, \ldots, x_n]$ be an ideal. Then there exists a finite subset $G = \{g_1, \ldots, g_t\}$ of $I$ such that $G$ is a Gröbner basis for $I$.
 -/
-theorem exists_groebner_basis [Finite σ] :
+theorem exists_isGroebnerBasis [Finite σ] :
   ∃ G : Finset (MvPolynomial σ k), IsGroebnerBasis m G ↑I := by
   have key : (Ideal.span (α:=MvPolynomial σ k) (m.leadingTerm '' ↑I)).FG :=
     (inferInstance : IsNoetherian _ _).noetherian _
@@ -388,9 +388,9 @@ set_option maxHeartbeats 400000 in
 /--
 A basis $G = \{ g_1, \ldots, g_t \}$ for an ideal $I$ is a Gröbner basis if and only if $S(g_i, g_j) \to_G 0$ for all $i \neq j$.
 -/
-theorem buchberger_criterion :
+theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
     m.IsGroebnerBasis G (Ideal.span G) ↔
-    (∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G 0) := by
+    ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G 0 := by
   classical
   constructor
   · intro h g₁ g₂
@@ -580,3 +580,22 @@ theorem buchberger_criterion :
     intro g' hg'
     -- why doesn't exact work here???
     apply Finset.le_sup hg'
+
+alias buchberger_criterion := isGroebnerBasis_iff_isRemainder_sPolynomial_zero
+
+theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero' :
+    m.IsGroebnerBasis G (Ideal.span G) ↔
+    ∀ (g₁ g₂ : G) (r : MvPolynomial σ k),
+      m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G r → r = 0 := by
+  constructor
+  · intro h g₁ g₂ r hr
+    apply (groebner_basis_isRemainder_zero_iff_mem_span' h hr).mpr
+    rw [m.isGroebnerBasis_iff'] at h
+    apply m.sPolynomial_mem_ideal
+    <;> exact Set.mem_of_subset_of_mem h.1 (by simp)
+  · rw [isGroebnerBasis_iff_isRemainder_sPolynomial_zero]
+    intro h g₁ g₂
+    obtain ⟨r, hr⟩ := m.div_set'' G (m.sPolynomial (R := k) ↑g₁ ↑g₂)
+    rwa [h g₁ g₂ r hr] at hr
+
+alias buchberger_criterion' := isGroebnerBasis_iff_isRemainder_sPolynomial_zero'
