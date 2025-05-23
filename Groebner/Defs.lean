@@ -430,10 +430,8 @@ Fix a monomial order on the polynomial ring $k[x_1, \ldots, x_n]$.A finite subse
   $$
   Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the empty set $\emptyset$ to be the Gröbner basis of the zero ideal $\{0\}$.
 -/
-def IsGroebnerBasis {R : Type*} [CommSemiring R] (G': Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :=
-  G'.toSet ⊆ I ∧
-  Ideal.span (m.leadingTerm '' ↑I)
-    = Ideal.span (m.leadingTerm '' G'.toSet)
+def IsGroebnerBasis {R : Type*} [CommSemiring R] (G: Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :=
+  G.toSet ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G.toSet)
 
 end CommSemiring
 
