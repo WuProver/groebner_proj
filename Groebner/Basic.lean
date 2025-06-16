@@ -350,9 +350,6 @@ theorem isGroebnerBasis_unique_isRemainder {G : Finset (MvPolynomial σ R)} {I :
   simp [hrne0]
   exact m.remainder_sub_remainder_mem_ideal h.1 hr₁ hr₂
 
-#check Submodule.mem_span_of_mem
-#check IsUnit
-
 /--
 Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$. Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if  for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
 whose leading coefficients are invertible with respect to a monomial order
@@ -412,7 +409,7 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
         apply Finset.sum_congr rfl
         intro b' hb'
         rcases hd b' hb' with h | h <;> simp [h]
-      · rw [← coeff_sum, ← coeff_add, ← not_mem_support_iff]
+      · rw [← coeff_sum, ← coeff_add, ← notMem_support_iff]
         exact m.not_mem_support_of_degree_lt hfd
     · apply Finset.sum_congr rfl
       intro b' hb'

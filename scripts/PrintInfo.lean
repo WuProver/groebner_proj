@@ -53,9 +53,9 @@ partial def expandUses (range : NameSet) (excluded : NameSet) (env: Environment)
       NameSet.empty.insert original
 
 def defSort (a b : DefInfo) (mods : Array Name) : Bool :=
-  match Ord.arrayOrd.compare
-    #[mods.findIdx (a.module==·), (a.pos.map (·.line)).getD 0]
-    #[mods.findIdx (b.module==·), (b.pos.map (·.line)).getD 0]
+  match compare
+      #[mods.findIdx (a.module==·), (a.pos.map (·.line)).getD 0]
+      #[mods.findIdx (b.module==·), (b.pos.map (·.line)).getD 0]
     with
     | Ordering.lt => true
     | _ => false

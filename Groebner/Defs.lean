@@ -603,7 +603,7 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     simp [h'] at h
     have : m.toSyn (m.degree (f - m.leadingTerm f)) ≥ 0 := by
       exact zero_le m (m.toSyn (m.degree (f - m.leadingTerm f)))
-    apply not_le_of_lt h this
+    apply not_le_of_gt h this
   · intro h
     by_cases hl: f - m.leadingTerm f = 0
     · simp [hl]
