@@ -21,9 +21,10 @@ This project is still work in process. There are some errors and out-of-date inf
 
 Given a monomial order, a field $k$, and an index set $\sigma$, we will show the following properties about $k[x_i:i\in \sigma]$:
 
-- [`MonomialOrder.exists_groebner_basis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.exists_groebner_basis): if the $\sigma$ is finite, then each ideal $I \subseteq k[x_i: i\in \sigma]$ has its Gröbner basis.
-- [`MonomialOrder.groebner_basis_isRemainder_zero_iff_mem_span`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.groebner_basis_isRemainder_zero_iff_mem_span) (WIP): given a Gröbner basis $G$ of an ideal $I\subseteq k[x_i: i\in \sigma]$, a polynomial $p\in k[x_i: i\in \sigma]$, and a remainder $r$ of $p$ on division by $G$, then $r = 0$ if and only if $p\in I$.
-- [`MonomialOrder.is_groebner_basis_iff`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.is_groebner_basis_iff): given an ideal $I\subseteq k[x_i:i\in\sigma]$ and a finite set $G\subseteq k[x_i:i\in\sigma]$, then $G$ is a Gröbner basis of $I$ if and only if $G \subseteq I$ and $0$ is a remainder of each $p\in I$ on division by $G$.
+- [`MonomialOrder.exists_isGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.exists_isGroebnerBasis): if the $\sigma$ is finite, then each ideal $I \subseteq k[x_i: i\in \sigma]$ has its Gröbner basis.
+- [`MonomialOrder.groebner_basis_isRemainder_zero_iff_mem_span`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.groebner_basis_isRemainder_zero_iff_mem_span): given a Gröbner basis $G$ of an ideal $I\subseteq k[x_i: i\in \sigma]$, a polynomial $p\in k[x_i: i\in \sigma]$, and a remainder $r$ of $p$ on division by $G$, then $r = 0$ if and only if $p\in I$.
+- [`MonomialOrder.isGroebnerBasis_iff`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.isGroebnerBasis_iff): given an ideal $I\subseteq k[x_i:i\in\sigma]$ and a finite set $G\subseteq k[x_i:i\in\sigma]$, then $G$ is a Gröbner basis of $I$ if and only if $G \subseteq I$ and $0$ is a remainder of each $p\in I$ on division by $G$.
+- [`MonomialOrder.isGroebnerBasis_unique_isRemainder`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.isGroebnerBasis_unique_isRemainder): remainder of any polynomial on division by Gröbner basis is unique.
 - [`MonomialOrder.span_groebner_basis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.span_groebner_basis): if $G$ is a Gröbner basis of $I\subseteq k[x_i:i\in\sigma]$, then $I=\langle G\rangle$.
 - [`MonomialOrder.buchberger_criterion`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.buchberger_criterion): a finite set $G\subseteq k[x_i:i\in\sigma]$ is Gröbner basis of $\langle G\rangle$, if and only if $0$ is the remainder of the S-polynomial of each two elements in $G$ on division by $G$.
 
@@ -57,7 +58,7 @@ lake build
 The blueprint can be generated as following:
 ```bash
 pip install https://github.com/WuProver/plastexdepgraph/archive/refs/heads/settitle.zip leanblueprint
-
+./generate-content.sh
 leanblueprint pdf
 leanblueprint web
 ```

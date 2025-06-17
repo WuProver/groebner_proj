@@ -22,7 +22,8 @@ lemma span_sdiff_singleton_zero._mathlib:
   ·rw [←span_insert_zero, (by simp [h] : insert 0 (s \ {0}) = s)]
   ·simp [h]
 
-lemma subset_finite_subset_subset_span (s : Set M)
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24648
+lemma subset_span_finite_of_subset_span._mathlib (s : Set M)
   (t : Finset M) (ht : (t : Set M) ⊆ span R s) :
   ∃ (s' : Finset M), ↑s' ⊆ s ∧ (t : Set M) ⊆ span R (s' : Set M) := by
   classical
@@ -48,14 +49,14 @@ lemma subset_finite_subset_subset_span (s : Set M)
   apply mem_iSup_of_mem (p := fun x ↦ span R (↑(h x).choose : Set M)) ⟨m, hm⟩
   exact (h (Subtype.mk m hm)).choose_spec.2
 
-
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/24651
 theorem fg_span_iff_fg_span_finset_subset (s : Set M) :
   (span R s).FG ↔ ∃ (s' : Finset M), ↑s' ⊆ s ∧ span R s = span R s' := by
   unfold FG
   constructor
   ·
     intro ⟨s'', hs''⟩
-    obtain ⟨s', hs's, hss'⟩ := subset_finite_subset_subset_span R s s'' (hs'' ▸ subset_span)
+    obtain ⟨s', hs's, hss'⟩ := subset_span_finite_of_subset_span (hs'' ▸ subset_span)
     refine ⟨s', hs's, ?_⟩
     apply le_antisymm
     · rwa [← hs'', Submodule.span_le]
@@ -65,5 +66,11 @@ theorem fg_span_iff_fg_span_finset_subset (s : Set M) :
       exact subset_span
   · intro ⟨s', _, h⟩
     exact ⟨s', h.symm⟩
+
+theorem mem_of_mem_of_le {x : M} {s t : Submodule R M} (hx : x ∈ s) (h : s ≤ t) : x ∈ t :=
+  Set.mem_of_mem_of_subset hx h
+
+theorem mem_span_of_mem {x : M} {s : Set M} (hx : x ∈ s) : x ∈ span R s :=
+  mem_span.mpr fun _ h ↦ h hx
 
 end Submodule
