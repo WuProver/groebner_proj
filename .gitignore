@@ -32,3 +32,8 @@ scripts/*.tex
 /blueprint/src/web.paux
 
 .cache.tar
+
+# mvpoly related
+polyrith.lean
+Test2.lean
+testpoly.lean

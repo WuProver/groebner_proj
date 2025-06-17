@@ -58,6 +58,7 @@ namespace Set
 --   let h := nbij_of_bijOn_left_finite hs h
 --   exact h' i h.1 h.2.1 h.2.2
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26013
 lemma card_bijOn {α β : Type*} {s : Finset α} {t : Finset β}
     (i : α → β) (h : Set.BijOn i s t) : s.card = t.card :=
   Finset.card_nbij i h.mapsTo h.injOn h.surjOn
@@ -69,6 +70,7 @@ Let $f: \alpha \to \beta$ be a function and $s \subseteq \alpha$ a subset with f
 - $f(s') = f(s)$ (image equality)
 - $|s'| = |f(s)|$ (cardinality preservation)
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26013
 lemma finset_subset_preimage_of_finite_image {α : Type*} {β : Type*}
     {s : Set α} {f : α → β} (h : (f '' s).Finite) :
     ∃ (s' : Finset α), ↑s' ⊆ s ∧ f '' s' = f '' s ∧ s'.card = h.toFinset.card := by
