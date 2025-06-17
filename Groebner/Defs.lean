@@ -32,16 +32,18 @@ lemma toSyn_lt_iff_ne_zero {a: m.syn} :
 --   (h : m.degree p ≺[m] m.degree f) : m.degree (f + p) = m.degree f := by
 --   exact degree_add_of_lt h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26000
 lemma degree_eq_zero_iff {f : MvPolynomial σ R} :
     m.degree f = 0 ↔ f = C (m.leadingCoeff f) := by
   constructor
   · intro h
-    simp [leadingCoeff]
     apply MonomialOrder.eq_C_of_degree_eq_zero h
   · intro h
     rw [h]
-    simp [leadingCoeff]
+    simp
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26000
+variable {f p} in
 lemma degree_add_eq_right_of_degree_lt
   (h : m.degree f ≺[m] m.degree p) : m.degree (f + p) = m.degree p := by
   rw [add_comm]
@@ -55,11 +57,13 @@ lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} 
   · rw [Finset.sum_insert haA, Finset.sup_insert]
     exact le_trans m.degree_add_le (max_le_max (le_refl _) h)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26000
 variable {m} in
 lemma ne_zero_of_degree_ne_zero {f : MvPolynomial σ R} (h : m.degree f ≠ 0) : f ≠ 0 := by
   by_contra h'
   exact h (h'.symm ▸ m.degree_zero)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26000
 lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support ↔ f ≠ 0 :=
   mem_support_iff.trans coeff_degree_ne_zero_iff
 
