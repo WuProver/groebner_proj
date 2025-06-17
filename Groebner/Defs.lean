@@ -71,6 +71,8 @@ lemma degree_mem_support_iff (f : MvPolynomial σ R) : m.degree f ∈ f.support 
 The leading term in a non-zero multivariate polynomial is the term of the polynomial's degree in
 the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
+
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
 
@@ -320,8 +322,6 @@ lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRem
   intro hb
   exact isRegular_of_ne_zero <| leadingCoeff_ne_zero_iff.mpr hb
 
-
-
 lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b'))
     (r : MvPolynomial σ R) :
@@ -396,9 +396,11 @@ lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : F
 /--
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
   m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
   apply subset_antisymm
@@ -412,6 +414,7 @@ lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     rw [←hpq, MonomialOrder.leadingTerm_eq_zero_iff] at hp
     exact ⟨q, ⟨hq, hp⟩, hpq⟩
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
   m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
   unfold leadingTerm
@@ -421,6 +424,7 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
   · simp_intro p hp
     rwa [Eq.comm (a := 0) (b := p)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 @[simp]
 lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
   rw [leadingTerm_eq_zero_iff]
@@ -543,7 +547,7 @@ theorem div_set'₀ {B : Set (MvPolynomial σ R)}
   rwa [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
 
 -- this part is some lemma about leadingTerm
-
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_degree_eq (f : MvPolynomial σ R) :
   m.degree (m.leadingTerm f) = m.degree f := by
     classical
@@ -553,6 +557,7 @@ lemma leadingTerm_degree_eq (f : MvPolynomial σ R) :
     simp [MonomialOrder.degree_monomial]
     exact fun a ↦ False.elim (h a)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_degree_eq' (f : MvPolynomial σ R) :
   m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
     classical
@@ -562,6 +567,7 @@ lemma leadingTerm_degree_eq' (f : MvPolynomial σ R) :
     simp [MonomialOrder.degree_monomial]
     exact fun a ↦ False.elim (h a)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f ∨ f - m.leadingTerm f = 0 := by
   by_cases h : f - m.leadingTerm f = 0
@@ -593,12 +599,13 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
       exact le_of_le_of_eq h₃' h3
     exact lt_of_le_of_ne h₃ h1
 
-
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 variable {m} in
 lemma degree_sub_leadingTerm_lt_degree {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f :=
   (or_iff_left h).mp <| m.degree_sub_leadingTerm f
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f ↔ m.degree f ≠ 0 := by
   classical

@@ -73,4 +73,7 @@ theorem mem_of_mem_of_le {x : M} {s t : Submodule R M} (hx : x ∈ s) (h : s ≤
 theorem mem_span_of_mem {x : M} {s : Set M} (hx : x ∈ s) : x ∈ span R s :=
   mem_span.mpr fun _ h ↦ h hx
 
+#find_home! mem_of_mem_of_le
+
+
 end Submodule
