@@ -46,11 +46,10 @@ For any ring $R$, the span of the zero singleton set equals the zero submodule:
     \mathsf{span}_R \{(0 : R)\} = \bot
   $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/24448
 @[simp]
 lemma span_singleton_zero : span {(0 : R)} = ⊥ :=
   Submodule.span_zero_singleton _
-
--- to Mathlib
 
 /--
 For any subset $s \subseteq R$ of a ring $R$, inserting zero does not change the linear span:
@@ -58,12 +57,12 @@ For any subset $s \subseteq R$ of a ring $R$, inserting zero does not change the
     \mathsf{span}_R(\{0\} \cup s) = \mathsf{span}_R(s)
   $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/24448
 @[simp]
 lemma span_insert_zero (s : Set R): span (insert 0 s) = span s :=
   Submodule.span_insert_zero
 
--- to Mathlib
-
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24360
 /--
 For any subset $s \subseteq R$ of a ring $R$, removing zero does not change the linear span:
   $$
@@ -172,7 +171,7 @@ lemma leadingTerm_ideal_span_monomial₀ {B: Set (MvPolynomial σ R)}
     _ = span (m.leadingTerm '' (B \ {0})) := by rw [m.leadingTerm_image_sdiff_singleton_zero]
     _ = _ := by
       apply leadingTerm_ideal_span_monomial
-      simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+      simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 lemma leadingTerm_ideal_span_monomial' {B: Set (MvPolynomial σ k)} :
       span (m.leadingTerm '' B) =
@@ -300,7 +299,7 @@ lemma isRemainder_term_not_mem_leading_term_ideal₀ {p r : MvPolynomial σ R}
   rw [← leadingTerm_ideal_sdiff_singleton_zero]
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
   refine isRemainder_term_not_mem_leading_term_ideal ?_ h
-  simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+  simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 lemma isRemainder_term_not_mem_leading_term_ideal' {p r : MvPolynomial σ k}
   {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r):
@@ -349,7 +348,7 @@ lemma isRemainder_monomial_not_mem_leading_term_ideal₀ {p r : MvPolynomial σ 
   rw [← leadingTerm_ideal_sdiff_singleton_zero]
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
   refine m.isRemainder_monomial_not_mem_leading_term_ideal ?_ h
-  simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+  simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 lemma isRemainder_monomial_not_mem_leading_term_ideal' {p r : MvPolynomial σ k}
   {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r):

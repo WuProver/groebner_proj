@@ -2,7 +2,7 @@ import Mathlib
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.MvPolynomial.MonomialOrder
 import Mathlib.RingTheory.Ideal.Span
-import Groebner.SimpIntro
+-- import Groebner.SimpIntro
 
 namespace MonomialOrder
 
@@ -13,6 +13,7 @@ section CommSemiring
 variable {R : Type*} [CommSemiring R]
 variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/24361
 /--
 0 is less then any `σ →₀ ℕ` w.r.t. monomial order.
 -/
@@ -118,7 +119,7 @@ lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r 
         congr 1
         simp [Finsupp.linearCombination_apply, Finsupp.sum]
         rfl
-      · simp_intro' b hb
+      · simp_intro b hb
         convert h₂ ⟨b, hb⟩
     · exact h₃
   · intro ⟨⟨g, hg, h₁, h₂⟩, h₃⟩
@@ -133,9 +134,9 @@ lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r 
         congr 1
         simp [Finsupp.linearCombination_apply, Finsupp.sum]
         apply Finset.sum_nbij (↑·)
-        · simp_intro' ..
-        · simp_intro' b _ b₁ _ h [Subtype.eq_iff]
-        · simp_intro' b hb
+        · simp_intro ..
+        · simp_intro b _ b₁ _ h [Subtype.eq_iff]
+        · simp_intro b hb
           exact Set.mem_of_subset_of_mem hg <| Finsupp.mem_support_iff.mpr hb
         · simp [DFunLike.coe]
       · simpa
@@ -162,9 +163,9 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
     exact h₃ g' (Set.mem_of_mem_of_subset hg' h₁)
   · intro ⟨⟨g, B', h₁, h₂, h₃⟩, h₄⟩
     split_ands
-    · use Finsupp.onFinset B' (fun b' => if b' ∈ B' then g b' else 0) (by simp_intro' ..)
+    · use Finsupp.onFinset B' (fun b' => if b' ∈ B' then g b' else 0) (by simp_intro ..)
       split_ands
-      · simp_intro' b' hb'
+      · simp_intro b' hb'
         exact Set.mem_of_mem_of_subset hb'.1 h₁
       · rw [Finsupp.linearCombination_apply, Finsupp.sum, h₂, Finsupp.support_onFinset]
         congr 1
@@ -196,7 +197,7 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
         rw [hsum]
         congr 1
         apply Finset.sum_subset hgsup
-        simp_intro' ..
+        simp_intro ..
       · exact hg
     · exact hr
   · rw [isRemainder_def'']
@@ -207,7 +208,7 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
     split_ands
     · rfl
     · simp [hsum]
-    · simp_intro' .. [hg]
+    · simp_intro .. [hg]
 
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
@@ -230,7 +231,7 @@ lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
           rw [Finset.sum_insert_zero (a:=0)]
           simp
         · rw [Finset.erase_eq_self.mpr hB'0]
-      · simp_intro' b' hb'
+      · simp_intro b' hb'
         exact h₂ b' hb'.2
     · intro c hc b hbB hb
       exact h₃ c hc b (by simp [hbB]) hb
@@ -305,7 +306,7 @@ lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (
     (h : m.IsRemainder 0 B r) : r = 0 := by
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
   refine m.isRemainder_zero ?_ h
-  simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+  simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRemainder 0 B r) :
     r = 0 := by
@@ -411,9 +412,9 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
   m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
   unfold leadingTerm
   apply subset_antisymm
-  · simp_intro' p hp
+  · simp_intro p hp
     rwa [Eq.comm (a := p) (b := 0)]
-  · simp_intro' p hp
+  · simp_intro p hp
     rwa [Eq.comm (a := 0) (b := p)]
 
 @[simp]
@@ -498,7 +499,7 @@ lemma sPolynomial_def (f g : MvPolynomial σ R) :
   congr 4
   all_goals
     rw [Finsupp.ext_iff]
-    simp_intro' a
+    simp_intro a
     by_cases h : (m.degree f) a ≤ (m.degree g) a
     ·simp [h]
     ·simp [le_of_lt (not_le.mp h)]
@@ -532,7 +533,7 @@ theorem div_set'₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, (IsUnit (m.leadingCoeff b) ∨ b = 0)) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
   have hB₁ : ∀ b ∈ B \ {0}, IsUnit (m.leadingCoeff b) := by
-    simp_intro' .. [or_iff_not_imp_right.mp (hB _ _)]
+    simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
   obtain ⟨r, h⟩ := m.div_set' hB₁ p
   exists r
   rwa [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder]

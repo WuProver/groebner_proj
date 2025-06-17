@@ -80,7 +80,7 @@ theorem groebner_basis_isRemainder_zero_iff_mem_span₀ {p : MvPolynomial σ R}
   rw [← m.isGroebnerBasis_erase_zero] at h
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at hr
   refine m.groebner_basis_isRemainder_zero_iff_mem_span ?_ h ?_
-  · simp_intro' .. [or_iff_not_imp_right.mp (hG _ _)]
+  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
   · convert hr
     simp
 
@@ -121,7 +121,7 @@ lemma groebner_basis_zero_isRemainder_iff_mem_ideal₀ {p : MvPolynomial σ R}
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
   convert m.groebner_basis_zero_isRemainder_iff_mem_ideal ?_ h
   · simp
-  simp_intro' a b [or_iff_not_imp_right.mp (hG _ _)]
+  simp_intro a b [or_iff_not_imp_right.mp (hG _ _)]
 
 lemma groebner_basis_zero_isRemainder_iff_mem_ideal' {p : MvPolynomial σ k}
     {G : Finset (MvPolynomial σ k)} {I : Ideal (MvPolynomial σ k)}
@@ -167,7 +167,7 @@ lemma remainder_zero₀ {R : Type*} [CommSemiring R]
   convert m.remainder_zero p hp (B \ {0}) ?_ h using 2
   · simp
     rw [and_assoc]
-  · simp_intro' a b [or_iff_not_imp_right.mp (hB _ _)]
+  · simp_intro a b [or_iff_not_imp_right.mp (hB _ _)]
 
 
 lemma remainder_zero' (p : MvPolynomial σ k) (hp : p ≠ 0) (B : Set (MvPolynomial σ k))
@@ -235,7 +235,7 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R
   · intro h
     exists (m.span_groebner_basis hG h).symm
     intro p hp hp0
-    apply m.remainder_zero _ hp0 ↑G (by simp_intro' .. [(hG _ _).isRegular])
+    apply m.remainder_zero _ hp0 ↑G (by simp_intro .. [(hG _ _).isRegular])
     exact (m.groebner_basis_zero_isRemainder_iff_mem_ideal hG h).mpr hp
   · rintro ⟨hG', h_degree⟩
     constructor
@@ -253,7 +253,7 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R
 
           rw [SetLike.mem_coe]
 
-          rw [m.leadingTerm_ideal_span_monomial (by simp_intro' .. [hG]),
+          rw [m.leadingTerm_ideal_span_monomial (by simp_intro .. [hG]),
             ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
           intro j hj
           simp [MonomialOrder.leadingCoeff_eq_zero_iff] at hj
@@ -296,7 +296,7 @@ theorem isGroebnerBasis_iff (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolyn
         apply (remainder_mem_ideal_iff h1 h_remainder).mp
         simp
     · intro p hp hp0
-      exact m.remainder_zero p hp0 G (by simp_intro' .. [(hG _ _).isRegular]) <| h_remainder p hp
+      exact m.remainder_zero p hp0 G (by simp_intro .. [(hG _ _).isRegular]) <| h_remainder p hp
 
 theorem isGroebnerBasis_iff₀ (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
@@ -305,7 +305,7 @@ theorem isGroebnerBasis_iff₀ (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPo
   convert m.isGroebnerBasis_iff (G.erase 0) I _ using 2
   · simp
   · simp [m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
-  · simp_intro' .. [or_iff_not_imp_right.mp (hG _ _)]
+  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
 theorem isGroebnerBasis_span_leading_monomial_eq {G : Finset (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}

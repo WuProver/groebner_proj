@@ -12,7 +12,7 @@ import Lean.Meta
 namespace Mathlib.Tactic
 open Lean Meta Elab Tactic
 
--- to Mathlib
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24372
 /--
 Main loop of the `simp_intro''` tactic.
 * `g`: the original goal
@@ -33,13 +33,13 @@ partial def simpIntroCore' (g : MVarId) (ctx : Simp.Context) (simprocs : Simp.Si
   let withFVar := fun (fvar, g) ↦ g.withContext do
     Term.addLocalVarInfo var (mkFVar fvar)
     -- modification start
-    let simpContext : Simp.Context ←
-      if (← instantiateMVars <| ← inferType <| ← fvar.getType).isProp then
+    let ctx : Simp.Context ←
+      if ← Meta.isProp <| ← fvar.getType then
         let ctx := ctx.setSimpTheorems <| ← ctx.simpTheorems.addTheorem (.fvar fvar) (.fvar fvar)
         pure ctx
       else
         pure ctx
-    simpIntroCore' g simpContext simprocs discharge? more ids'
+    simpIntroCore' g ctx simprocs discharge? more ids'
     -- modification end
   match t with
   | .letE .. => withFVar (← g.intro n)
@@ -56,6 +56,7 @@ partial def simpIntroCore' (g : MVarId) (ctx : Simp.Context) (simprocs : Simp.Si
     throwErrorAt var "simp_intro'' failed to introduce {var}\n{g}"
 
 open Parser.Tactic
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24372
 /--
 The `simp_intro''` tactic is a combination of `simp` and `intro`: it will simplify the types of
 variables as it introduces them and uses the new variables to simplify later arguments
