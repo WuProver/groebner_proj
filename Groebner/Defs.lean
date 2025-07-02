@@ -96,6 +96,26 @@ def IsRemainder :=
     ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree p) ∧
   ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)
 
+theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
+    m.IsRemainder p (Set.range b) r ↔
+    (∃ g : ι →₀ MvPolynomial σ R,
+        p = Finsupp.linearCombination _ b g + r ∧
+        ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
+      ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+  constructor
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    sorry
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    sorry
+
+theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
+    m.IsRemainder p (Set.range b) r ↔
+    (∃ g : ι → MvPolynomial σ R,
+        p = ∑ i : ι, (b i * g i) + r ∧
+        ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
+      ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+  sorry
+
 open Classical
 
 -- it may free you from coercion between different kinds of "sets",
