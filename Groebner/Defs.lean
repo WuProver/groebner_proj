@@ -328,7 +328,7 @@ lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.l
   split_ands
   · rw [m.degree_eq_zero_iff.mp rdeg0]; simp [hr]
   contrapose! h0sumg
-  simp [hg] at h0sumg
+  simp at h0sumg
   suffices (b : B) : g b * ↑b = 0
   simp [this]
   exact ne_comm.mp hr
@@ -625,7 +625,7 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
       simp [coeff_monomial, leadingTerm]
       simp [leadingCoeff]
     have h1: m.toSyn ( m.degree (f - m.leadingTerm f)) ≠  m.toSyn (m.degree f) := by
-      simp [degree_eq_zero_iff]
+      simp
       by_contra h
       have hin: m.degree (f - m.leadingTerm f) ∈ (f - m.leadingTerm f).support := by
         (expose_names; exact (degree_mem_support_iff m (f - m.leadingTerm f)).mpr h_1)
@@ -640,7 +640,7 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
       have h₃'':  m.toSyn (m.degree f) = m.toSyn (m.degree (m.leadingTerm f)) := by
         exact Eq.symm (leadingTerm_degree_eq' m f)
       have h3:  m.toSyn (m.degree f) ⊔ m.toSyn (m.degree (m.leadingTerm f)) = m.toSyn (m.degree f) := by
-        simp [max_le_iff, h₃'']
+        simp [h₃'']
       exact le_of_le_of_eq h₃' h3
     exact lt_of_le_of_ne h₃ h1
 
@@ -740,7 +740,7 @@ lemma degree_sPolynomial (f g : MvPolynomial σ R) :
       have h1: m.toSyn (m.degree (m.sPolynomial f g)) ≤  m.toSyn (m.degree f ⊔ m.degree g) := by
         exact degree_sPolynomial_le m f g
       have h3: m.toSyn (m.degree (m.sPolynomial f g)) ≠ m.toSyn (m.degree f ⊔ m.degree g):= by
-        simp [degree_eq_zero_iff]
+        simp
         by_contra h
         have: coeff (m.degree (m.sPolynomial f g)) (m.sPolynomial f g) ≠  0 := by
           exact coeff_degree_ne_zero_iff.mpr hs

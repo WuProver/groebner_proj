@@ -1,6 +1,7 @@
 import Groebner.List
 import Groebner.Basic
 
+set_option linter.unusedSimpArgs false in
 example : sorry := by
 
   have : ({1, 2, 3} : Set Nat) = Set.range (?_ : List Nat).get := by
@@ -19,6 +20,7 @@ example : sorry := by
 
 open MvPolynomial MonomialOrder
 
+set_option linter.unusedSimpArgs false in
 example :
     lex.IsRemainder (X 0 ^ 2 + X 1 ^ 3 + X 2 ^ 4 + X 3 ^ 5: MvPolynomial (Fin 4) ℚ)
       {X 0, X 1, X 2, X 3} 0 := by
@@ -39,6 +41,7 @@ example :
       }
   · simp -- here the remainder is 0, whose support set is empty, so `simp` solves it...
 
+set_option linter.unusedSimpArgs false in
 example :
     lex.IsRemainder (X 0 ^ 2 + X 1 ^ 3 + X 2 ^ 4 + X 3 ^ 5: MvPolynomial (Fin 6) ℚ)
       {X 3, X 4 + X 5} (X 0 ^ 2 + X 1 ^ 3 + X 2 ^ 4) := by

@@ -257,7 +257,7 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R
             ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
           intro j hj
           simp [MonomialOrder.leadingCoeff_eq_zero_iff] at hj
-          simp [MonomialOrder.leadingCoeff_eq_zero_iff]
+          simp
 
           exact hj.1 ▸ h_degree p hp' hj.2
         exact h₁
@@ -388,10 +388,10 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
     · simp [Finset.sum_insert hb, hb0] at hd hfd
       simp [Finset.sum_insert hb, hb0]
       exact h hd hfd
-    simp [Finset.sum_insert hb, hb, hb0] at hfd hd
+    simp [Finset.sum_insert hb, hb0] at hfd hd
     obtain ⟨⟨deg_gb_eq_d, isunit_gb⟩, hd⟩ := hd
     use fun b₁ b₂ ↦ if b₂ = b then ↑isunit_gb.unit⁻¹ else 0
-    simp [Finset.sum_insert hb, hb, hb0]
+    simp [Finset.sum_insert hb, hb]
     simp [← deg_gb_eq_d] at *
     clear d
     trans ∑ b' ∈ B, (g b' - (m.leadingCoeff (g b') * ↑isunit_gb.unit⁻¹) • g b)
@@ -420,7 +420,7 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
       simp [h] at this
       simp [this, smul_eq_C_mul, mul_sub, ← mul_assoc _ _ (g b), ← mul_assoc _ _ (g b')]
       simp_rw [← C_mul]
-      simp [hb0, mul_comm]
+      simp [mul_comm]
 
 lemma sPolynomial_decomposition' {d: m.syn} {ι : Type*}
     {B: Finset ι} (g : ι → MvPolynomial σ k)
@@ -494,7 +494,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
           simp
           by_cases hg'₂ : g' = 0 <;> simp [hg'₂]
           by_cases hg'₃ : g g' = 0 <;> simp [hg'₃]
-          by_cases hg'₄ : gg'deg g' = a <;> simp [hg'₃, hg'₄]
+          by_cases hg'₄ : gg'deg g' = a <;> simp [hg'₄]
           have := m.leadingCoeff_ne_zero_iff.mpr hg'₃
           rw [← hg'₄, EmbeddingLike.apply_eq_iff_eq,
             degree_mul (monomial_eq_zero.not.mpr this) hg'₂,
@@ -512,14 +512,14 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
           by_cases hg'₃ : g g' = 0
           · simp [hg'₃, a_gt_zero]
           by_cases hg'₄ : gg'deg g' = a
-          · simp [hg'₄, a_gt_zero]
+          · simp [hg'₄]
             by_cases h : g g' - m.leadingTerm (g g') = 0
             · simp [h, a_gt_zero]
             refine lt_of_lt_of_le ?_ (hg₂ g' hg')
             rw [degree_mul h hg'₂, degree_mul hg'₂ hg'₃, add_comm,
               AddEquiv.map_add, AddEquiv.map_add, add_lt_add_iff_left]
             exact m.degree_sub_leadingTerm_lt_degree h
-          · simp [hg'₄, a_gt_zero]
+          · simp [hg'₄]
             apply lt_of_le_of_ne (mul_comm (g g') g' ▸ hg₂ g' hg')
             exact hg'₄
 
@@ -570,8 +570,8 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
           by_cases hspoly : m.sPolynomial g'₁ g'₂ = 0
           · simp [hspoly] at hq'0
             simp [hq'0, a_gt_zero]
-          simp [hspoly] at hq'
-          simp [hq', a_gt_zero]
+          simp at hq'
+          simp
           rw [mul_assoc]
           apply lt_of_le_of_lt degree_mul_le
           rw [AddEquiv.map_add]

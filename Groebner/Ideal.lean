@@ -121,7 +121,7 @@ lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R)) (I :
       constructor
       · exact hGI
       · exact Set.singleton_subset_iff.mpr (Submodule.zero_mem _)
-  · simp [IsGroebnerBasis, m.leadingTerm_ideal_insert_zero]
+  · simp [m.leadingTerm_ideal_insert_zero]
 /--
 Let $G'' \subseteq R[x_1, \dots, x_n]$ be a set of polynomials such that
 $$
