@@ -1,4 +1,9 @@
 import Mathlib
+import Mathlib.Algebra.EuclideanDomain.Field
+import Mathlib.Algebra.Lie.OfAssociative
+import Mathlib.Data.Finset.Functor
+import Mathlib.RingTheory.MvPolynomial.Groebner
+import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.MvPolynomial.MonomialOrder
 import Mathlib.RingTheory.Ideal.Span
@@ -13,18 +18,21 @@ section CommSemiring
 variable {R : Type*} [CommSemiring R]
 variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/24361
 /--
 0 is less then any `σ →₀ ℕ` w.r.t. monomial order.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/24361
 @[simp]
 lemma zero_le (a : m.syn) : 0 ≤ a := bot_le
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26062
 lemma toSyn_eq_zero_iff (a: σ →₀ ℕ) :
     m.toSyn a = 0 ↔ a = 0 := AddEquiv.map_eq_zero_iff m.toSyn
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26062
 lemma toSyn_lt_iff_ne_zero {a: m.syn} :
     0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
+
 
 -- #check Polynomial.degree_add_eq_left_of_degree_lt
 
@@ -49,6 +57,7 @@ lemma degree_add_eq_right_of_degree_lt
   rw [add_comm]
   exact degree_add_of_lt h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26000
 lemma degree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} :
     (m.toSyn <| m.degree <| ∑ x ∈ s, f x) ≤ s.sup fun x => (m.toSyn <| m.degree <| f x) := by
   classical
@@ -77,11 +86,11 @@ noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
 
 /--
-Given a multivariate polynomial $p$ and a set $B$ of multivariate polynomials over a commutative
+Given a multivariate polynomial $f$ and a set $B$ of multivariate polynomials over a commutative
 semiring $R$, and a monomial order. If there exists a $g : B \to R[X]$ with finite support, and a
 multivriate polynomial $r$, such that
 
-1. $p = \sum_{b\in B} g(b)b + r,$
+1. $f = \sum_{b\in B} g(b)b + r$
 2. degree of any non-zero $g(b)b$ where b\in B is less than or equal to the degree of $p$,
 3. none of terms of $r$ is divisible by leading monomial of a non-zero elements of $B$,
 
@@ -92,8 +101,8 @@ denoted as `m.IsRemainder p B r`.
 -/
 def IsRemainder :=
   (∃ (g : B →₀ MvPolynomial σ R),
-    p = Finsupp.linearCombination _ (fun (b : B) ↦ (b : MvPolynomial σ R)) g + r ∧
-    ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree p) ∧
+    f = Finsupp.linearCombination _ (fun (b : B) ↦ (b : MvPolynomial σ R)) g + r ∧
+    ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree f) ∧
   ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)
 
 theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
@@ -124,6 +133,8 @@ open Classical
 /--
 A variant of `IsRemainder` without coercion of a `Set (MvPolynomial σ R)`.
 -/
+
+-- tag
 lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔ (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
       ↑g.support ⊆ B ∧
@@ -172,6 +183,7 @@ lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r 
 A variant of `IsRemainder` where `g : MvPolynomial σ R →₀ MvPolynomial σ R` is replaced with a
 function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its support.
 -/
+-- tag
 lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B r ↔
   (∃ (g : MvPolynomial σ R → MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)),
@@ -207,6 +219,7 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
         · simp [hbB']
     · exact h₄
 
+-- tag
 lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R)
   : m.IsRemainder p B' r ↔
   (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
@@ -239,6 +252,7 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
+-- tag
 lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
   (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
   m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
@@ -327,6 +341,7 @@ lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.l
   rw [m.degree_mul_of_isRegular_right hg <| hB ↑b (by simp)]
   simp [h0sumg]
 
+-- tag
 variable {m B} in
 lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b) ∨ b = 0)
     (h : m.IsRemainder 0 B r) : r = 0 := by
@@ -342,6 +357,7 @@ lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRem
   intro hb
   exact isRegular_of_ne_zero <| leadingCoeff_ne_zero_iff.mpr hb
 
+-- tag
 lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b'))
     (r : MvPolynomial σ R) :
@@ -366,6 +382,7 @@ lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial �
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
+--tag
 lemma isRemainder_finset₀₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b') ∨ b' = 0)
     (r : MvPolynomial σ R) :
@@ -390,6 +407,7 @@ lemma isRemainder_finset₀₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomia
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
+-- tag
 lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (r : MvPolynomial σ R) :
     m.IsRemainder p B' r ↔
@@ -475,6 +493,7 @@ The $S$-polynomial of $f$ and $g$ is the combination
   S(f, g) = \frac{x^\gamma}{\mathrm{LT}(f)} \cdot f - \frac{x^\gamma}{\mathrm{LT}(g)} \cdot g.
   $$
 -/
+--tag
 noncomputable def sPolynomial (f g : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree g - m.degree f) (m.leadingCoeff g) * f -
   monomial (m.degree f - m.degree g) (m.leadingCoeff f) * g
@@ -485,6 +504,7 @@ the S-polynomial of $f$ and $g$ is antisymmetric:
     \Sph{f}{g} = -\Sph{g}{f}
   $$
 -/
+--tag
 lemma sPolynomial_antisymm (f g : MvPolynomial σ R) :
    m.sPolynomial f g = - m.sPolynomial g f := by
    unfold sPolynomial
@@ -500,6 +520,7 @@ lemma sPolynomial_antisymm (f g : MvPolynomial σ R) :
     \Sph{0}{g} = 0
   $$
 -/
+--tag
 @[simp]
 lemma sPolynomial_left_zero (g : MvPolynomial σ R) :
   m.sPolynomial 0 g = 0 := by
@@ -514,11 +535,13 @@ lemma sPolynomial_left_zero (g : MvPolynomial σ R) :
     \Sph{f}{0} = 0
   $$
 -/
+--tag
 @[simp]
 lemma sPolynomial_right_zero (f : MvPolynomial σ R) :
   m.sPolynomial f 0 = 0 := by
   rw [sPolynomial_antisymm, sPolynomial_left_zero, neg_zero]
 
+--tag
 lemma sPolynomial_def (f g : MvPolynomial σ R) :
     m.sPolynomial f g =
       monomial (m.degree f ⊔ m.degree g - m.degree f) (m.leadingCoeff g) * f -
@@ -532,9 +555,11 @@ lemma sPolynomial_def (f g : MvPolynomial σ R) :
     ·simp [h]
     ·simp [le_of_lt (not_le.mp h)]
 
+--tag
 @[simp]
 lemma sPolynomial_self (f : MvPolynomial σ R) : m.sPolynomial f f = 0 := sub_self _
 
+--tag
 theorem div_set' {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, IsUnit <| m.leadingCoeff b) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
@@ -646,6 +671,7 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
       exact lt_of_le_of_ne h1 (id (Ne.symm h2))
     · exact m.degree_sub_leadingTerm_lt_degree hl
 
+--tag
 lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≼[m] m.degree f ⊔ m.degree g) := by
     classical
@@ -670,6 +696,7 @@ lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
           intro a
           exact Nat.sub_add_cancel <| by simp
 
+--tag
 lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
     (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
   by_cases hf0 : f = 0
@@ -691,6 +718,7 @@ lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
   unfold leadingCoeff
   ring
 
+--tag
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ∨ m.sPolynomial f g = 0 := by
     classical
@@ -720,19 +748,21 @@ lemma degree_sPolynomial (f g : MvPolynomial σ R) :
         exact this (m.coeff_sPolynomial_sup_eq_zero _ _)
       exact lt_of_le_of_ne h1 h3
 
-
+--tag
 variable {m} in
 lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
 
+
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
 -/
-lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {h₁ h₂: MvPolynomial σ R}
-    (h: m.degree h₁ = m.degree h₂) (hs: m.sPolynomial h₁ h₂ ≠ 0) :
-    m.degree (m.sPolynomial h₁ h₂) ≺[m] m.degree h₁ := by
-  convert m.degree_sPolynomial h₁ h₂
+-- tag
+lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {f g: MvPolynomial σ R}
+    (h: m.degree f = m.degree g) (hs: m.sPolynomial f g ≠ 0) :
+    m.degree (m.sPolynomial f g) ≺[m] m.degree f := by
+  convert m.degree_sPolynomial f g
   simp [h, hs]
 
 /-- Monomial degree of product -/
@@ -746,6 +776,7 @@ lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺
   simp
   exact coeff_eq_zero_of_lt h
 
+-- tag 
 lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : R) :
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
@@ -796,3 +827,5 @@ theorem div_set'' (B : Set (MvPolynomial σ k))
   simp [em']
 
 end Field
+
+#min_imports
