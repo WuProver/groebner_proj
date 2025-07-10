@@ -58,8 +58,9 @@ For any subset $s \subseteq R$ of a ring $R$, inserting zero does not change the
   $$
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/24448
+-- however overlap with: https://github.com/leanprover-community/mathlib4/pull/24448
 @[simp]
-lemma span_insert_zero (s : Set R): span (insert 0 s) = span s :=
+lemma span_insert_zero._mathlib (s : Set R): span (insert 0 s) = span s :=
   Submodule.span_insert_zero
 
 -- merged: https://github.com/leanprover-community/mathlib4/pull/24360

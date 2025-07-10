@@ -70,10 +70,8 @@ theorem fg_span_iff_fg_span_finset_subset (s : Set M) :
 theorem mem_of_mem_of_le {x : M} {s t : Submodule R M} (hx : x ∈ s) (h : s ≤ t) : x ∈ t :=
   Set.mem_of_mem_of_subset hx h
 
-theorem mem_span_of_mem {x : M} {s : Set M} (hx : x ∈ s) : x ∈ span R s :=
+-- overlap with: https://github.com/leanprover-community/mathlib4/pull/26162
+theorem mem_span_of_mem._mathlib {x : M} {s : Set M} (hx : x ∈ s) : x ∈ span R s :=
   mem_span.mpr fun _ h ↦ h hx
-
-#find_home! mem_of_mem_of_le
-
 
 end Submodule

@@ -21,16 +21,16 @@ variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial
 /--
 0 is less then any `σ →₀ ℕ` w.r.t. monomial order.
 -/
--- submitted: https://github.com/leanprover-community/mathlib4/pull/24361
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24361
 @[simp]
-lemma zero_le (a : m.syn) : 0 ≤ a := bot_le
+lemma zero_le._mathlib (a : m.syn) : 0 ≤ a := bot_le
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26062
-lemma toSyn_eq_zero_iff (a: σ →₀ ℕ) :
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26062
+lemma toSyn_eq_zero_iff._mathlib (a: σ →₀ ℕ) :
     m.toSyn a = 0 ↔ a = 0 := AddEquiv.map_eq_zero_iff m.toSyn
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26062
-lemma toSyn_lt_iff_ne_zero {a: m.syn} :
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26062
+lemma toSyn_lt_iff_ne_zero._mathlib {a: m.syn} :
     0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
 
 
@@ -776,7 +776,7 @@ lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺
   simp
   exact coeff_eq_zero_of_lt h
 
--- tag 
+-- tag
 lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : R) :
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
