@@ -6,6 +6,8 @@ defaultTargets = ["Groebner"]
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 autoImplicit = false
+weak.linter.indentation = true
+weak.linter.mathlibStandardSet = true
 
 [[require]]
 name = "mathlib"
