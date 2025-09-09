@@ -225,6 +225,14 @@ theorem span_groebner_basis {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolyn
       exact hG' hp'
     exact hI hp
 
+theorem isGroebnerBasis_iff_self (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
+    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    m.IsGroebnerBasis G I ↔ (I = Ideal.span G ∧ m.IsGroebnerBasis G (Ideal.span G)) := by
+  constructor
+  · intro h
+    simp [span_groebner_basis hG h] at *
+    exact h
+  · simp_intro ..
 
 theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :

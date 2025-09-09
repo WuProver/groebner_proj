@@ -36,8 +36,8 @@ A subset $s \subseteq R$ has finitely generated span if and only if:
 $\exists$ finite $s' \subseteq s$ such that $\mathsf{span}(s) = \mathsf{span}(s')$
 -/
 lemma fg_span_iff_fg_span_finset_subset (s : Set R) :
-  (span s).FG ↔ ∃ (s' : Finset R), s'.toSet ⊆ s ∧ span s = span s' :=
-  Submodule.fg_span_iff_fg_span_finset_subset R s
+    (span s).FG ↔ ∃ (s' : Finset R), s'.toSet ⊆ s ∧ span s = span s' :=
+  Submodule.fg_span_iff_fg_span_finset_subset s
 -- to Mathlib
 
 /--
@@ -46,9 +46,10 @@ For any ring $R$, the span of the zero singleton set equals the zero submodule:
     \mathsf{span}_R \{(0 : R)\} = \bot
   $$
 -/
--- submitted: https://github.com/leanprover-community/mathlib4/pull/24448
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24448
+-- (https://github.com/leanprover-community/mathlib4/pull/26148)
 @[simp]
-lemma span_singleton_zero : span {(0 : R)} = ⊥ :=
+lemma span_singleton_zero._mathlib_ : span {(0 : R)} = ⊥ :=
   Submodule.span_zero_singleton _
 
 /--
@@ -57,10 +58,10 @@ For any subset $s \subseteq R$ of a ring $R$, inserting zero does not change the
     \mathsf{span}_R(\{0\} \cup s) = \mathsf{span}_R(s)
   $$
 -/
--- submitted: https://github.com/leanprover-community/mathlib4/pull/24448
--- however overlap with: https://github.com/leanprover-community/mathlib4/pull/24448
+-- merged: https://github.com/leanprover-community/mathlib4/pull/24448
+-- (https://github.com/leanprover-community/mathlib4/pull/26148)
 @[simp]
-lemma span_insert_zero._mathlib (s : Set R): span (insert 0 s) = span s :=
+lemma span_insert_zero._mathlib (s : Set R) : span (insert 0 s) = span s :=
   Submodule.span_insert_zero
 
 -- merged: https://github.com/leanprover-community/mathlib4/pull/24360
@@ -71,7 +72,8 @@ For any subset $s \subseteq R$ of a ring $R$, removing zero does not change the 
   $$
 -/
 @[simp]
-lemma span_sdiff_singleton_zero (s : Set R): span (s \ {0}) = span s := Submodule.span_sdiff_singleton_zero
+lemma span_sdiff_singleton_zero._mathlib_ (s : Set R) : span (s \ {0}) = span s :=
+  Submodule.span_sdiff_singleton_zero
 
 end Ideal
 
@@ -92,9 +94,9 @@ open Submodule
 open Ideal
 open Field
 
-lemma leadingTerm_ideal_sdiff_singleton_zero (B: Set (MvPolynomial σ R)) :
+lemma leadingTerm_ideal_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
   span (m.leadingTerm '' (B \ {0})) = span (m.leadingTerm '' B) :=
-  m.leadingTerm_image_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero _
+  m.leadingTerm_image_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero
 
 lemma leadingTerm_ideal_insert_zero (B: Set (MvPolynomial σ R)) :
   span (m.leadingTerm '' (insert 0 B)) = span (m.leadingTerm '' B) := by
@@ -163,12 +165,12 @@ $$
 \langle \mathrm{lt}(G) \rangle = \left\langle \left\{ x^t : t \in \{ \mathrm{multideg}(p) : p \in G \setminus \{0\} \} \right\} \right\rangle
 $$
 -/
-lemma leadingTerm_ideal_span_monomial₀ {B: Set (MvPolynomial σ R)}
+lemma leadingTerm_ideal_span_monomial₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0) :
     span (m.leadingTerm '' B) =
     span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
   calc
-    _ = span (m.leadingTerm '' B \ {0}) := (Ideal.span_sdiff_singleton_zero _).symm
+    _ = span (m.leadingTerm '' B \ {0}) := Ideal.span_sdiff_singleton_zero.symm
     _ = span (m.leadingTerm '' (B \ {0})) := by rw [m.leadingTerm_image_sdiff_singleton_zero]
     _ = _ := by
       apply leadingTerm_ideal_span_monomial
@@ -218,7 +220,7 @@ $$
 r \in I \quad \Longleftrightarrow \quad p \in I.
 $$
 -/
-lemma remainder_mem_ideal_iff {R : Type*} [CommRing R] {B: Set (MvPolynomial σ R)}
+lemma remainder_mem_ideal_iff {R : Type*} [CommRing R] {B : Set (MvPolynomial σ R)}
     {r : MvPolynomial σ R} {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
     (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) :
     r ∈ I ↔ p ∈ I := by
