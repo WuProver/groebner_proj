@@ -43,11 +43,10 @@ partial def expandUses (range : NameSet) (excluded : NameSet) (env: Environment)
       match env.find? used with
       | some info =>
         let usedByUsed := if statement then info.type.getUsedConstantsAsSet else info.getUsedConstantsAsSet
-        let expanded := (usedByUsed \ range).union <| NameSet.ofArray <|
+        (usedByUsed \ range) ∪ (NameSet.ofArray <|
           ((usedByUsed ∩ range) \ excluded).toArray.flatMap
           fun x => (expandUses range excluded env x s statement).toArray.append
-            <| if statement then (expandUses range excluded env x s false).toArray else #[]
-        expanded
+            <| if statement then (expandUses range excluded env x s false).toArray else #[])
       | _ => panic! ""
     else
       NameSet.empty.insert original
@@ -90,12 +89,12 @@ def generateFromEnv (env : Environment) (mods : Array Name) : IO (Array DefInfo)
       let proofUses := NameSet.ofArray <|
           (info.snd.getUsedConstantsAsSet ∩ names).toArray.flatMap <|
           fun x => (expandUses names {} env x info.fst false).toArray
-      let proofSorry := (proofUses.find? ``sorryAx).isSome || (info.snd.getUsedConstantsAsSet.find? ``sorryAx).isSome
+      let proofSorry := (proofUses.get? ``sorryAx).isSome || (info.snd.getUsedConstantsAsSet.get? ``sorryAx).isSome
       let statementUses := NameSet.ofArray <|
           (info.snd.type.getUsedConstantsAsSet ∩ names).toArray.flatMap <|
           fun x => (expandUses names {} env x info.fst true).toArray
-      let statementSorry := (statementUses.find? ``sorryAx).isSome ||
-        (info.snd.type.getUsedConstantsAsSet.find? ``sorryAx).isSome
+      let statementSorry := (statementUses.get? ``sorryAx).isSome ||
+        (info.snd.type.getUsedConstantsAsSet.get? ``sorryAx).isSome
       let ourStatementUses := statementUses ∩ names
       pure <| some {
         name := info.fst,
