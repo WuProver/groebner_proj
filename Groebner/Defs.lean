@@ -15,7 +15,7 @@ open MvPolynomial
 variable {σ : Type*} (m : MonomialOrder σ)
 
 section CommSemiring
-variable {R : Type*} [CommSemiring R]
+variable {R : Type*} [CommSemiring R] [NoZeroDivisors R]
 variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
 /--
@@ -112,9 +112,10 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
         p = Finsupp.linearCombination _ b g + r ∧
         ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+  classical
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
-    let : (↑ (Set.range b)) ↪ ι := {
+    let f : (↑ (Set.range b)) ↪ ι := {
       toFun := fun x ↦ Classical.choose (Set.mem_range.mp x.2),
       inj' := by
         intro x y h
@@ -128,36 +129,71 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
     }
     split_ands
     ·
-      use Finsupp.embDomain (this : (↑(Set.range b)) ↪ ι) g
+      use Finsupp.embDomain (f : (↑(Set.range b)) ↪ ι) g
       split_ands
       · simp
-        refine ext p ((Finsupp.linearCombination (MvPolynomial σ R) (b ∘ ⇑this)) g + r) ?_
+        refine ext p ((Finsupp.linearCombination (MvPolynomial σ R) (b ∘ ⇑f)) g + r) ?_
         simp [h₁]
         congr 1
         simp [Finsupp.linearCombination_apply, Finsupp.sum]
-        have : (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (this x)) := by
+        have sum : (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (f x)) := by
           apply Finset.sum_congr rfl
           intro x hx
-          have h : (x : MvPolynomial σ R) = b (this x) := by
-            simp [this]
+          have h : (x : MvPolynomial σ R) = b (f x) := by
+            simp [f]
             exact Eq.symm (Set.apply_rangeSplitting b x)
           rw [h]
-        exact fun m ↦ congrFun (congrArg HAdd.hAdd (congrArg (coeff m) this)) (coeff m r)
+        exact fun m ↦ congrFun (congrArg HAdd.hAdd (congrArg (coeff m) sum)) (coeff m r)
       · intro i
         specialize h₂ ⟨b i, Set.mem_range_self i⟩
         simp at h₂
         dsimp [Finsupp.embDomain]
-        by_cases hi : i ∈ Finset.map this g.support
+        by_cases hi : i ∈ Finset.map f g.support
         · simp [hi]
-          sorry
+          have exists_mem : ∃ a ∈ g.support, f a = i := by
+            simpa using hi
+          rcases exists_mem with ⟨a, ha, ha_eq⟩
+          have a_eq : a = ⟨b i, Set.mem_range_self i⟩ := by
+            apply Subtype.eq
+            simp
+            rw [←ha_eq]
+            exact Eq.symm (Set.apply_rangeSplitting b a)
+          rw [←a_eq] at h₂
+          trans  m.toSyn (m.degree (b i * g a))
+          · have h_exists : ∃ a₁ ∈ g.support, f a₁ = i := by
+              rcases Finset.mem_map.mp hi with ⟨a, ha, rfl⟩
+              exact ⟨a, ha, rfl⟩
+            rcases h_exists with ⟨a₁, ha₁, ha₁_eq⟩
+            have a₁_eq : a₁ = ⟨b i, Set.mem_range_self i⟩ := by
+              apply Subtype.eq
+              simp
+              rw [←ha₁_eq]
+              exact Eq.symm (Set.apply_rangeSplitting b a₁)
+            have h1 : a = a₁ := by rw [a_eq, a₁_eq]
+            refine le_degree ?_
+            refine mem_support_iff.mpr ?_
+            rw [h1]
+            have h₃: g a₁ ≠ 0 := by
+              exact Finsupp.mem_support_iff.mp ha₁
+            simp
+            generalize_proofs z
+            have h₄ : g (Finset.choose (fun a₁ ↦ f a₁ = i) g.support z) = g a₁ := by
+              unfold Finset.choose
+              sorry
+
+            have h₅ : b i ≠ 0 := by
+              sorry
+            rw [h₄]
+            simp only [coeff_degree_eq_zero_iff, ne_eq]
+            exact (mul_ne_zero_iff_right h₃).mpr h₅
+          · exact h₂
         · simp [hi]
     · intro i hi b hb
       aesop
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     simp [IsRemainder]
     split_ands
-    ·
-      sorry
+    · sorry
     · aesop
 
 
@@ -186,8 +222,6 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         have : (∑ i : ι, b i * g i) = ∑ x ∈ g.support, b x * g x := by
           refine Eq.symm (Fintype.sum_subset ?_)
           simp_intro ..
-          intro i
-          aesop
         rw [this]
         simp_rw [mul_comm (g _) (b _)]
       · exact h₂
