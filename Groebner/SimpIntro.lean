@@ -56,31 +56,31 @@ partial def simpIntroCore' (g : MVarId) (ctx : Simp.Context) (simprocs : Simp.Si
     throwErrorAt var "simp_intro'' failed to introduce {var}\n{g}"
 
 open Parser.Tactic
--- merged: https://github.com/leanprover-community/mathlib4/pull/24372
-/--
-The `simp_intro''` tactic is a combination of `simp` and `intro`: it will simplify the types of
-variables as it introduces them and uses the new variables to simplify later arguments
-and the goal.
-* `simp_intro'' x y z` introduces variables named `x y z`
-* `simp_intro'' x y z ..` introduces variables named `x y z` and then keeps introducing `_` binders
-* `simp_intro'' (config := cfg) (discharger := tac) x y .. only [h₁, h₂]`:
-  `simp_intro''` takes the same options as `simp` (see `simp`)
-```
-example : x + 0 = y → x = z := by
-  simp_intro'' h
-  -- h: x = y ⊢ y = z
-  sorry
-```
--/
-elab "simp_intro'" cfg:optConfig disch:(discharger)?
-    ids:(ppSpace colGt binderIdent)* more:" .."? only:(&" only")? args:(simpArgs)? : tactic => do
-  let args := args.map fun args ↦ ⟨args.raw[1].getArgs⟩
-  let stx ← `(tactic| simp $cfg:optConfig $(disch)? $[only%$only]? $[[$args,*]]?)
-  let { ctx, simprocs, dischargeWrapper } ←
-    withMainContext <| mkSimpContext stx (eraseLocal := false)
-  dischargeWrapper.with fun discharge? ↦ do
-    let g ← getMainGoal
-    g.checkNotAssigned `simp_intro''
-    g.withContext do
-      let g? ← simpIntroCore' g ctx (simprocs := simprocs) discharge? more.isSome ids.toList
-      replaceMainGoal <| if let some g := g? then [g] else []
+-- -- merged: https://github.com/leanprover-community/mathlib4/pull/24372
+-- /--
+-- The `simp_intro''` tactic is a combination of `simp` and `intro`: it will simplify the types of
+-- variables as it introduces them and uses the new variables to simplify later arguments
+-- and the goal.
+-- * `simp_intro'' x y z` introduces variables named `x y z`
+-- * `simp_intro'' x y z ..` introduces variables named `x y z` and then keeps introducing `_` binders
+-- * `simp_intro'' (config := cfg) (discharger := tac) x y .. only [h₁, h₂]`:
+--   `simp_intro''` takes the same options as `simp` (see `simp`)
+-- ```
+-- example : x + 0 = y → x = z := by
+--   simp_intro'' h
+--   -- h: x = y ⊢ y = z
+--   sorry
+-- ```
+-- -/
+-- elab "simp_intro'" cfg:optConfig disch:(discharger)?
+--     ids:(ppSpace colGt binderIdent)* more:" .."? only:(&" only")? args:(simpArgs)? : tactic => do
+--   let args := args.map fun args ↦ ⟨args.raw[1].getArgs⟩
+--   let stx ← `(tactic| simp $cfg:optConfig $(disch)? $[only%$only]? $[[$args,*]]?)
+--   let { ctx, simprocs, dischargeWrapper } ←
+--     withMainContext <| mkSimpContext stx (eraseLocal := false)
+--   dischargeWrapper.with fun discharge? ↦ do
+--     let g ← getMainGoal
+--     g.checkNotAssigned `simp_intro''
+--     g.withContext do
+--       let g? ← simpIntroCore' g ctx (simprocs := simprocs) discharge? more.isSome ids.toList
+--       replaceMainGoal <| if let some g := g? then [g] else []

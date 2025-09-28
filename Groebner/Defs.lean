@@ -105,6 +105,7 @@ def IsRemainder :=
     ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree f) ∧
   ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)
 
+
 theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder p (Set.range b) r ↔
     (∃ g : ι →₀ MvPolynomial σ R,
@@ -113,9 +114,52 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
       ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
-    sorry
+    let : (↑ (Set.range b)) ↪ ι := {
+      toFun := fun x ↦ Classical.choose (Set.mem_range.mp x.2),
+      inj' := by
+        intro x y h
+        apply Subtype.ext
+        have hx : b (Classical.choose (Set.mem_range.mp x.2)) = x.1 :=
+        Classical.choose_spec (Set.mem_range.mp x.2)
+        have hy : b (Classical.choose (Set.mem_range.mp y.2)) = y.1 :=
+        Classical.choose_spec (Set.mem_range.mp y.2)
+        rw [←hx, ←hy]
+        exact congrArg b h
+    }
+    split_ands
+    ·
+      use Finsupp.embDomain (this : (↑(Set.range b)) ↪ ι) g
+      split_ands
+      · simp
+        refine ext p ((Finsupp.linearCombination (MvPolynomial σ R) (b ∘ ⇑this)) g + r) ?_
+        simp [h₁]
+        congr 1
+        simp [Finsupp.linearCombination_apply, Finsupp.sum]
+        have : (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (this x)) := by
+          apply Finset.sum_congr rfl
+          intro x hx
+          have h : (x : MvPolynomial σ R) = b (this x) := by
+            simp [this]
+            exact Eq.symm (Set.apply_rangeSplitting b x)
+          rw [h]
+        exact fun m ↦ congrFun (congrArg HAdd.hAdd (congrArg (coeff m) this)) (coeff m r)
+      · intro i
+        specialize h₂ ⟨b i, Set.mem_range_self i⟩
+        simp at h₂
+        dsimp [Finsupp.embDomain]
+        by_cases hi : i ∈ Finset.map this g.support
+        · simp [hi]
+          sorry
+        · simp [hi]
+    · intro i hi b hb
+      aesop
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
-    sorry
+    simp [IsRemainder]
+    split_ands
+    ·
+      sorry
+    · aesop
+
 
 theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder p (Set.range b) r ↔
@@ -123,7 +167,56 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         p = ∑ i : ι, (b i * g i) + r ∧
         ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
-  sorry
+  classical
+  rw [isRemainder_range]
+  constructor
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    split_ands
+    ·
+      use g.toFun
+      split_ands
+      · simp [Finsupp.linearCombination_apply, Finsupp.sum] at h₁
+        rw [h₁]
+        congr 1
+        have h₁: ∑ i, b i * g.toFun i = ∑ i, b i * g i  := by
+          apply Finset.sum_congr rfl
+          intro i _
+          congr 1
+        simp [h₁]
+        have : (∑ i : ι, b i * g i) = ∑ x ∈ g.support, b x * g x := by
+          refine Eq.symm (Fintype.sum_subset ?_)
+          simp_intro ..
+          intro i
+          aesop
+        rw [this]
+        simp_rw [mul_comm (g _) (b _)]
+      · exact h₂
+    · exact h₃
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    split_ands
+    · use Finsupp.onFinset Finset.univ (fun i => g i) (by simp_intro ..)
+      split_ands
+      · simp [h₁]
+        simp [Finsupp.linearCombination_apply, Finsupp.sum]
+        have : (∑ i : ι, b i * g i) = ∑ x ∈ Finset.univ, b x * g x := by
+          rfl
+        rw [this]
+        congr 1
+        have support_eq : (Finsupp.onFinset Finset.univ (fun i ↦ g i) (by simp)).support =
+          Finset.univ.filter (fun i => g i ≠ 0) := by
+          ext i
+          simp [Finsupp.mem_support_iff, Finsupp.onFinset_apply]
+        rw [support_eq]
+
+        rw [Finset.sum_filter]
+        apply Finset.sum_congr rfl
+        intro i _
+        by_cases hi : g i = 0 <;> simp [hi]
+        exact CommMonoid.mul_comm (b i) (g i)
+      ·
+        intro i
+        exact h₂ i
+    · aesop
 
 open Classical
 
