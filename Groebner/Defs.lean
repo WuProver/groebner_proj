@@ -15,7 +15,7 @@ open MvPolynomial
 variable {σ : Type*} (m : MonomialOrder σ)
 
 section CommSemiring
-variable {R : Type*} [CommSemiring R] [NoZeroDivisors R]
+variable {R : Type*} [CommSemiring R]
 variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
 /--
@@ -105,6 +105,8 @@ def IsRemainder :=
     ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree f) ∧
   ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)
 
+section NoZeroDivisors
+variable [NoZeroDivisors R]
 
 theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder p (Set.range b) r ↔
@@ -375,6 +377,7 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         intro i
         exact h₂ i
     · aesop
+end NoZeroDivisors
 
 open Classical
 
