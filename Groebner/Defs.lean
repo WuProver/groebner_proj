@@ -16,7 +16,7 @@ variable {σ : Type*} (m : MonomialOrder σ)
 
 section CommSemiring
 variable {R : Type*} [CommSemiring R]
-variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
+variable (f p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
 /--
 0 is less then any `σ →₀ ℕ` w.r.t. monomial order.
@@ -26,11 +26,11 @@ variable (f p: MvPolynomial σ R) (B: Set (MvPolynomial σ R)) (r : MvPolynomial
 lemma zero_le._mathlib (a : m.syn) : 0 ≤ a := bot_le
 
 -- merged: https://github.com/leanprover-community/mathlib4/pull/26062
-lemma toSyn_eq_zero_iff._mathlib (a: σ →₀ ℕ) :
+lemma toSyn_eq_zero_iff._mathlib (a : σ →₀ ℕ) :
     m.toSyn a = 0 ↔ a = 0 := AddEquiv.map_eq_zero_iff m.toSyn
 
 -- merged: https://github.com/leanprover-community/mathlib4/pull/26062
-lemma toSyn_lt_iff_ne_zero._mathlib {a: m.syn} :
+lemma toSyn_lt_iff_ne_zero._mathlib {a : m.syn} :
     0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
 
 
@@ -99,6 +99,7 @@ then $r$ is called a **remainder** of $p$ on division by "divisors" $B$.
 A statement that `r` is a remainder of `p` on division by `B` w.r.t. a monomial order `m` is
 denoted as `m.IsRemainder p B r`.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 def IsRemainder :=
   (∃ (g : B →₀ MvPolynomial σ R),
     f = Finsupp.linearCombination _ (fun (b : B) ↦ (b : MvPolynomial σ R)) g + r ∧
@@ -387,31 +388,24 @@ open Classical
 /--
 A variant of `IsRemainder` without coercion of a `Set (MvPolynomial σ R)`.
 -/
-
--- tag
-lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
-  : m.IsRemainder p B r ↔ (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
-      ↑g.support ⊆ B ∧
-      p = Finsupp.linearCombination _ id g + r ∧
-      ∀ b ∈ B, m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree p) ∧
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
+    m.IsRemainder p B r ↔
+      (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
+        ↑g.support ⊆ B ∧
+        p = Finsupp.linearCombination _ id g + r ∧
+        ∀ b ∈ B, m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ g' ∈ B, g' ≠ 0 → ¬ (m.degree g' ≤ c) := by
-  unfold IsRemainder
   constructor
   · intro ⟨⟨g, h₁, h₂⟩, h₃⟩
     split_ands
-    · use {
-        support := g.support,
-        toFun := fun b => if hb : b ∈ B then g.toFun (⟨b, hb⟩) else 0,
-        mem_support_toFun := by intro; simp; rfl
-      }
+    · use g.mapDomain Subtype.val
       split_ands
-      · simp
+      · exact subset_trans (Finset.coe_subset.mpr Finsupp.mapDomain_support) (by simp)
       · simp [h₁]
-        congr 1
-        simp [Finsupp.linearCombination_apply, Finsupp.sum]
-        rfl
-      · simp_intro b hb
-        convert h₂ ⟨b, hb⟩
+      · intro b hb
+        rw [show b = ↑(Subtype.mk b hb) by rfl, Finsupp.mapDomain_apply (by simp)]
+        exact h₂ ⟨b, hb⟩
     · exact h₃
   · intro ⟨⟨g, hg, h₁, h₂⟩, h₃⟩
     split_ands
@@ -437,13 +431,13 @@ lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r 
 A variant of `IsRemainder` where `g : MvPolynomial σ R →₀ MvPolynomial σ R` is replaced with a
 function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its support.
 -/
--- tag
-lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
-  : m.IsRemainder p B r ↔
-  (∃ (g : MvPolynomial σ R → MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)),
-      ↑B' ⊆ B ∧
-      p = B'.sum (fun x => g x * x) + r ∧
-      ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
+    m.IsRemainder p B r ↔
+      (∃ (g : MvPolynomial σ R → MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)),
+        ↑B' ⊆ B ∧
+        p = B'.sum (fun x => g x * x) + r ∧
+        ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c) := by
   rw [isRemainder_def']
   constructor
@@ -473,13 +467,14 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r
         · simp [hbB']
     · exact h₄
 
--- tag
-lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)) (r : MvPolynomial σ R)
-  : m.IsRemainder p B' r ↔
-  (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
-      p = B'.sum (fun x => g x * x) + r ∧
-      ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
-      ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+    (r : MvPolynomial σ R) :
+      m.IsRemainder p B' r ↔
+        (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
+          p = B'.sum (fun x => g x * x) + r ∧
+          ∀ b' ∈ B', m.degree ((b' : MvPolynomial σ R) * (g b')) ≼[m] m.degree p) ∧
+        ∀ c ∈ r.support, ∀ b ∈ B', b ≠ 0 → ¬ (m.degree b ≤ c) := by
   constructor
   · rw [isRemainder_def']
     intro ⟨⟨g, hgsup, hsum, hg⟩, hr⟩
@@ -506,12 +501,13 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
--- tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
-  (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
-  m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
+    (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
+    m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
   constructor
-  · by_cases hB : 0 ∈ B; simp only [Set.insert_eq_of_mem hB, imp_self]
+  · by_cases hB : 0 ∈ B
+    · simp only [Set.insert_eq_of_mem hB, imp_self]
     simp_rw [isRemainder_def'']
     intro ⟨⟨g, B', hB', h₁, h₂⟩, h₃⟩
     split_ands
@@ -546,6 +542,7 @@ lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
 /--
 Remainders are preserved with the zero polynomial removed from the set of divisors.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
     (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
     m.IsRemainder p (B \ {0}) r ↔ m.IsRemainder p B r := by
@@ -557,6 +554,7 @@ lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
 --     (hf : ∀ b ∈ B, IsUnit (m.leadingCoeff f)) (hg : g ≠ 0) :
 --     m.degree (f * g) = m.degree f + m.degree g := degree_mul_of_isRegular_left (IsUnit.isRegular hf) hg
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 variable {m B} in
 lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b))
     (h : m.IsRemainder 0 B r) : r = 0 := by
@@ -583,10 +581,9 @@ lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.l
   · rw [m.degree_eq_zero_iff.mp rdeg0]; simp [hr]
   contrapose! h0sumg
   simp at h0sumg
-  suffices (b : B) : g b * ↑b = 0
-  simp [this]
-  exact ne_comm.mp hr
-  apply show g b = 0 ∨ b.1 = 0 → g b * b.1 = 0 by by_cases h : g b = 0 <;> simp_intro h' [h]
+  suffices ∀ b : B, g b * ↑b = 0 by simp [this, hr.symm]
+  intro b
+  suffices g b = 0 ∨ b.1 = 0 by by_cases h : g b = 0; simp [h]; simp [this.resolve_left h]
   rw [or_iff_not_imp_right]
   intro hb
   specialize hg b
@@ -595,7 +592,7 @@ lemma isRemainder_zero {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.l
   rw [m.degree_mul_of_isRegular_right hg <| hB ↑b (by simp)]
   simp [h0sumg]
 
--- tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 variable {m B} in
 lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b) ∨ b = 0)
     (h : m.IsRemainder 0 B r) : r = 0 := by
@@ -603,6 +600,7 @@ lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (
   refine m.isRemainder_zero ?_ h
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRemainder 0 B r) :
     r = 0 := by
   refine isRemainder_zero₀ ?_ h
@@ -611,7 +609,7 @@ lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRem
   intro hb
   exact isRegular_of_ne_zero <| leadingCoeff_ne_zero_iff.mpr hb
 
--- tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b'))
     (r : MvPolynomial σ R) :
@@ -631,12 +629,11 @@ lemma isRemainder_finset₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial �
     rw [isRemainder_finset]
     rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
-  ·
-    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+  · rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_finset₀₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (hB' : ∀ b' ∈ B', IsRegular (m.leadingCoeff b') ∨ b' = 0)
     (r : MvPolynomial σ R) :
@@ -656,13 +653,13 @@ lemma isRemainder_finset₀₁ (p : MvPolynomial σ R) (B' : Finset (MvPolynomia
     rw [isRemainder_finset]
     rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
-  ·
-    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+  · rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
--- tag
-lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R)
+    (B' : Finset (MvPolynomial σ R))
     (r : MvPolynomial σ R) :
     m.IsRemainder p B' r ↔
       (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
@@ -680,8 +677,7 @@ lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : F
     rw [isRemainder_finset]
     rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     exact ⟨⟨g, h₁, h₂, by simp [hp0]⟩, h₃⟩
-  ·
-    rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
+  · rintro ⟨⟨g, h₁, h₂, -⟩, h₃⟩
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
@@ -689,12 +685,12 @@ lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B' : F
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
-lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R): m.leadingTerm p = 0 ↔ p = 0 := by
+lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R) : m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
-  m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
+    m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
   apply subset_antisymm
   · intro p
     simp
@@ -708,7 +704,7 @@ lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
-  m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
+    m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
   unfold leadingTerm
   apply subset_antisymm
   · simp_intro p hp
@@ -731,7 +727,9 @@ Fix a monomial order on the polynomial ring $k[x_1, \ldots, x_n]$.A finite subse
   $$
   Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the empty set $\emptyset$ to be the Gröbner basis of the zero ideal $\{0\}$.
 -/
-def IsGroebnerBasis {R : Type*} [CommSemiring R] (G: Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :=
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+def IsGroebnerBasis {R : Type*} [CommSemiring R] (G: Finset (MvPolynomial σ R))
+    (I : Ideal (MvPolynomial σ R)) :=
   G.toSet ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G.toSet)
 
 end CommSemiring
@@ -740,14 +738,13 @@ section CommRing
 open Classical
 variable {R : Type*} [CommRing R] {s : σ →₀ ℕ}
 
-
 /--
 The $S$-polynomial of $f$ and $g$ is the combination
   $$
   S(f, g) = \frac{x^\gamma}{\mathrm{LT}(f)} \cdot f - \frac{x^\gamma}{\mathrm{LT}(g)} \cdot g.
   $$
 -/
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 noncomputable def sPolynomial (f g : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree g - m.degree f) (m.leadingCoeff g) * f -
   monomial (m.degree f - m.degree g) (m.leadingCoeff f) * g
@@ -758,49 +755,43 @@ the S-polynomial of $f$ and $g$ is antisymmetric:
     \Sph{f}{g} = -\Sph{g}{f}
   $$
 -/
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sPolynomial_antisymm (f g : MvPolynomial σ R) :
-   m.sPolynomial f g = - m.sPolynomial g f := by
-   unfold sPolynomial
-   exact
-     Eq.symm
-       (neg_sub ((monomial (m.degree f - m.degree g)) (m.leadingCoeff f) * g)
-         ((monomial (m.degree g - m.degree f)) (m.leadingCoeff g) * f))
+    m.sPolynomial f g = - m.sPolynomial g f :=
+  Eq.symm (neg_sub (_ * g) (_ * f))
 
 /--
-  For any polynomial $g \in \MvPolynomial{\sigma}{R}$ and monomial order $m$,
+For any polynomial $g \in \MvPolynomial{\sigma}{R}$ and monomial order $m$,
   the S-polynomial with zero as first argument vanishes:
   $$
     \Sph{0}{g} = 0
   $$
 -/
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 @[simp]
 lemma sPolynomial_left_zero (g : MvPolynomial σ R) :
-  m.sPolynomial 0 g = 0 := by
-  unfold sPolynomial
-  simp only [zero_mul, sub_zero, leadingCoeff_zero, monomial_zero]
-  exact CommMonoidWithZero.mul_zero ((monomial (m.degree g - m.degree 0)) (m.leadingCoeff g))
+    m.sPolynomial 0 g = 0 := by
+  simp [sPolynomial]
 
 /--
-  For any polynomial $g \in \MvPolynomial{\sigma}{R}$ and monomial order $m$,
+For any polynomial $g \in \MvPolynomial{\sigma}{R}$ and monomial order $m$,
   the S-polynomial with zero as second argument vanishes:
   $$
     \Sph{f}{0} = 0
   $$
 -/
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 @[simp]
 lemma sPolynomial_right_zero (f : MvPolynomial σ R) :
-  m.sPolynomial f 0 = 0 := by
+    m.sPolynomial f 0 = 0 := by
   rw [sPolynomial_antisymm, sPolynomial_left_zero, neg_zero]
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sPolynomial_def (f g : MvPolynomial σ R) :
     m.sPolynomial f g =
       monomial (m.degree f ⊔ m.degree g - m.degree f) (m.leadingCoeff g) * f -
       monomial (m.degree f ⊔ m.degree g - m.degree g) (m.leadingCoeff f) * g := by
-  rw [sPolynomial]
+  unfold sPolynomial
   congr 4
   all_goals
     rw [Finsupp.ext_iff]
@@ -809,11 +800,11 @@ lemma sPolynomial_def (f g : MvPolynomial σ R) :
     ·simp [h]
     ·simp [le_of_lt (not_le.mp h)]
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 @[simp]
 lemma sPolynomial_self (f : MvPolynomial σ R) : m.sPolynomial f f = 0 := sub_self _
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem div_set' {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, IsUnit <| m.leadingCoeff b) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
@@ -826,7 +817,8 @@ theorem div_set' {B : Set (MvPolynomial σ R)}
     exact h.2.2 c hc b hb
 
 /--
-  Let $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials where every nonzero element has a unit leading coefficient:
+Let $G'' \subseteq R[\mathbf{X}]$ be a set of polynomials where every nonzero element has a unit
+leading coefficient:
   $$
     \forall g \in G'',\ \big(\mathrm{IsUnit}(\LC_m(g)) \lor g = 0\big)
   $$
@@ -836,6 +828,7 @@ theorem div_set' {B : Set (MvPolynomial σ R)}
   $$
   where $\LC_m(g)$ denotes the leading coefficient of $g$ under monomial order $m$.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem div_set'₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, (IsUnit (m.leadingCoeff b) ∨ b = 0)) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
@@ -892,32 +885,33 @@ lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     · simpa [hl, toSyn_lt_iff_ne_zero]
     · exact m.degree_sub_leadingTerm_lt_degree hl
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma degree_sPolynomial_le (f g : MvPolynomial σ R) :
     ((m.degree <| m.sPolynomial f g) ≼[m] m.degree f ⊔ m.degree g) := by
-    classical
-    by_cases hf_zero: f = 0; simp [hf_zero]
-    by_cases hg_zero: g = 0; simp [hg_zero]
-    simp [sPolynomial_def]
-    calc
-      _ ≤ _ ⊔ _ := by
-        exact degree_sub_le
-      _ ≤  m.toSyn (m.degree _ + m.degree _) ⊔ m.toSyn (m.degree _ + m.degree _) := by
-        exact sup_le_sup degree_mul_le degree_mul_le
-      _ ≤ (m.toSyn <| m.degree f ⊔ m.degree g - m.degree f + m.degree f) ⊔
-            (m.toSyn <| m.degree f ⊔ m.degree g - m.degree g + m.degree g) := by
-        simp_rw [degree_monomial]
-        simp [hg_zero, hf_zero]
-      _ ≤ m.toSyn (m.degree f ⊔ m.degree g) := by
-        simp
-        constructor
-        all_goals
-          apply le_of_eq
-          simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff]
-          intro a
-          exact Nat.sub_add_cancel <| by simp
+  classical
+  by_cases hf_zero: f = 0
+  · simp [hf_zero]
+  by_cases hg_zero: g = 0
+  · simp [hg_zero]
+  simp [sPolynomial_def]
+  calc
+    _ ≤ _ ⊔ _ := degree_sub_le
+    _ ≤  m.toSyn (m.degree _ + m.degree _) ⊔ m.toSyn (m.degree _ + m.degree _) :=
+      sup_le_sup degree_mul_le degree_mul_le
+    _ ≤ (m.toSyn <| m.degree f ⊔ m.degree g - m.degree f + m.degree f) ⊔
+          (m.toSyn <| m.degree f ⊔ m.degree g - m.degree g + m.degree g) := by
+      simp_rw [degree_monomial]
+      simp [hg_zero, hf_zero]
+    _ ≤ m.toSyn (m.degree f ⊔ m.degree g) := by
+      simp
+      constructor
+      all_goals
+        apply le_of_eq
+        simp_rw [← AddEquiv.map_add, (AddEquiv.injective m.toSyn).eq_iff, Finsupp.ext_iff]
+        intro a
+        exact Nat.sub_add_cancel <| by simp
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
     (m.sPolynomial f g).coeff (m.degree f ⊔ m.degree g) = 0 := by
   by_cases hf0 : f = 0
@@ -928,60 +922,59 @@ lemma coeff_sPolynomial_sup_eq_zero (f g : MvPolynomial σ R) :
   rw [sPolynomial_def, coeff_sub]
   have : m.degree f ⊔ m.degree g = m.degree f ⊔ m.degree g - m.degree f + m.degree f := by
     rw [Finsupp.ext_iff]
-    intro _
-    exact (Nat.sub_add_cancel <| by simp).symm
+    exact fun _ ↦ (Nat.sub_add_cancel <| by simp).symm
   nth_rewrite 1 [this, coeff_monomial_mul]
   have : m.degree f ⊔ m.degree g = m.degree f ⊔ m.degree g - m.degree g + m.degree g := by
     rw [Finsupp.ext_iff]
-    intro _
-    exact (Nat.sub_add_cancel <| by simp).symm
+    exact fun _ ↦ (Nat.sub_add_cancel <| by simp).symm
   nth_rewrite 1 [this, coeff_monomial_mul]
   unfold leadingCoeff
   ring
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma degree_sPolynomial (f g : MvPolynomial σ R) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g ∨ m.sPolynomial f g = 0 := by
-    classical
-    by_cases hf : m.degree f = 0 ∧ m.degree g = 0
-    · rcases hf with ⟨h₁, h₂⟩
-      right
-      simp [sPolynomial_def, h₁, h₂]
-      have h1 : f = C (m.leadingCoeff f) := by
-        exact degree_eq_zero_iff.mp h₁
-      have h2 : g = C (m.leadingCoeff g) := by
-        exact degree_eq_zero_iff.mp h₂
-      nth_rewrite 1 [h1]
-      nth_rewrite 2 [h2]
-      ring
-    · by_cases hs: m.sPolynomial f g = 0; simp [hs]
-      by_cases hf_zero: f = 0; simp [hf_zero]
-      by_cases hg_zero: g = 0; simp [hg_zero]
-      left
-      have h1: m.toSyn (m.degree (m.sPolynomial f g)) ≤  m.toSyn (m.degree f ⊔ m.degree g) := by
-        exact degree_sPolynomial_le m f g
-      have h3: m.toSyn (m.degree (m.sPolynomial f g)) ≠ m.toSyn (m.degree f ⊔ m.degree g):= by
-        simp
-        by_contra h
-        have: coeff (m.degree (m.sPolynomial f g)) (m.sPolynomial f g) ≠  0 := by
-          exact coeff_degree_ne_zero_iff.mpr hs
-        rw [h] at this
-        exact this (m.coeff_sPolynomial_sup_eq_zero _ _)
-      exact lt_of_le_of_ne h1 h3
+  classical
+  by_cases hf : m.degree f = 0 ∧ m.degree g = 0
+  · rcases hf with ⟨h₁, h₂⟩
+    right
+    simp [sPolynomial_def, h₁, h₂]
+    nth_rewrite 1 [degree_eq_zero_iff.mp h₁]
+    nth_rewrite 2 [degree_eq_zero_iff.mp h₂]
+    ring
+  · by_cases hs: m.sPolynomial f g = 0
+    · simp [hs]
+    by_cases hf_zero: f = 0
+    · simp [hf_zero]
+    by_cases hg_zero: g = 0
+    · simp [hg_zero]
+    left
+    have h1: m.toSyn (m.degree (m.sPolynomial f g)) ≤  m.toSyn (m.degree f ⊔ m.degree g) :=
+      degree_sPolynomial_le m f g
+    have h3: m.toSyn (m.degree (m.sPolynomial f g)) ≠ m.toSyn (m.degree f ⊔ m.degree g) := by
+      simp
+      by_contra h
+      have: coeff (m.degree (m.sPolynomial f g)) (m.sPolynomial f g) ≠ 0 :=
+        coeff_degree_ne_zero_iff.mpr hs
+      rw [h] at this
+      exact this (m.coeff_sPolynomial_sup_eq_zero _ _)
+    exact lt_of_le_of_ne h1 h3
 
---tag
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 variable {m} in
-lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
+lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R}
+    (h : m.sPolynomial f g ≠ 0) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
 
 
 /--
-$h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then $lm(S(h_1, h_2)) < lm(h_1)$.
+$h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then
+$lm(S(h_1, h_2)) < lm(h_1)$.
 -/
--- tag
-lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {f g: MvPolynomial σ R}
-    (h: m.degree f = m.degree g) (hs: m.sPolynomial f g ≠ 0) :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {f g : MvPolynomial σ R}
+    (h : m.degree f = m.degree g) (hs : m.sPolynomial f g ≠ 0) :
     m.degree (m.sPolynomial f g) ≺[m] m.degree f := by
   convert m.degree_sPolynomial f g
   simp [h, hs]
@@ -997,8 +990,9 @@ lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺
   simp
   exact coeff_eq_zero_of_lt h
 
--- tag
-lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ) (c₁ c₂ : R) :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ)
+    (c₁ c₂ : R) :
     m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
       monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
       m.sPolynomial p₁ p₂ := by
@@ -1041,6 +1035,7 @@ variable {k : Type*} [Field k]
 Let $k$ be a field, and let $G'' \subseteq k[x_i : i \in \sigma]$ be a set of polynomials.
 Then for any $p \in k[x_i : i \in \sigma]$, there exists a generalized remainder $r$ of $p$ upon division by $G''$.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem div_set'' (B : Set (MvPolynomial σ k))
     (p : MvPolynomial σ k) :
     ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
