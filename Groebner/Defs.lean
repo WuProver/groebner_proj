@@ -106,9 +106,6 @@ def IsRemainder :=
     ∀ (b : B), m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree f) ∧
   ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)
 
-section NoZeroDivisors
-variable [NoZeroDivisors R]
-
 theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder p (Set.range b) r ↔
     (∃ g : ι →₀ MvPolynomial σ R,
@@ -118,83 +115,41 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
   classical
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
-    let f : (↑ (Set.range b)) ↪ ι := {
-      toFun := fun x ↦ Classical.choose (Set.mem_range.mp x.2),
-      inj' := by
-        intro x y h
-        apply Subtype.ext
-        have hx : b (Classical.choose (Set.mem_range.mp x.2)) = x.1 :=
-        Classical.choose_spec (Set.mem_range.mp x.2)
-        have hy : b (Classical.choose (Set.mem_range.mp y.2)) = y.1 :=
-        Classical.choose_spec (Set.mem_range.mp y.2)
-        rw [←hx, ←hy]
-        exact congrArg b h
+    -- map an element in range of `b` to one of its indexes (whose type is `ι`)
+    let f : (↑(Set.range b)) ↪ ι := {
+      toFun := Set.rangeSplitting b,
+      inj' := Set.rangeSplitting_injective b
     }
     split_ands
-    ·
-      use Finsupp.embDomain (f : (↑(Set.range b)) ↪ ι) g
+    · use Finsupp.embDomain f g
       split_ands
       · simp
         refine ext p ((Finsupp.linearCombination (MvPolynomial σ R) (b ∘ ⇑f)) g + r) ?_
         simp [h₁]
         simp [Finsupp.linearCombination_apply, Finsupp.sum]
-        have sum : (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (f x)) := by
-          apply Finset.sum_congr rfl
-          intro x hx
-          have h : (x : MvPolynomial σ R) = b (f x) := by
-            simp [f]
-            exact Eq.symm (Set.apply_rangeSplitting b x)
-          rw [h]
-        exact fun m ↦ congrFun (congrArg HAdd.hAdd (congrArg (coeff m) sum)) (coeff m r)
+        suffices (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (f x)) by simp [this]
+        apply Finset.sum_congr rfl
+        intro x hx
+        simp [f, Set.apply_rangeSplitting]
       · intro i
         specialize h₂ ⟨b i, Set.mem_range_self i⟩
         simp at h₂
-        dsimp [Finsupp.embDomain]
-        by_cases hi : i ∈ Finset.map f g.support
-        · by_cases hb : b i = 0
-          · simp [hb]
-          simp [hi]
-          have exists_mem : ∃ a ∈ g.support, f a = i := by
-            simpa using hi
-          rcases exists_mem with ⟨a, ha, ha_eq⟩
-          have a_eq : a = ⟨b i, Set.mem_range_self i⟩ := by
-            apply Subtype.eq
-            simp
-            rw [←ha_eq]
-            exact Eq.symm (Set.apply_rangeSplitting b a)
-          rw [←a_eq] at h₂
-          trans  m.toSyn (m.degree (b i * g a))
-          · have h_exists : ∃ a₁ ∈ g.support, f a₁ = i := by
-              rcases Finset.mem_map.mp hi with ⟨a, ha, rfl⟩
-              exact ⟨a, ha, rfl⟩
-            rcases h_exists with ⟨a₁, ha₁, ha₁_eq⟩
-            have a₁_eq : a₁ = ⟨b i, Set.mem_range_self i⟩ := by
-              apply Subtype.eq
-              simp
-              rw [←ha₁_eq]
-              exact Eq.symm (Set.apply_rangeSplitting b a₁)
-            have h1 : a = a₁ := by rw [a_eq, a₁_eq]
-            refine le_degree ?_
-            refine mem_support_iff.mpr ?_
-            rw [h1]
-            have h₃: g a₁ ≠ 0 := by
-              exact Finsupp.mem_support_iff.mp ha₁
-            simp
-            generalize_proofs z
-            have h₄ : g (Finset.choose (fun a₁ ↦ f a₁ = i) g.support z) = g a₁ := by
-              have h_a : Finset.choose (fun a₁ ↦ f a₁ = i) g.support z = a₁ := by
-                have l₁ : f (Finset.choose (fun a₁ ↦ f a₁ = i) g.support z) = i := by
-                  exact Finset.choose_property (fun a₁ ↦ f a₁ = i) g.support z
-                have l₂ :  f (Finset.choose (fun a₁ ↦ f a₁ = i) g.support z) = f a₁ := by
-                  rw [l₁]
-                  exact id (Eq.symm ha₁_eq)
-                exact f.inj' l₂
-              rw [h_a]
-            rw [h₄]
-            simp only [coeff_degree_eq_zero_iff, ne_eq]
-            exact (mul_ne_zero_iff_right h₃).mpr hb
-          · exact h₂
-        · simp [hi]
+        by_cases h' : (Finsupp.embDomain f g) i = 0
+        · simp [h']
+        simp at h'
+        convert h₂
+        generalize_proofs hbi
+        convert_to g.embDomain f (hbi.choose) = _
+        · simp [Finsupp.embDomain_eq_mapDomain, Finsupp.mapDomain, Finsupp.single_apply] at ⊢ h'
+          congr
+          ext
+          congr
+          obtain ⟨a, ha, ha'⟩ := Finset.exists_ne_zero_of_sum_ne_zero h'
+          simp [f] at ha'
+          convert_to i = Set.rangeSplitting b ⟨b i, hbi⟩
+          simp [← ha'.1, Set.apply_rangeSplitting]
+        · convert Finsupp.embDomain_apply f g _
+          rfl
     · intro i hi b hb
       aesop
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
@@ -314,29 +269,24 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
           intro i hi
           rw [Finset.mem_filter] at hi
           exact h₂ i
-        have degree_sum_le :
-          m.toSyn (m.degree (∑ i ∈ g.support.filter fun i ↦ f i = b1, b i * g i)) ≤
-          (Finset.sup (g.support.filter fun i ↦ f i = b1) fun i ↦ m.toSyn (m.degree (b i * g i)))  := by
-          exact m.degree_sum_le
-        trans (Finset.sup (g.support.filter fun i ↦ f i = b1) fun i ↦ m.toSyn (m.degree (b i * g i)))
-        · exact degree_sum_le
+        trans (g.support.filter fun i ↦ f i = b1).sup fun i ↦ m.toSyn (m.degree (b i * g i))
+        · exact m.degree_sum_le
         · exact Finset.sup_le (fun i hi ↦ degree_le i hi)
     · aesop
 
-
-theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
-    m.IsRemainder p (Set.range b) r ↔
-    (∃ g : ι → MvPolynomial σ R,
-        p = ∑ i : ι, (b i * g i) + r ∧
-        ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
-      ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
+    (r : MvPolynomial σ R) :
+      m.IsRemainder p (Set.range b) r ↔
+      (∃ g : ι → MvPolynomial σ R,
+          p = ∑ i : ι, (b i * g i) + r ∧
+          ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
+        ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
   classical
   rw [isRemainder_range]
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     split_ands
-    ·
-      use g.toFun
+    · use g.toFun
       split_ands
       · simp [Finsupp.linearCombination_apply, Finsupp.sum] at h₁
         rw [h₁]
@@ -348,7 +298,9 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         simp [h₁]
         have : (∑ i : ι, b i * g i) = ∑ x ∈ g.support, b x * g x := by
           refine Eq.symm (Fintype.sum_subset ?_)
-          simp_intro ..
+          intro _ h
+          contrapose! h
+          simp [Finsupp.notMem_support_iff.mp h]
         rw [this]
         simp_rw [mul_comm (g _) (b _)]
       · exact h₂
@@ -374,11 +326,9 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         intro i _
         by_cases hi : g i = 0 <;> simp [hi]
         exact CommMonoid.mul_comm (b i) (g i)
-      ·
-        intro i
+      · intro i
         exact h₂ i
     · aesop
-end NoZeroDivisors
 
 open Classical
 
