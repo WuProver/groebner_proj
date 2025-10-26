@@ -83,13 +83,13 @@ open Field
 
 lemma span_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     span (m.leadingTerm '' (B \ {0})) = span (m.leadingTerm '' B) :=
-  m.leadingTerm_image_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero
+  m.image_leadingTerm_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero
 
 lemma span_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
     span (m.leadingTerm '' (insert 0 B)) = span (m.leadingTerm '' B) := by
   by_cases h : 0 ∈ B
   · rw [Set.insert_eq_of_mem h]
-  · simp [leadingTerm_image_insert_zero]
+  · simp [image_leadingTerm_insert_zero]
 
 lemma isGroebnerBasis_erase_zero (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis (G.erase 0) I ↔ m.IsGroebnerBasis G I := by
@@ -163,14 +163,14 @@ lemma span_leadingTerm_eq_span_monomial₀ {B : Set (MvPolynomial σ R)}
     span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
   calc
     _ = span (m.leadingTerm '' B \ {0}) := Ideal.span_sdiff_singleton_zero.symm
-    _ = span (m.leadingTerm '' (B \ {0})) := by rw [m.leadingTerm_image_sdiff_singleton_zero]
+    _ = span (m.leadingTerm '' (B \ {0})) := by rw [m.image_leadingTerm_sdiff_singleton_zero]
     _ = _ := by
       apply span_leadingTerm_eq_span_monomial
       simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 lemma span_leadingTerm_eq_span_monomial' {B : Set (MvPolynomial σ k)} :
-      span (m.leadingTerm '' B) =
-      span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
+    span (m.leadingTerm '' B) =
+    span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
   apply span_leadingTerm_eq_span_monomial₀
   simp [em']
 
@@ -282,7 +282,7 @@ lemma term_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
 lemma term_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
     {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
-  rw [←Ideal.span_sdiff_singleton_zero, ← m.leadingTerm_image_sdiff_singleton_zero]
+  rw [←Ideal.span_sdiff_singleton_zero, ← m.image_leadingTerm_sdiff_singleton_zero]
   apply term_notMem_span_leadingTerm_of_isRemainder
   · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
@@ -331,7 +331,7 @@ lemma monomial_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ 
 lemma monomial_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
     {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
-  rw [←Ideal.span_sdiff_singleton_zero, ← m.leadingTerm_image_sdiff_singleton_zero]
+  rw [←Ideal.span_sdiff_singleton_zero, ← m.image_leadingTerm_sdiff_singleton_zero]
   apply monomial_notMem_span_leadingTerm_of_isRemainder
   · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h

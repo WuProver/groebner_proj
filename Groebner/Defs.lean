@@ -593,7 +593,7 @@ lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R) : m.leadingTerm p = 0 ↔ 
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
-lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
+lemma image_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
   apply subset_antisymm
   · intro p
@@ -607,7 +607,7 @@ lemma leadingTerm_image_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     exact ⟨q, ⟨hq, hp⟩, hpq⟩
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
-lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
+lemma image_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
     m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
   unfold leadingTerm
   apply subset_antisymm
