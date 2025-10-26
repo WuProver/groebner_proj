@@ -17,20 +17,6 @@ namespace Ideal
 
 variable {R : Type*} [Semiring R]
 
--- lemma mem_span_iff (A : Set R) (p : R) :
--- p ∈ Ideal.span A ↔ ∃ (s : Finset A)(f : R → R), p = ∑ m in s, f m * m
--- :=by
---   sorry
--- lemma mem_span_iff' (A : Set R) (p : R) :
--- p ∈ Ideal.span A ↔ ∃ (s : Finset A)(f : A → R), p = ∑ m in s, f m * m
--- := by
---   sorry
--- lemma mem_span_iff'' (A : Set R) (p : R) :
--- p ∈ Ideal.span A ↔
--- ∃ (s : Finset R) (f : R → R), s.toSet ⊆ A ∧ p = ∑ m in s, f m * m
--- := by
---   sorry
-
 /--
 A subset $s \subseteq R$ has finitely generated span if and only if:
 $\exists$ finite $s' \subseteq s$ such that $\mathsf{span}(s) = \mathsf{span}(s')$
@@ -83,8 +69,9 @@ open MvPolynomial
 open Classical
 
 variable {σ : Type*} {m : MonomialOrder σ} {s : σ →₀ ℕ}
-variable {k : Type*} [Field k] variable (p p₁ p₂ : MvPolynomial σ k)
-variable (B' G: Finset (MvPolynomial σ k)) (B: Set (MvPolynomial σ k))
+variable {k : Type*} [Field k]
+variable (p p₁ p₂ : MvPolynomial σ k)
+variable (B' G : Finset (MvPolynomial σ k)) (B : Set (MvPolynomial σ k))
 variable (I : Ideal (MvPolynomial σ k))
 variable {R : Type*} [CommSemiring R]
 
@@ -94,22 +81,23 @@ open Submodule
 open Ideal
 open Field
 
-lemma leadingTerm_ideal_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
-  span (m.leadingTerm '' (B \ {0})) = span (m.leadingTerm '' B) :=
+lemma span_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
+    span (m.leadingTerm '' (B \ {0})) = span (m.leadingTerm '' B) :=
   m.leadingTerm_image_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero
 
-lemma leadingTerm_ideal_insert_zero (B: Set (MvPolynomial σ R)) :
-  span (m.leadingTerm '' (insert 0 B)) = span (m.leadingTerm '' B) := by
+lemma span_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
+    span (m.leadingTerm '' (insert 0 B)) = span (m.leadingTerm '' B) := by
   by_cases h : 0 ∈ B
   · rw [Set.insert_eq_of_mem h]
   · simp [leadingTerm_image_insert_zero]
 
 lemma isGroebnerBasis_erase_zero (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
-  m.IsGroebnerBasis (G.erase 0) I ↔ m.IsGroebnerBasis G I := by
-  simp [IsGroebnerBasis, m.leadingTerm_ideal_sdiff_singleton_zero]
+    m.IsGroebnerBasis (G.erase 0) I ↔ m.IsGroebnerBasis G I := by
+  simp [IsGroebnerBasis, m.span_leadingTerm_sdiff_singleton_zero]
 
-lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
-  m.IsGroebnerBasis (G ∪ {0}) I ↔ m.IsGroebnerBasis G I := by
+lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R))
+    (I : Ideal (MvPolynomial σ R)) :
+    m.IsGroebnerBasis (G ∪ {0}) I ↔ m.IsGroebnerBasis G I := by
   unfold IsGroebnerBasis
   congr! 1
   · constructor
@@ -123,7 +111,8 @@ lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R)) (I :
       constructor
       · exact hGI
       · exact Set.singleton_subset_iff.mpr (Submodule.zero_mem _)
-  · simp [m.leadingTerm_ideal_insert_zero]
+  · simp [m.span_leadingTerm_insert_zero]
+
 /--
 Let $G'' \subseteq R[x_1, \dots, x_n]$ be a set of polynomials such that
 $$
@@ -131,12 +120,14 @@ $$
 $$
 Then,
 $$
-\left\langle \operatorname{lt}(G'') \right\rangle = \left\langle x^{\deg(p)} \mid p \in G'' \right\rangle,
+\left\langle \operatorname{lt}(G'') \right\rangle =
+\left\langle x^{\deg(p)} \mid p \in G'' \right\rangle,
 $$
 -/
-lemma leadingTerm_ideal_span_monomial {B: Set (MvPolynomial σ R)}
+lemma span_leadingTerm_eq_span_monomial {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p)) :
-    span (m.leadingTerm '' B) = span ((fun p ↦ MvPolynomial.monomial (m.degree p) (1 : R)) '' B) := by
+    span (m.leadingTerm '' B) =
+      span ((fun p ↦ MvPolynomial.monomial (m.degree p) (1 : R)) '' B) := by
   apply le_antisymm
   all_goals
     rintro p hl
@@ -162,10 +153,11 @@ lemma leadingTerm_ideal_span_monomial {B: Set (MvPolynomial σ R)}
 
 /--
 $$
-\langle \mathrm{lt}(G) \rangle = \left\langle \left\{ x^t : t \in \{ \mathrm{multideg}(p) : p \in G \setminus \{0\} \} \right\} \right\rangle
+\langle \mathrm{lt}(G) \rangle = \left\langle \left\{ x^t : t \in \{ \mathrm{multideg}(p) : p \in
+G \setminus \{0\} \} \right\} \right\rangle
 $$
 -/
-lemma leadingTerm_ideal_span_monomial₀ {B : Set (MvPolynomial σ R)}
+lemma span_leadingTerm_eq_span_monomial₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0) :
     span (m.leadingTerm '' B) =
     span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
@@ -173,13 +165,13 @@ lemma leadingTerm_ideal_span_monomial₀ {B : Set (MvPolynomial σ R)}
     _ = span (m.leadingTerm '' B \ {0}) := Ideal.span_sdiff_singleton_zero.symm
     _ = span (m.leadingTerm '' (B \ {0})) := by rw [m.leadingTerm_image_sdiff_singleton_zero]
     _ = _ := by
-      apply leadingTerm_ideal_span_monomial
+      apply span_leadingTerm_eq_span_monomial
       simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
-lemma leadingTerm_ideal_span_monomial' {B: Set (MvPolynomial σ k)} :
+lemma span_leadingTerm_eq_span_monomial' {B : Set (MvPolynomial σ k)} :
       span (m.leadingTerm '' B) =
       span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
-  apply leadingTerm_ideal_span_monomial₀
+  apply span_leadingTerm_eq_span_monomial₀
   simp [em']
 
 /--
@@ -195,7 +187,7 @@ $$
 p \in I.
 $$
 -/
-lemma mem_ideal_of_remainder_mem_ideal {B: Set (MvPolynomial σ R)} {r : MvPolynomial σ R}
+lemma mem_ideal_of_isRemainder_of_mem_ideal {B : Set (MvPolynomial σ R)} {r : MvPolynomial σ R}
     {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
     (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) (hr : r ∈ I) :
     p ∈ I := by
@@ -209,7 +201,8 @@ lemma mem_ideal_of_remainder_mem_ideal {B: Set (MvPolynomial σ R)} {r : MvPolyn
   · exact hr
 
 /--
-Let $R$ be a commutative ring, and let $G'' \subseteq R[x_1, \dots, x_n]$, $I \subseteq R[x_1, \dots, x_n]$ be an ideal, and $p, r \in R[x_1, \dots, x_n]$.
+Let $R$ be a commutative ring, and let $G'' \subseteq R[x_1, \dots, x_n]$,
+$I \subseteq R[x_1, \dots, x_n]$ be an ideal, and $p, r \in R[x_1, \dots, x_n]$.
 Assume that:
 
   - $G'' \subseteq I$,
@@ -220,11 +213,11 @@ $$
 r \in I \quad \Longleftrightarrow \quad p \in I.
 $$
 -/
-lemma remainder_mem_ideal_iff {R : Type*} [CommRing R] {B : Set (MvPolynomial σ R)}
+lemma mem_ideal_iff_of_isRemainder {R : Type*} [CommRing R] {B : Set (MvPolynomial σ R)}
     {r : MvPolynomial σ R} {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
     (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) :
     r ∈ I ↔ p ∈ I := by
-  refine ⟨mem_ideal_of_remainder_mem_ideal hBI hpBr, ?_⟩
+  refine ⟨mem_ideal_of_isRemainder_of_mem_ideal hBI hpBr, ?_⟩
   obtain ⟨⟨f, h_eq, h_deg⟩, h_remain⟩ := hpBr
   intro hp
   rw [← sub_eq_of_eq_add' h_eq]
@@ -242,8 +235,8 @@ $$
 r_1 - r_2 \in I.
 $$
 -/
-lemma remainder_sub_remainder_mem_ideal {R : Type*} [CommRing R]
-    {B: Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} {p r₁ r₂ : MvPolynomial σ R}
+lemma sub_mem_ideal_of_isRemainder_of_subset_ideal {R : Type*} [CommRing R]
+    {B : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} {p r₁ r₂ : MvPolynomial σ R}
     (hBI : B ⊆ I) (hr₁ : m.IsRemainder p B r₁) (hr₂ : m.IsRemainder p B r₂) :
     r₁ - r₂ ∈ I := by
   obtain ⟨⟨f₁, h_eq₁, h_deg₁⟩, h_remain₁⟩ := hr₁
@@ -256,32 +249,14 @@ lemma remainder_sub_remainder_mem_ideal {R : Type*} [CommRing R]
     intro g hg
     exact mul_mem_left I _ (Set.mem_of_mem_of_subset (by simp) hBI)
 
--- lemma monomial_not_mem_leading_term_ideal{r : MvPolynomial σ k}
---   {G' : Set (MvPolynomial σ k)}
---   (h : ∀ g ∈ G', g ≠ 0 → ∀ s ∈ r.support, ¬ m.degree g ≤ s) :
---   ∀ s ∈ r.support, monomial s (1 : k) ∉ leading_term_ideal m G' := by
---   sorry
-
--- lemma term_not_mem_leading_term_ideal {r : MvPolynomial σ k}
--- {G' : Set (MvPolynomial σ k)}
--- (h : ∀ g ∈ G', g ≠ 0 → ∀ s ∈ r.support, ¬ m.degree g ≤ s)
--- : ∀ s ∈ r.support, monomial s (r.coeff s) ∉ leading_term_ideal m  G' := by
---   sorry
-
--- lemma not_mem_leading_term_ideal {r : MvPolynomial σ k}
--- {G' : Set (MvPolynomial σ k)}
--- (h : ∀ g ∈ G', g ≠ 0 → ∀ s ∈ r.support, ¬ m.degree g ≤ s)
--- (hr : r ≠ 0) :
--- r ∉ leading_term_ideal m G' := by
---  sorry
-
-lemma isRemainder_term_not_mem_leading_term_ideal {p r : MvPolynomial σ R}
+lemma term_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
     (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
   intro s hs
-  rw [leadingTerm_ideal_span_monomial hB, ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
+  rw [span_leadingTerm_eq_span_monomial hB, ← Set.image_image (monomial · 1) _ _,
+    mem_ideal_span_monomial_image]
   have h1ne0: (1 : R) ≠ 0 := by
     by_contra h1eq0
     rw [MvPolynomial.mem_support_iff, ← mul_one <| r.coeff s, h1eq0, mul_zero] at hs
@@ -294,31 +269,31 @@ lemma isRemainder_term_not_mem_leading_term_ideal {p r : MvPolynomial σ R}
   specialize hB b hb
   simp [hq0, h1ne0.symm] at hB
 
-lemma isRemainder_term_not_mem_leading_term_ideal₀ {p r : MvPolynomial σ R}
+lemma term_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0)
     (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
-  rw [← leadingTerm_ideal_sdiff_singleton_zero]
+  rw [← span_leadingTerm_sdiff_singleton_zero]
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
-  refine isRemainder_term_not_mem_leading_term_ideal ?_ h
+  refine term_notMem_span_leadingTerm_of_isRemainder ?_ h
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
-lemma isRemainder_term_not_mem_leading_term_ideal' {p r : MvPolynomial σ k}
-  {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r):
-∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
+lemma term_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
+    {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
+    ∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
   rw [←Ideal.span_sdiff_singleton_zero, ← m.leadingTerm_image_sdiff_singleton_zero]
-  apply isRemainder_term_not_mem_leading_term_ideal
-  simp
+  apply term_notMem_span_leadingTerm_of_isRemainder
+  · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
 
-lemma monomial_not_mem_leading_term_ideal {r : MvPolynomial σ R}
+lemma monomial_notMem_span_leadingTerm {r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
     (h : ∀ c ∈ r.support, ∀ b ∈ B, ¬ (m.degree b ≤ c)) :
     ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
   intro s hs
-  rw [leadingTerm_ideal_span_monomial hB,
+  rw [span_leadingTerm_eq_span_monomial hB,
       ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
   simp
   split_ands
@@ -328,12 +303,12 @@ lemma monomial_not_mem_leading_term_ideal {r : MvPolynomial σ R}
   · intro b hb
     exact h s hs b hb
 
-lemma isRemainder_monomial_not_mem_leading_term_ideal {p r : MvPolynomial σ R}
+lemma monomial_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
     (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
-  apply monomial_not_mem_leading_term_ideal hB
+  apply monomial_notMem_span_leadingTerm hB
   intro c hc b hb
   have : Nontrivial R := by
     rw [nontrivial_iff_exists_ne 0]
@@ -343,22 +318,22 @@ lemma isRemainder_monomial_not_mem_leading_term_ideal {p r : MvPolynomial σ R}
     exact hc rfl
   refine h.2 c hc b hb (m.leadingCoeff_ne_zero_iff.mp (hB _ hb).ne_zero)
 
-lemma isRemainder_monomial_not_mem_leading_term_ideal₀ {p r : MvPolynomial σ R}
+lemma monomial_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0)
     (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
-  rw [← leadingTerm_ideal_sdiff_singleton_zero]
+  rw [← span_leadingTerm_sdiff_singleton_zero]
   rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
-  refine m.isRemainder_monomial_not_mem_leading_term_ideal ?_ h
+  refine m.monomial_notMem_span_leadingTerm_of_isRemainder ?_ h
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
-lemma isRemainder_monomial_not_mem_leading_term_ideal' {p r : MvPolynomial σ k}
-  {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r):
-∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
+lemma monomial_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
+    {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
+    ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
   rw [←Ideal.span_sdiff_singleton_zero, ← m.leadingTerm_image_sdiff_singleton_zero]
-  apply isRemainder_monomial_not_mem_leading_term_ideal
-  simp
+  apply monomial_notMem_span_leadingTerm_of_isRemainder
+  · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
 
 lemma sPolynomial_mem_ideal {R : Type*} [CommRing R]
@@ -366,27 +341,13 @@ lemma sPolynomial_mem_ideal {R : Type*} [CommRing R]
     (hp : p ∈ I) (hq : q ∈ I) : m.sPolynomial p q ∈ I :=
   sub_mem (mul_mem_left I _ hp) (mul_mem_left I _ hq)
 
-
--- lemma rem_monomial_not_mem_leading_term_ideal {p r : MvPolynomial σ k}
--- {G' : Finset (MvPolynomial σ k)} (h : IsRemainder p G' r):
--- ∀ s ∈ r.support, monomial s 1 ∉ leading_term_ideal G'.toSet := by
---   sorry
-
--- lemma rem_term_not_mem_leading_term_ideal {p r : MvPolynomial σ k}
--- {G' : Finset (MvPolynomial σ k)} (h : is_rem p G' r):
--- ∀ s ∈ r.support, monomial s (r.coeff s) ∉ leading_term_ideal G' := by
-
--- lemma rem_not_mem_leading_term_ideal {p r : MvPolynomial σ k}
--- {G' : Finset (MvPolynomial σ k)} (h : is_rem p G' r) (hr :r ≠ 0):
--- r ∉ leading_term_ideal G' := by
-
-lemma isRemainder_sub_isRemainder_monomial_not_mem_leading_term_ideal
+lemma sub_monomial_notMem_span_leadingTerm_of_isRemainder
     {R : Type*} [CommRing R]
     {B : Set (MvPolynomial σ R)} {p r₁ r₂ : MvPolynomial σ R}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
-    (hr₁ : m.IsRemainder p B r₁) (hr₂ :  m.IsRemainder p B r₂) :
+    (hr₁ : m.IsRemainder p B r₁) (hr₂ : m.IsRemainder p B r₂) :
     ∀ s ∈ (r₁ - r₂).support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
-  apply m.monomial_not_mem_leading_term_ideal hB
+  apply m.monomial_notMem_span_leadingTerm hB
   intro c hc
   apply MvPolynomial.support_sub at hc
   rw [mem_union] at hc

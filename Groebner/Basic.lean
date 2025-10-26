@@ -44,13 +44,13 @@ theorem groebner_basis_isRemainder_zero_iff_mem_span {R : Type*} [CommRing R] {p
     (hr : m.IsRemainder p G r) :
     r = 0 ↔ p ∈ I := by
   constructor
-  · rw [← m.remainder_mem_ideal_iff h.1 hr]
+  · rw [← m.mem_ideal_iff_of_isRemainder h.1 hr]
     simp_intro ..
   · intro h_p_mem
     by_contra hr_ne_zero
     have h₃: m.leadingTerm r ∉ Ideal.span (m.leadingTerm '' ↑G) := by
       nth_rewrite 1 [leadingTerm]
-      apply isRemainder_term_not_mem_leading_term_ideal hG hr
+      apply term_notMem_span_leadingTerm_of_isRemainder hG hr
       exact (m.degree_mem_support_iff r).mpr hr_ne_zero
     rcases h with ⟨h_G', h_span⟩
     obtain ⟨⟨q, h_p_eq_sum_r, h_r_reduced⟩, h_degree⟩ := hr
@@ -261,7 +261,7 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R
 
           rw [SetLike.mem_coe]
 
-          rw [m.leadingTerm_ideal_span_monomial (by simp_intro .. [hG]),
+          rw [m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
             ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
           intro j hj
           simp [MonomialOrder.leadingCoeff_eq_zero_iff] at hj
@@ -301,7 +301,7 @@ theorem isGroebnerBasis_iff (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolyn
           exact h_G hp'
         have h1: (G : Set <| MvPolynomial σ R) ⊆ (Ideal.span (α := MvPolynomial σ R) ↑G) := by
           exact Ideal.subset_span
-        apply (remainder_mem_ideal_iff h1 h_remainder).mp
+        apply (mem_ideal_iff_of_isRemainder h1 h_remainder).mp
         simp
     · intro p hp hp0
       exact m.remainder_zero p hp0 G (by simp_intro .. [(hG _ _).isRegular]) <| h_remainder p hp
@@ -322,7 +322,7 @@ theorem isGroebnerBasis_span_leading_monomial_eq {G : Finset (MvPolynomial σ R)
     Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
   classical
   by_cases hR : Nontrivial R
-  rw [m.leadingTerm_ideal_span_monomial (B := (↑G : Set (MvPolynomial σ R))) hG]
+  rw [m.span_leadingTerm_eq_span_monomial (B := (↑G : Set (MvPolynomial σ R))) hG]
   apply le_antisymm
   · rw [Ideal.span_le]
     refine subset_trans ?_ Submodule.subset_span
@@ -350,13 +350,13 @@ theorem isGroebnerBasis_unique_isRemainder {G : Finset (MvPolynomial σ R)} {I :
   rw [← sub_eq_zero]
   by_contra! hrne0
   have hr := (m.degree_mem_support_iff _).mpr hrne0
-  apply m.isRemainder_sub_isRemainder_monomial_not_mem_leading_term_ideal (B := ↑G) hG hr₁ hr₂ at hr
+  apply m.sub_monomial_notMem_span_leadingTerm_of_isRemainder (B := ↑G) hG hr₁ hr₂ at hr
   rw [m.isGroebnerBasis_span_leading_monomial_eq h hG] at hr
   apply hr
   apply Submodule.mem_span_of_mem
   apply Set.mem_image_of_mem
   simp [hrne0]
-  exact m.remainder_sub_remainder_mem_ideal h.1 hr₁ hr₂
+  exact m.sub_mem_ideal_of_isRemainder_of_subset_ideal h.1 hr₁ hr₂
 
 /--
 Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$. Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if  for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
@@ -418,7 +418,7 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
         intro b' hb'
         rcases hd b' hb' with h | h <;> simp [h]
       · rw [← coeff_sum, ← coeff_add, ← notMem_support_iff]
-        exact m.not_mem_support_of_degree_lt hfd
+        exact m.notMem_support_of_degree_lt hfd
     · apply Finset.sum_congr rfl
       intro b' hb'
       rw [sPolynomial]

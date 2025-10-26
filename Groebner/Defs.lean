@@ -621,15 +621,16 @@ lemma leadingTerm_image_insert_zero (B : Set (MvPolynomial σ R)) :
 lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
   rw [leadingTerm_eq_zero_iff]
 
--- @[reducible]
--- def leading_term_ideal : Ideal (MvPolynomial σ R) := Ideal.span (leadingTerm m '' (G' : Set (MvPolynomial σ R)))
-
 /--
-Fix a monomial order on the polynomial ring $k[x_1, \ldots, x_n]$.A finite subset $G = \{g_1, \ldots, g_t\}$ of an ideal $I \subseteq k[x_1, \ldots, x_n]$, with $I \ne \{0\}$, is said to be a **Gröbner basis** (or standard basis) if
+Fix a monomial order on the polynomial ring $k[x_1, \ldots, x_n]$.A finite subset
+$G = \{g_1, \ldots, g_t\}$ of an ideal $I \subseteq k[x_1, \ldots, x_n]$,
+with $I \ne \{0\}$, is said to be a **Gröbner basis** (or standard basis) if
   $$
-  \langle \operatorname{LT}(g_1), \ldots, \operatorname{LT}(g_t) \rangle = \langle \operatorname{LT}(I) \rangle.
+  \langle \operatorname{LT}(g_1), \ldots, \operatorname{LT}(g_t) \rangle =
+  \langle \operatorname{LT}(I) \rangle.
   $$
-  Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the empty set $\emptyset$ to be the Gröbner basis of the zero ideal $\{0\}$.
+Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the empty set $\emptyset$
+to be the Gröbner basis of the zero ideal $\{0\}$.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 def IsGroebnerBasis {R : Type*} [CommSemiring R] (G: Finset (MvPolynomial σ R))
@@ -866,11 +867,9 @@ lemma degree_sPolynomial (f g : MvPolynomial σ R) :
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 variable {m} in
-lemma degree_sPolynomial_lt_sup_degree [NoZeroDivisors R] {f g : MvPolynomial σ R}
-    (h : m.sPolynomial f g ≠ 0) :
+lemma degree_sPolynomial_lt_sup_degree {f g : MvPolynomial σ R} (h : m.sPolynomial f g ≠ 0) :
     (m.degree <| m.sPolynomial f g) ≺[m] m.degree f ⊔ m.degree g :=
   (or_iff_left h).mp <| m.degree_sPolynomial f g
-
 
 /--
 $h_1, h_2 \in k[\mathbf{x}], lm(h_1) = lm(h_2), S(h_1, h_2) \ne 0$, then
@@ -889,7 +888,7 @@ lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0
   rw [mul_ne_zero_iff] at hf
   exact m.degree_mul hf.1 hf.2
 
-lemma not_mem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺[m] m.degree g) :
+lemma notMem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺[m] m.degree g) :
     m.degree g ∉ f.support := by
   simp
   exact coeff_eq_zero_of_lt h
