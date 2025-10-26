@@ -108,7 +108,7 @@ def IsRemainder :=
 
 theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder p (Set.range b) r ↔
-    (∃ g : ι →₀ MvPolynomial σ R,
+      (∃ g : ι →₀ MvPolynomial σ R,
         p = Finsupp.linearCombination _ b g + r ∧
         ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
       ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
@@ -123,13 +123,9 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
     split_ands
     · use Finsupp.embDomain f g
       split_ands
-      · simp
-        refine ext p ((Finsupp.linearCombination (MvPolynomial σ R) (b ∘ ⇑f)) g + r) ?_
-        simp [h₁]
-        simp [Finsupp.linearCombination_apply, Finsupp.sum]
-        suffices (∑ x ∈ g.support, g x * ↑x) = (∑ x ∈ g.support, g x * b (f x)) by simp [this]
-        apply Finset.sum_congr rfl
-        intro x hx
+      · ext
+        simp [h₁, Finsupp.linearCombination_apply, Finsupp.sum]
+        congr
         simp [f, Set.apply_rangeSplitting]
       · intro i
         specialize h₂ ⟨b i, Set.mem_range_self i⟩
@@ -148,8 +144,7 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
           simp [f] at ha'
           convert_to i = Set.rangeSplitting b ⟨b i, hbi⟩
           simp [← ha'.1, Set.apply_rangeSplitting]
-        · convert Finsupp.embDomain_apply f g _
-          rfl
+        · exact Finsupp.embDomain_apply f g ⟨b i, hbi⟩
     · intro i hi b hb
       aesop
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
@@ -157,119 +152,78 @@ theorem isRemainder_range {ι : Type*} (b : ι → MvPolynomial σ R) (r : MvPol
     · let b_support : Finset (Set.range b) :=
         (g.support.biUnion fun i ↦
           {⟨b i, Set.mem_range_self i⟩})
-      let f : ι → Set.range b := fun i ↦ ⟨b i, Set.mem_range_self i⟩
-
-      let g' : Set.range b → MvPolynomial σ R := fun x ↦
-         Finset.sum (g.support.filter fun i ↦ f i = x) fun i ↦ g i
+      let b' : ι → Set.range b := fun i ↦ ⟨b i, Set.mem_range_self i⟩
+      let g' : Set.range b → MvPolynomial σ R :=
+        fun x ↦ Finset.sum (g.support.filter fun i ↦ b' i = x) fun i ↦ g i
       have mem_support : ∀ x, g' x ≠ 0 → x ∈ b_support := by
         intro x hx
-        have : ∃ i ∈ g.support, f i = x := by
-          by_contra h
-          push_neg at h
-          have : g' x = 0 := by
-            dsimp [g']
-            rw [Finset.sum_filter]
-            have hg: (g.support.filter (fun i => f i = x)) = ∅ := by
-              ext i
-              constructor
-              · intro hi
-                simp at hi h
-                exfalso
-                aesop
-              · intro h; simp at h
-            rw [← Finset.sum_filter]
-            rw [hg, Finset.sum_empty]
-          contradiction
-        rcases this with ⟨i, hi, hfx⟩
+        obtain ⟨i, hi, hb'x⟩ : ∃ i ∈ g.support, b' i = x := by
+          contrapose! hx
+          simp [g']
+          rw [Finset.sum_filter]
+          suffices (g.support.filter (fun i => b' i = x)) = ∅ by
+            rw [← Finset.sum_filter, this, Finset.sum_empty]
+          ext i
+          simp at hx
+          simp
+          exact hx i
         simp [b_support, Finset.mem_biUnion]
         use i
         constructor
         · exact Finsupp.mem_support_iff.mp hi
-        · have x_eq : x = ⟨b i, Set.mem_range_self i⟩ := hfx.symm
-          rw [x_eq]
+        · exact hb'x.symm
       use Finsupp.onFinset b_support g' mem_support
       split_ands
-      · simp [h₁]
-        simp [Finsupp.linearCombination_apply, Finsupp.sum]
-        have : ∑ x ∈ g.support, g x * b x =
-          ∑ x ∈ (Finsupp.onFinset b_support g' mem_support).support, g' x * ↑x := by
-          calc
-            ∑ x ∈ g.support, g x * b x
-                = ∑ x ∈ g.support, g x * (f x : MvPolynomial σ R) := by
-                  refine Finset.sum_congr rfl fun x hx => ?_
-                  congr
-            _ = ∑ y ∈ Finset.image f g.support,
-            (∑ x ∈ g.support.filter (fun x => f x = y), g x) * (y : MvPolynomial σ R) := by
-                  rw [Finset.sum_image']
-                  intro y hy
-                  rw [Finset.sum_filter]
-                  ext x
-                  have h : (∑ a ∈ g.support, if f a = f y then g a else 0) =
-                    ∑ j ∈ g.support.filter (fun j ↦ f j = f y), g j := by
-                    simp [Finset.sum_filter]
-                  have left_eq_right : (∑ a ∈ g.support, if f a = f y then g a else 0) * ↑(f y) =
-                    ∑ j ∈ g.support.filter (fun j ↦ f j = f y), g j * ↑(f j) := by
-                    calc
-                    (∑ a ∈ g.support, if f a = f y then g a else 0) * ↑(f y) =
-                        (∑ j ∈ g.support.filter (fun j ↦ f j = f y), g j) * ↑(f y) := by rw [h]
-                    _ = ∑ j ∈ g.support.filter (fun j ↦ f j = f y), g j * ↑(f y) := by
-                      exact Finset.sum_mul ({j ∈ g.support | f j = f y}) ⇑g ↑(f y)
-                    _ = ∑ j ∈ g.support.filter (fun j ↦ f j = f y), g j * ↑(f j) := by
-                      apply Finset.sum_congr rfl
-                      intro j hj
-                      have : f j = f y := (Finset.mem_filter.mp hj).2
-                      rw [this]
-                  exact congr_arg (coeff x) left_eq_right
-            _ = ∑ y ∈ Finset.image f g.support, g' y * (y : MvPolynomial σ R) := by
-                  refine Finset.sum_congr rfl fun y hy => ?_
-                  congr
-            _ = ∑ y ∈ b_support, g' y * (y : MvPolynomial σ R) := by
-                  have image_eq : Finset.image f g.support = b_support := by
-                    ext y
-                    constructor
-                    · intro hy
-                      rcases Finset.mem_image.1 hy with ⟨x, hx, rfl⟩
-                      simp [b_support, Finset.mem_biUnion]
-                      use x
-                      constructor
-                      · exact Finsupp.mem_support_iff.mp hx
-                      · exact rfl
-                    · intro hy
-                      simp [b_support, Finset.mem_biUnion] at hy
-                      rcases hy with ⟨x, hx, h⟩
-                      refine Finset.mem_image.mpr ?_
-                      use x
-                      constructor
-                      · exact Finsupp.mem_support_iff.mpr hx
-                      · exact id (Eq.symm h)
-                  rw [image_eq]
-            _ = ∑ x ∈ (Finsupp.onFinset b_support g' mem_support).support, g' x * ↑x := by
-                  rw [Finsupp.support_onFinset, Finset.sum_filter]
-                  congr
-                  ext x
-                  by_cases hx : g' x = 0 <;> simp [hx]
-        rw [this]
+      · simp [h₁, Finsupp.linearCombination_apply, Finsupp.sum]
+        congr
+        calc
+          ∑ x ∈ g.support, g x * b x
+            = ∑ x ∈ g.support, g x * (b' x : MvPolynomial σ R) := by rfl
+          _ = ∑ y ∈ Finset.image b' g.support,
+              (∑ x ∈ g.support.filter (b' · = y), g x) * (y : MvPolynomial σ R) := by
+            rw [Finset.sum_image']
+            intro y hy
+            rw [Finset.sum_filter]
+            ext x
+            congr
+            calc
+              (∑ a ∈ g.support, if b' a = b' y then g a else 0) * ↑(b' y) =
+                  (∑ j ∈ g.support.filter (fun j ↦ b' j = b' y), g j) * ↑(b' y) := by
+                congr 1
+                simp [Finset.sum_filter]
+              _ = ∑ j ∈ g.support.filter (fun j ↦ b' j = b' y), g j * ↑(b' y) :=
+                Finset.sum_mul ({j ∈ g.support | b' j = b' y}) ⇑g ↑(b' y)
+              _ = ∑ j ∈ g.support.filter (fun j ↦ b' j = b' y), g j * ↑(b' j) := by
+                apply Finset.sum_congr rfl
+                intro j hj
+                congr 2
+                exact (Finset.mem_filter.mp hj).2.symm
+          _ = ∑ y ∈ Finset.image b' g.support, g' y * (y : MvPolynomial σ R) := by rfl
+          _ = ∑ y ∈ b_support, g' y * (y : MvPolynomial σ R) := by
+            congr
+            ext y
+            simp [b_support, Eq.comm (a:=y), b']
+          _ = ∑ x ∈ (Finsupp.onFinset b_support g' mem_support).support, g' x * ↑x := by
+            rw [Finsupp.support_onFinset, Finset.sum_filter]
+            congr
+            ext x
+            by_cases hx : g' x = 0 <;> simp [hx]
       · intro b1
-        dsimp [Finsupp.onFinset]
-        dsimp [g']
+        simp [Finsupp.onFinset, g']
         rw [Finset.mul_sum]
-        have coe_b1_eq : ∀ i, f i = b1 → (b1 : MvPolynomial σ R) = b i := by
-          intro i hi
-          simp [f] at hi
-          rw [←hi]
-        have sum_eq : (∑ i ∈ g.support.filter (fun i => f i = b1), ↑b1 * g i) =
-                (∑ i ∈ g.support.filter (fun i => f i = b1), b i * g i) := by
-          refine Finset.sum_congr rfl fun i hi => ?_
+        have sum_eq : (∑ i ∈ g.support.filter (fun i => b' i = b1), ↑b1 * g i) =
+            (∑ i ∈ g.support.filter (fun i => b' i = b1), b i * g i) := by
+          refine Finset.sum_congr rfl fun i hi ↦ ?_
           rw [Finset.mem_filter] at hi
-          have : (b1 : MvPolynomial σ R) = b i := coe_b1_eq i hi.2
-          rw [this]
+          congr
+          exact Subtype.eq_iff.mp hi.2.symm
         rw [sum_eq]
-        have degree_le : ∀ i ∈ g.support.filter (fun i => f i = b1),
+        have degree_le : ∀ i ∈ g.support.filter (fun i => b' i = b1),
             m.degree (b i * g i) ≼[m] m.degree p := by
           intro i hi
           rw [Finset.mem_filter] at hi
           exact h₂ i
-        trans (g.support.filter fun i ↦ f i = b1).sup fun i ↦ m.toSyn (m.degree (b i * g i))
+        trans (g.support.filter fun i ↦ b' i = b1).sup fun i ↦ m.toSyn (m.degree (b i * g i))
         · exact m.degree_sum_le
         · exact Finset.sup_le (fun i hi ↦ degree_le i hi)
     · aesop
