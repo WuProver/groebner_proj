@@ -81,10 +81,12 @@ open Submodule
 open Ideal
 open Field
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma span_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     span (m.leadingTerm '' (B \ {0})) = span (m.leadingTerm '' B) :=
   m.image_leadingTerm_sdiff_singleton_zero B ▸ Ideal.span_sdiff_singleton_zero
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma span_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
     span (m.leadingTerm '' (insert 0 B)) = span (m.leadingTerm '' B) := by
   by_cases h : 0 ∈ B
@@ -124,6 +126,7 @@ $$
 \left\langle x^{\deg(p)} \mid p \in G'' \right\rangle,
 $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma span_leadingTerm_eq_span_monomial {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p)) :
     span (m.leadingTerm '' B) =
@@ -157,6 +160,7 @@ $$
 G \setminus \{0\} \} \right\} \right\rangle
 $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma span_leadingTerm_eq_span_monomial₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0) :
     span (m.leadingTerm '' B) =
@@ -168,6 +172,7 @@ lemma span_leadingTerm_eq_span_monomial₀ {B : Set (MvPolynomial σ R)}
       apply span_leadingTerm_eq_span_monomial
       simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma span_leadingTerm_eq_span_monomial' {B : Set (MvPolynomial σ k)} :
     span (m.leadingTerm '' B) =
     span ((fun p ↦ MvPolynomial.monomial (m.degree p) 1) '' (B \ {0})) := by
