@@ -80,7 +80,6 @@ lemma degree_mem_support_iff._mathlib_ (f : MvPolynomial σ R) : m.degree f ∈ 
 The leading term in a non-zero multivariate polynomial is the term of the polynomial's degree in
 the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
-
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
@@ -589,8 +588,14 @@ lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R)
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+@[simp]
 lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R) : m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
+
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+@[simp]
+lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
+  rw [leadingTerm_eq_zero_iff]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma image_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
@@ -616,11 +621,6 @@ lemma image_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
   · simp_intro p hp
     rwa [Eq.comm (a := 0) (b := p)]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
-@[simp]
-lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
-  rw [leadingTerm_eq_zero_iff]
-
 /--
 Fix a monomial order on the polynomial ring $k[x_1, \ldots, x_n]$.A finite subset
 $G = \{g_1, \ldots, g_t\}$ of an ideal $I \subseteq k[x_1, \ldots, x_n]$,
@@ -633,7 +633,7 @@ Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the emp
 to be the Gröbner basis of the zero ideal $\{0\}$.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
-def IsGroebnerBasis {R : Type*} [CommSemiring R] (G: Finset (MvPolynomial σ R))
+def IsGroebnerBasis {R : Type*} [CommSemiring R] (G : Finset (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) :=
   G.toSet ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G.toSet)
 
@@ -743,8 +743,10 @@ theorem div_set'₀ {B : Set (MvPolynomial σ R)}
   exists r
   rwa [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
 
--- this part is some lemma about leadingTerm
+-- the following part is some lemma about leadingTerm
+
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+@[simp]
 lemma degree_leadingTerm (f : MvPolynomial σ R) :
     m.degree (m.leadingTerm f) = m.degree f := by
   classical
@@ -753,6 +755,11 @@ lemma degree_leadingTerm (f : MvPolynomial σ R) :
     simp [leadingCoeff, h]
   simp [MonomialOrder.degree_monomial]
   exact fun a ↦ False.elim (h a)
+
+@[simp]
+lemma leadingCoeff_leadingTerm (f : MvPolynomial σ R) :
+    m.leadingCoeff (m.leadingTerm f) = m.leadingCoeff f := by
+  simp [leadingTerm, leadingCoeff_monomial]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
 theorem degree_sub_leadingTerm_le (f : MvPolynomial σ R) :

@@ -93,10 +93,14 @@ lemma span_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
   · rw [Set.insert_eq_of_mem h]
   · simp [image_leadingTerm_insert_zero]
 
+-- submit: https://github.com/leanprover-community/mathlib4/pull/29203
+@[simp]
 lemma isGroebnerBasis_erase_zero (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis (G.erase 0) I ↔ m.IsGroebnerBasis G I := by
   simp [IsGroebnerBasis, m.span_leadingTerm_sdiff_singleton_zero]
 
+-- submit: https://github.com/leanprover-community/mathlib4/pull/29203
+@[simp]
 lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis (G ∪ {0}) I ↔ m.IsGroebnerBasis G I := by
@@ -192,18 +196,17 @@ $$
 p \in I.
 $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma mem_ideal_of_isRemainder_of_mem_ideal {B : Set (MvPolynomial σ R)} {r : MvPolynomial σ R}
     {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
     (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) (hr : r ∈ I) :
     p ∈ I := by
   obtain ⟨⟨f, h_eq, h_deg⟩, h_remain⟩ := hpBr
-  rw[h_eq]
-  refine Ideal.add_mem _ ?_ ?_
-  · rw [Finsupp.linearCombination_apply]
-    apply Ideal.sum_mem
-    intro b hb
-    exact mul_mem_left _ _ (Set.mem_of_mem_of_subset (by simp) hBI)
-  · exact hr
+  rw [h_eq]
+  refine Ideal.add_mem _ ?_ hr
+  rw [Finsupp.linearCombination_apply]
+  apply Ideal.sum_mem
+  exact fun _ _ ↦ mul_mem_left _ _ (Set.mem_of_mem_of_subset (by simp) hBI)
 
 /--
 Let $R$ be a commutative ring, and let $G'' \subseteq R[x_1, \dots, x_n]$,
@@ -218,10 +221,10 @@ $$
 r \in I \quad \Longleftrightarrow \quad p \in I.
 $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma mem_ideal_iff_of_isRemainder {R : Type*} [CommRing R] {B : Set (MvPolynomial σ R)}
     {r : MvPolynomial σ R} {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
-    (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) :
-    r ∈ I ↔ p ∈ I := by
+    (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) : r ∈ I ↔ p ∈ I := by
   refine ⟨mem_ideal_of_isRemainder_of_mem_ideal hBI hpBr, ?_⟩
   obtain ⟨⟨f, h_eq, h_deg⟩, h_remain⟩ := hpBr
   intro hp
@@ -229,8 +232,7 @@ lemma mem_ideal_iff_of_isRemainder {R : Type*} [CommRing R] {B : Set (MvPolynomi
   apply Ideal.sub_mem I hp
   -- (optional) to make it clearer: `rw [Finsupp.linearCombination_apply]`
   apply Ideal.sum_mem
-  intro b hb
-  exact mul_mem_left I _ (Set.mem_of_mem_of_subset (by simp) hBI)
+  exact fun _ _ ↦ mul_mem_left I _ (Set.mem_of_mem_of_subset (by simp) hBI)
 
 /--
 Let $I \subseteq k[x_i : i \in \sigma]$ be an ideal, and let $G \subseteq I$ be a finite subset.
@@ -240,6 +242,7 @@ $$
 r_1 - r_2 \in I.
 $$
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sub_mem_ideal_of_isRemainder_of_subset_ideal {R : Type*} [CommRing R]
     {B : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} {p r₁ r₂ : MvPolynomial σ R}
     (hBI : B ⊆ I) (hr₁ : m.IsRemainder p B r₁) (hr₂ : m.IsRemainder p B r₂) :
@@ -254,6 +257,7 @@ lemma sub_mem_ideal_of_isRemainder_of_subset_ideal {R : Type*} [CommRing R]
     intro g hg
     exact mul_mem_left I _ (Set.mem_of_mem_of_subset (by simp) hBI)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma term_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
@@ -274,6 +278,7 @@ lemma term_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
   specialize hB b hb
   simp [hq0, h1ne0.symm] at hB
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma term_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0)
@@ -284,6 +289,7 @@ lemma term_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
   refine term_notMem_span_leadingTerm_of_isRemainder ?_ h
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma term_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
     {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s (r.coeff s) ∉ Ideal.span (m.leadingTerm '' B) := by
@@ -292,6 +298,7 @@ lemma term_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
   · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma monomial_notMem_span_leadingTerm {r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
@@ -308,6 +315,7 @@ lemma monomial_notMem_span_leadingTerm {r : MvPolynomial σ R}
   · intro b hb
     exact h s hs b hb
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma monomial_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p))
@@ -323,6 +331,7 @@ lemma monomial_notMem_span_leadingTerm_of_isRemainder {p r : MvPolynomial σ R}
     exact hc rfl
   refine h.2 c hc b hb (m.leadingCoeff_ne_zero_iff.mp (hB _ hb).ne_zero)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma monomial_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)}
     (hB : ∀ p ∈ B, IsUnit (m.leadingCoeff p) ∨ p = 0)
@@ -333,6 +342,7 @@ lemma monomial_notMem_span_leadingTerm_of_isRemainder₀ {p r : MvPolynomial σ 
   refine m.monomial_notMem_span_leadingTerm_of_isRemainder ?_ h
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma monomial_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
     {B : Set (MvPolynomial σ k)} (h : m.IsRemainder p B r) :
     ∀ s ∈ r.support, monomial s 1 ∉ Ideal.span (m.leadingTerm '' B) := by
@@ -341,11 +351,13 @@ lemma monomial_notMem_span_leadingTerm_of_isRemainder' {p r : MvPolynomial σ k}
   · simp
   rwa [←isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sPolynomial_mem_ideal {R : Type*} [CommRing R]
     {I : Ideal <| MvPolynomial σ R} {p q : MvPolynomial σ R}
     (hp : p ∈ I) (hq : q ∈ I) : m.sPolynomial p q ∈ I :=
   sub_mem (mul_mem_left I _ hp) (mul_mem_left I _ hq)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sub_monomial_notMem_span_leadingTerm_of_isRemainder
     {R : Type*} [CommRing R]
     {B : Set (MvPolynomial σ R)} {p r₁ r₂ : MvPolynomial σ R}
