@@ -97,7 +97,6 @@ jobs:
             python3 -m venv env
             source env/bin/activate
             pip install --upgrade pip requests wheel
-            pip install pygraphviz --global-option=build_ext --global-option="-L/usr/lib/graphviz/" --global-option="-R/usr/lib/graphviz/"
             # patched plastexdepgraph for line break on dep graph
             pip install https://github.com/WuProver/plastexdepgraph/archive/refs/heads/settitle.zip
             pip install leanblueprint
