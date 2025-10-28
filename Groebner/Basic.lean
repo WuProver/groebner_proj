@@ -35,10 +35,17 @@ theorem exists_isGroebnerBasis [Finite σ] :
   · exact hG.trans hG'I
   · rw [hIs, hGG', hG's]
 
-/--
+/-- Given a remainder `r` of a polynomial `p` on division by a Gröbner basis `G` of an ideal `I`,
+the remainder `r` is 0 if and only if `p` is in the ideal `I`.
+
+Any leading coefficient of polynomial in the Gröbner basis `G` is required to be a unit.
+
+Formally:
+
 Let $G = \{g_1, \dots, g_t\}$ be a Gröbner basis for an ideal $I \subseteq k[x_1, \dots, x_n]$ and let $f \in k[x_1, \dots, x_n]$. Then $f \in I$ if and only if the remainder on division of $f$ by $G$ is zero.
 -/
-theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner {R : Type*} [CommRing R]
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner
     {p : MvPolynomial σ R} {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     {r : MvPolynomial σ R} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) (h : m.IsGroebnerBasis G I)
     (hr : m.IsRemainder p G r) :
@@ -72,6 +79,12 @@ theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner {R : Type*} [CommRing R]
       exact h₂
     exact h₃ h₄
 
+/-- Given a remainder `r` of a polynomial `p` on division by a Gröbner basis `G` of an ideal `I`,
+the remainder `r` is 0 if and only if `p` is in the ideal `I`.
+
+It is a variant of `MonomialOrder.remainder_eq_zero_iff_mem_ideal_of_isGroebner`, allowing the
+finite set to include also 0, besides polynomials with invertible leading coefficients. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner₀ {p : MvPolynomial σ R}
     {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} {r : MvPolynomial σ R}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) (h : m.IsGroebnerBasis G I)
@@ -84,6 +97,12 @@ theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner₀ {p : MvPolynomial σ R}
   · convert hr
     simp
 
+/-- Given a remainder `r` of a polynomial `p` on division by a Gröbner basis `G` of an ideal `I`,
+the remainder `r` is 0 if and only if `p` is in the ideal `I`.
+
+It is variant of `MonomialOrder.remainder_eq_zero_iff_mem_ideal_of_isGroebner`, over a field and
+without hypothesis on leading coefficients in the finite set. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner' {p : MvPolynomial σ k}
     {G : Finset (MvPolynomial σ k)} {I : Ideal (MvPolynomial σ k)}
     {r : MvPolynomial σ k}
@@ -93,6 +112,7 @@ theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner' {p : MvPolynomial σ k}
   refine remainder_eq_zero_iff_mem_ideal_of_isGroebner₀ ?_ h hr
   simp [em']
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isRemainder_zero_iff_mem_ideal_of_isGroebner {p : MvPolynomial σ R}
     {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g))
@@ -112,6 +132,7 @@ theorem isRemainder_zero_iff_mem_ideal_of_isGroebner {p : MvPolynomial σ R}
     rw [h₂] at hr
     exact hr
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_zero_iff_mem_ideal_of_isGroebner₀ {p : MvPolynomial σ R}
     {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0)
@@ -123,6 +144,7 @@ lemma isRemainder_zero_iff_mem_ideal_of_isGroebner₀ {p : MvPolynomial σ R}
   · simp
   simp_intro a b [or_iff_not_imp_right.mp (hG _ _)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma isRemainder_zero_iff_mem_ideal_of_isGroebner' {p : MvPolynomial σ k}
     {G : Finset (MvPolynomial σ k)} {I : Ideal (MvPolynomial σ k)}
     (h : m.IsGroebnerBasis G I) :
@@ -130,6 +152,7 @@ lemma isRemainder_zero_iff_mem_ideal_of_isGroebner' {p : MvPolynomial σ k}
   refine m.isRemainder_zero_iff_mem_ideal_of_isGroebner₀ ?_ h
   simp [em']
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma exists_degree_le_degree_of_isRemainder_zero {R : Type*} [CommSemiring R]
     (p : MvPolynomial σ R) (hp : p ≠ 0) (B : Set (MvPolynomial σ R))
     (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b))
@@ -158,6 +181,7 @@ lemma exists_degree_le_degree_of_isRemainder_zero {R : Type*} [CommSemiring R]
     · exact le_of_add_le_right (le_of_eq hb₂)
     exact hB b (Set.mem_of_mem_of_subset hb₁ h₁)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma exists_degree_le_degree_of_isRemainder_zero₀ {R : Type*} [CommSemiring R]
     (p : MvPolynomial σ R) (hp : p ≠ 0) (B : Set (MvPolynomial σ R))
     (hB : ∀ b ∈ B, IsRegular (m.leadingCoeff b) ∨ b = 0)
@@ -169,7 +193,7 @@ lemma exists_degree_le_degree_of_isRemainder_zero₀ {R : Type*} [CommSemiring R
     rw [and_assoc]
   · simp_intro a b [or_iff_not_imp_right.mp (hB _ _)]
 
-
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma exists_degree_le_degree_of_isRemainder_zero' (p : MvPolynomial σ k) (hp : p ≠ 0)
     (B : Set (MvPolynomial σ k)) (h : m.IsRemainder p B 0) :
     ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree p :=
@@ -194,46 +218,37 @@ lemma exists_degree_le_degree_of_isRemainder_zero' (p : MvPolynomial σ k) (hp :
 /--
 Let $G = \{g_1, \ldots, g_t\}$ be a Gröbner basis for an ideal $I \subseteq k[x_1, \ldots, x_n]$. Then $G$ is a basis for the vector space $I$ over $k$.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem ideal_eq_span_of_isGroebner {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) (h : m.IsGroebnerBasis G I) :
     I = Ideal.span G := by
   apply le_antisymm
   · intro p hp
-    have h_remainder: m.IsRemainder p G 0 := by
-      exact (isRemainder_zero_iff_mem_ideal_of_isGroebner hG h).mpr hp
-    obtain ⟨⟨f, h_eq, h_deg⟩, h_remain⟩ := h_remainder
-    rw [h_eq]
-    simp
-    rw [Finsupp.linearCombination_apply]
+    rw [← isRemainder_zero_iff_mem_ideal_of_isGroebner hG h] at hp
+    obtain ⟨⟨f, h_eq, h_deg⟩, h_remain⟩ := hp
+    rw [h_eq, Finsupp.linearCombination_apply, add_zero]
     apply Ideal.sum_mem
     intro g hg
     rcases g with ⟨g, gG'⟩
-    simp
-    have : g ∈ Ideal.span G := by
-      apply Ideal.subset_span
-      exact gG'
-    apply Ideal.mul_mem_left
-    exact this
-
+    exact Ideal.mul_mem_left _ _ (Ideal.subset_span gG')
   · intro p hp
-    have hG' : G.toSet ⊆ I := by
-      exact h.1
-    have hI : Ideal.span ↑G ≤ I := by
-      apply Ideal.span_le.mpr
-      intro p hp'
-      rw [SetLike.mem_coe]
-      exact hG' hp'
-    exact hI hp
+    suffices Ideal.span ↑G ≤ I by
+      exact this hp
+    apply Ideal.span_le.mpr
+    intro p hp'
+    rw [SetLike.mem_coe]
+    exact h.1 hp'
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isGroebnerBasis_iff_ideal_eq_span_and_isGroebner_span (G : Finset (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G I ↔ (I = Ideal.span G ∧ m.IsGroebnerBasis G (Ideal.span G)) := by
   constructor
-  · intro h
-    simp [ideal_eq_span_of_isGroebner hG h] at *
-    exact h
+  · intro this
+    simpa [ideal_eq_span_of_isGroebner hG this]
   · simp_intro ..
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G I ↔
@@ -251,30 +266,28 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Finset (MvPolynomial σ R
     · exact hG' ▸ Submodule.subset_span
     · rw [← hG', ←SetLike.coe_set_eq]
       apply Set.eq_of_subset_of_subset
-      · have h₁: Ideal.span (m.leadingTerm '' Ideal.span (α := MvPolynomial σ R) G)
-          ≤ Ideal.span (α := MvPolynomial σ R) (m.leadingTerm '' G) := by
-          apply Ideal.span_le.mpr
-          intro p' hp
-          rcases hp with ⟨p, hp', hp'₁⟩
-          rw [←hp'₁, leadingTerm]
-
-          rw [hG'] at hp'
-
-          rw [SetLike.mem_coe]
-
-          rw [m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
-            ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
-          intro j hj
-          simp [MonomialOrder.leadingCoeff_eq_zero_iff] at hj
-          simp
-
-          exact hj.1 ▸ h_degree p hp' hj.2
-        exact h₁
+      · apply Ideal.span_le.mpr
+        intro p' hp
+        rcases hp with ⟨p, hp', hp'₁⟩
+        rw [hG'] at hp'
+        rw [←hp'₁, leadingTerm, SetLike.mem_coe,
+          m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
+          ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
+        intro j hj
+        simp [MonomialOrder.leadingCoeff_eq_zero_iff] at hj
+        simp
+        exact hj.1 ▸ h_degree p hp' hj.2
       · rw [hG']
         apply Ideal.span_mono
         exact Set.image_mono (hG' ▸ Submodule.subset_span)
 
-theorem isGroebnerBasis_iff (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
+/-- A finite set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of
+this ideal and 0 is a remainder of each member of this ideal on division by this finite set.
+
+Any leading coefficient of polynomial in the finite set is required to be a unit. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
+    (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G I ↔ G.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 := by
   classical
@@ -306,14 +319,38 @@ theorem isGroebnerBasis_iff (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolyn
         (by simp_intro .. [(hG _ _).isRegular]) <|
           h_remainder p hp
 
-theorem isGroebnerBasis_iff₀ (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R))
-    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+/-- A finite set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of
+this ideal and 0 is a remainder of each member of this ideal on division by this finite set.
+
+It is a variant of `MonomialOrder.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero`, allowing
+the finite set to include also 0, besides polynomials with invertible leading coefficients. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ (G : Finset (MvPolynomial σ R))
+    (I : Ideal (MvPolynomial σ R)) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
     m.IsGroebnerBasis G I ↔ G.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 := by
   rw [← m.isGroebnerBasis_erase_zero]
-  convert m.isGroebnerBasis_iff (G.erase 0) I _ using 2
+  convert m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero (G.erase 0) I _ using 2
   · simp
   · simp [m.isRemainder_sdiff_singleton_zero_iff_isRemainder]
   · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
+/-- A finite set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of
+this ideal and 0 is a remainder of each member of this ideal on division by this finite set.
+
+It is a variant of `MonomialOrder.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero`,
+over a field and without hypothesis on leading coefficients in the finite set.
+
+Formally:
+
+Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$.
+Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if
+for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
+whose leading coefficients are invertible with respect to a monomial order
+-/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero' :
+    m.IsGroebnerBasis G I ↔ G.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 :=
+  m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ G I (by simp [em'])
 
 theorem span_leadingTerm_eq_span_monomial_of_isGroebner {G : Finset (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
@@ -341,6 +378,21 @@ theorem span_leadingTerm_eq_span_monomial_of_isGroebner {G : Finset (MvPolynomia
   · rw [not_nontrivial_iff_subsingleton] at hR
     exact ((Submodule.subsingleton_iff _).mpr inferInstance).elim _ _
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem span_leadingTerm_eq_span_monomial_of_isGroebner₀ {G : Finset (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)}
+    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+    Ideal.span (m.leadingTerm '' ↑G) =
+    Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
+  rw [← m.isGroebnerBasis_erase_zero] at h
+  convert m.span_leadingTerm_eq_span_monomial_of_isGroebner h _ using 1
+  · simp [m.image_leadingTerm_sdiff_singleton_zero]
+  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
+/-- Remainder of any polynomial on division by Gröbner basis exists and is unique.
+
+Any leading coefficient of polynomial in the Gröbner basis is required to be a unit. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem existsUnique_isRemainder_of_isGroebnerBasis {G : Finset (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
     (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) (p : MvPolynomial σ R) :
@@ -359,13 +411,21 @@ theorem existsUnique_isRemainder_of_isGroebnerBasis {G : Finset (MvPolynomial σ
   simp [hrne0]
   exact m.sub_mem_ideal_of_isRemainder_of_subset_ideal h.1 hr₁ hr₂
 
-/--
-Let $G = \{g_1, \ldots, g_t\}$ be a finite subset of $k[x_1, \ldots, x_n]$. Then $G$ is a Gröbner basis for the ideal $I = \langle G \rangle$ if and only if  for every $f \in I$, the remainder of $f$ on division by $G$ is zero.
-whose leading coefficients are invertible with respect to a monomial order
--/
-theorem isGroebnerBasis_iff' :
-    m.IsGroebnerBasis G I ↔ G.toSet ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 :=
-  m.isGroebnerBasis_iff₀ G I (by simp [em'])
+/-- Remainder of any polynomial on division by Gröbner basis exists and is unique.
+
+It is a variant of `MonomialOrder.existsUnique_isRemainder_of_isGroebnerBasis`, allowing the
+Gröbner basis to include also 0, besides polynomials with invertible leading coefficients. -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+theorem existsUnique_isRemainder_of_isGroebnerBasis₀ {G : Finset (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)}
+    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0)
+    (p : MvPolynomial σ R) :
+    ∃! (r : MvPolynomial σ R), m.IsRemainder p G r := by
+  rw [← m.isGroebnerBasis_erase_zero] at h
+  simp_rw [← m.isRemainder_sdiff_singleton_zero_iff_isRemainder p G]
+  convert m.existsUnique_isRemainder_of_isGroebnerBasis h _ p
+  · simp
+  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
 lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0) :
     (0 < (m.toSyn <| m.degree f)) ∨ (0 < (m.toSyn <| m.degree g)) := by
@@ -380,13 +440,20 @@ lemma sPolynomial_ne_zero (f g : MvPolynomial σ R) (h : m.sPolynomial f g ≠ 0
   ring
 
 /--
-Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and suppose $$f = c_1 h_1 + \cdots + c_m h_m, \quad \text{with } c_i \in k.$$ If $$\mathrm{lm}(h_1) = \mathrm{lm}(h_2) = \cdots = \mathrm{lm}(h_i) > \mathrm{lm}(f),$$ then $$f = \sum_{1 \leq i < j \leq m} c_{i,j} S(h_i, h_j), \quad c_{i,j} \in k.$$ Furthermore, if $S(h_i, h_j) \ne 0$, then $\mathrm{lm}(h_i) > \mathrm{lm}(S(h_i, h_j))$.
+Let $f, h_1, \dots, h_m \in k[\mathbf{x}] \setminus \{0\}$, and
+suppose
+  $$f = c_1 h_1 + \cdots + c_m h_m, \quad \text{with } c_i \in k.$$
+
+If $$\mathrm{lm}(h_1) = \mathrm{lm}(h_2) = \cdots = \mathrm{lm}(h_i) > \mathrm{lm}(f),$$ then
+$$f = \sum_{1 \leq i < j \leq m} c_{i,j} S(h_i, h_j), \quad c_{i,j} \in k.$$
+Furthermore, if $S(h_i, h_j) \ne 0$, then $\mathrm{lm}(h_i) > \mathrm{lm}(S(h_i, h_j))$.
 -/
-lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
-    {B: Finset ι} {g : ι → MvPolynomial σ R}
-    (hd: ∀ b ∈ B,
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+lemma sPolynomial_decomposition {d : m.syn} {ι : Type*}
+    {B : Finset ι} {g : ι → MvPolynomial σ R}
+    (hd : ∀ b ∈ B,
       (m.toSyn <| m.degree <| g b) = d ∧ IsUnit (m.leadingCoeff <| g b) ∨ g b = 0)
-    (hfd: (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d):
+    (hfd : (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d) :
     ∃ (c : ι → ι → R),
       ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
   classical
@@ -394,8 +461,7 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
   | empty => simp
   | insert b B hb h =>
     by_cases hb0 : g b = 0
-    · simp [Finset.sum_insert hb, hb0] at hd hfd
-      simp [Finset.sum_insert hb, hb0]
+    · simp [Finset.sum_insert hb, hb0] at hd hfd ⊢
       exact h hd hfd
     simp [Finset.sum_insert hb, hb0] at hfd hd
     obtain ⟨⟨deg_gb_eq_d, isunit_gb⟩, hd⟩ := hd
@@ -426,10 +492,11 @@ lemma sPolynomial_decomposition {d: m.syn} {ι : Type*}
       · simp [h]
       have := hd b' hb'
       simp [h] at this
-      simp [this, smul_eq_C_mul, mul_sub, ← mul_assoc _ _ (g b), ← mul_assoc _ _ (g b')]
+      simp [this, smul_eq_C_mul, mul_sub, ← mul_assoc _ _ (g b), ← mul_assoc _ _ (g b'),]
       simp_rw [← C_mul]
       simp [mul_comm]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sPolynomial_decomposition' {d : m.syn} {ι : Type*}
     {B : Finset ι} (g : ι → MvPolynomial σ k)
     (hd : ∀ b ∈ B, (m.toSyn <| m.degree <| g b) = d ∨ g b = 0)
@@ -443,18 +510,19 @@ set_option maxHeartbeats 400000 in
 /--
 A basis $G = \{ g_1, \ldots, g_t \}$ for an ideal $I$ is a Gröbner basis if and only if $S(g_i, g_j) \to_G 0$ for all $i \neq j$.
 -/
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
     m.IsGroebnerBasis G (Ideal.span G) ↔
     ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G 0 := by
   classical
   constructor
   · intro h g₁ g₂
-    rw [m.isGroebnerBasis_iff'] at h
+    rw [m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero'] at h
     apply h.2
     apply m.sPolynomial_mem_ideal
     <;> exact Set.mem_of_mem_of_subset (by simp) h.1
   intro hG
-  rw [isGroebnerBasis_iff']
+  rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero']
   exists Ideal.subset_span
   intro p hp
   simp_rw [isRemainder_finset, add_zero]
@@ -635,6 +703,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero :
 
 alias buchberger_criterion := isGroebnerBasis_iff_isRemainder_sPolynomial_zero
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero' :
     m.IsGroebnerBasis G (Ideal.span G) ↔
     ∀ (g₁ g₂ : G) (r : MvPolynomial σ k),
@@ -642,7 +711,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero' :
   constructor
   · intro h g₁ g₂ r hr
     apply (remainder_eq_zero_iff_mem_ideal_of_isGroebner' h hr).mpr
-    rw [m.isGroebnerBasis_iff'] at h
+    rw [m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero'] at h
     apply m.sPolynomial_mem_ideal
     <;> exact Set.mem_of_subset_of_mem h.1 (by simp)
   · rw [isGroebnerBasis_iff_isRemainder_sPolynomial_zero]

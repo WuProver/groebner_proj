@@ -405,7 +405,7 @@ lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
-lemma isRemainder_of_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
+lemma isRemainder_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
     (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
     m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
   constructor
@@ -450,7 +450,7 @@ lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
     (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
     m.IsRemainder p (B \ {0}) r ↔ m.IsRemainder p B r := by
   by_cases h : 0 ∈ B
-  · rw [←isRemainder_of_insert_zero_iff_isRemainder, show insert 0 (B \ {0}) = B by simp [h]]
+  · rw [←isRemainder_insert_zero_iff_isRemainder, show insert 0 (B \ {0}) = B by simp [h]]
   · simp [h]
 
 -- theorem degree_mul_of_isUnit_left {f g : MvPolynomial σ R}
@@ -890,6 +890,7 @@ lemma sPolynomial_lt_of_degree_ne_zero_of_degree_eq {f g : MvPolynomial σ R}
   simp [h, hs]
 
 /-- Monomial degree of product -/
+@[simp]
 lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0) :
     m.degree (f * g) = m.degree f + m.degree g := by
   rw [mul_ne_zero_iff] at hf
@@ -897,8 +898,7 @@ lemma degree_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} (hf : f * g ≠ 0
 
 lemma notMem_support_of_degree_lt {f g : MvPolynomial σ R} (h : m.degree f ≺[m] m.degree g) :
     m.degree g ∉ f.support := by
-  simp
-  exact coeff_eq_zero_of_lt h
+  simp [coeff_eq_zero_of_lt h]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 lemma sPolynomial_mul_monomial [IsCancelMulZero R] (p₁ p₂ : MvPolynomial σ R) (d₁ d₂ : σ →₀ ℕ)
