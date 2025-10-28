@@ -83,7 +83,7 @@ theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner
 the remainder `r` is 0 if and only if `p` is in the ideal `I`.
 
 It is a variant of `MonomialOrder.remainder_eq_zero_iff_mem_ideal_of_isGroebner`, allowing the
-finite set to include also 0, besides polynomials with invertible leading coefficients. -/
+finite set to contain also 0, besides polynomials with invertible leading coefficients. -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem remainder_eq_zero_iff_mem_ideal_of_isGroebner₀ {p : MvPolynomial σ R}
     {G : Finset (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} {r : MvPolynomial σ R}
@@ -323,7 +323,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
 this ideal and 0 is a remainder of each member of this ideal on division by this finite set.
 
 It is a variant of `MonomialOrder.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero`, allowing
-the finite set to include also 0, besides polynomials with invertible leading coefficients. -/
+the finite set to contain also 0, besides polynomials with invertible leading coefficients. -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ (G : Finset (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
@@ -414,7 +414,7 @@ theorem existsUnique_isRemainder_of_isGroebnerBasis {G : Finset (MvPolynomial σ
 /-- Remainder of any polynomial on division by Gröbner basis exists and is unique.
 
 It is a variant of `MonomialOrder.existsUnique_isRemainder_of_isGroebnerBasis`, allowing the
-Gröbner basis to include also 0, besides polynomials with invertible leading coefficients. -/
+Gröbner basis to contain also 0, besides polynomials with invertible leading coefficients. -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
 theorem existsUnique_isRemainder_of_isGroebnerBasis₀ {G : Finset (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
