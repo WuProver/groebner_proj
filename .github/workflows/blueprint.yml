@@ -57,8 +57,6 @@ jobs:
             .lake/build/doc/Qq
             .lake/build/doc/Std
             .lake/build/doc/Mathlib
-            .lake/build/doc/declarations
-            .lake/build/doc/find
             .lake/build/doc/*.*
             !.lake/build/doc/declarations/declaration-data-Groebner*
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
