@@ -504,6 +504,7 @@ lemma isRemainder_zero₀ {r : MvPolynomial σ R} (hB : ∀ b ∈ B, IsRegular (
   simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
+variable {m B} in
 lemma isRemainder_zero' [IsCancelMulZero R] {r : MvPolynomial σ R} (h : m.IsRemainder 0 B r) :
     r = 0 := by
   refine isRemainder_zero₀ ?_ h
@@ -584,6 +585,27 @@ lemma isRemainder_finset'₁ [IsCancelMulZero R] (p : MvPolynomial σ R)
     rw [isRemainder_finset]
     exact ⟨⟨g, h₁, h₂⟩, h₃⟩
 
+theorem isRemainder_def'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
+    (r : MvPolynomial σ R) : m.IsRemainder p B r ↔
+      (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
+        ↑g.support ⊆ B ∧
+        p = Finsupp.linearCombination _ id g + r ∧
+        ∀ b ∈ B, m.degree ((b : MvPolynomial σ R) * (g b)) ≼[m] m.degree p ∧
+        (p = 0 → g = 0)) ∧
+      ∀ c ∈ r.support, ∀ g' ∈ B, g' ≠ 0 → ¬ (m.degree g' ≤ c) := by
+  by_cases h : p ≠ 0
+  · simp [isRemainder_def', h]
+  push_neg at h
+  rw [h]
+  constructor
+  · intro h'
+    simp [isRemainder_zero' h']
+    use 0
+    simp
+  · intro h'
+    rw [isRemainder_def']
+    aesop
+
 /--
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
@@ -633,9 +655,9 @@ Using the convention that $\langle \emptyset \rangle = \{0\}$, we define the emp
 to be the Gröbner basis of the zero ideal $\{0\}$.
 -/
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/29203
-def IsGroebnerBasis {R : Type*} [CommSemiring R] (G : Finset (MvPolynomial σ R))
+def IsGroebnerBasis {R : Type*} [CommSemiring R] (G : Set (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) :=
-  G.toSet ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G.toSet)
+  G ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G)
 
 end CommSemiring
 

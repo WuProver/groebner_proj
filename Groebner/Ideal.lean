@@ -95,28 +95,23 @@ lemma span_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
 
 -- submit: https://github.com/leanprover-community/mathlib4/pull/29203
 @[simp]
-lemma isGroebnerBasis_erase_zero (G : Finset (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
-    m.IsGroebnerBasis (G.erase 0) I ↔ m.IsGroebnerBasis G I := by
+lemma isGroebnerBasis_sdiff_singleton_zero (G : Set (MvPolynomial σ R))
+    (I : Ideal (MvPolynomial σ R)) :
+    m.IsGroebnerBasis (G \ {0}) I ↔ m.IsGroebnerBasis G I := by
   simp [IsGroebnerBasis, m.span_leadingTerm_sdiff_singleton_zero]
 
 -- submit: https://github.com/leanprover-community/mathlib4/pull/29203
 @[simp]
-lemma isGroebnerBasis_union_singleton_zero (G : Finset (MvPolynomial σ R))
-    (I : Ideal (MvPolynomial σ R)) :
-    m.IsGroebnerBasis (G ∪ {0}) I ↔ m.IsGroebnerBasis G I := by
+lemma isGroebnerBasis_insert_zero (G : Set (MvPolynomial σ R))
+(I : Ideal (MvPolynomial σ R)) :
+    m.IsGroebnerBasis (insert 0 G) I ↔ m.IsGroebnerBasis G I := by
   unfold IsGroebnerBasis
   congr! 1
   · constructor
     · intro h x hx
       apply h
-      refine mem_coe.mpr ?_
-      exact mem_union_left {0} hx
-    · intro hGI
-      push_cast
-      rw [Set.union_subset_iff]
-      constructor
-      · exact hGI
-      · exact Set.singleton_subset_iff.mpr (Submodule.zero_mem _)
+      simp [hx]
+    · simp [Set.insert_subset_iff]
   · simp [m.span_leadingTerm_insert_zero]
 
 /--
