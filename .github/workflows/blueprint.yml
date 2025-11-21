@@ -22,6 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     name: Build project
     steps:
+      - name: free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/doc
+          docker system prune -af
+
       - name: Checkout project
         uses: actions/checkout@v4
         with:
