@@ -23,34 +23,6 @@ set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsReduced (hG : m.IsGroebnerBasis G I) :=
   (∀ p ∈ G, m.Monic p) ∧ ∀ p ∈ G, m.IsRemainder p (G \ {p}) p
 
--- todo: move
-lemma isRemainder_self_iff (p : MvPolynomial σ R)
-    (G : Set (MvPolynomial σ R)) :
-    m.IsRemainder p G p ↔
-    ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a :=
-  and_iff_right ⟨0, by simp⟩
-
-lemma isRemainder_self_tfae (p : MvPolynomial σ R)
-    (G : Set (MvPolynomial σ R)) :
-    [m.IsRemainder p G p, ∀ B' ⊆ G, m.IsRemainder p B' p,
-      ∀ q ∈ G, m.IsRemainder p {q} p,
-      ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a].TFAE := by
-  classical
-  apply List.tfae_of_forall (∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a)
-  intro h h
-  fin_cases h
-  · exact m.isRemainder_self_iff ..
-  · simp only [m.isRemainder_self_iff]
-    aesop
-  · simp only [m.isRemainder_self_iff]
-    aesop
-  rfl
-
-lemma IsRemainder.isRemainder_self {p r : MvPolynomial σ R}
-    (h : m.IsRemainder p G r) :
-    m.IsRemainder r G r :=
-  ⟨⟨0, by simp⟩, h.2⟩
-
 -- lemma degree_eq_iff_of_isRemainder {p r : MvPolynomial σ R}
 --     (hG : m.IsRemainder p G r)
 --     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
@@ -102,38 +74,38 @@ lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
 --   -- rw [monomial_notMem_span_leadingTerm]
 --   sorry
 
-lemma isGroebnerBasis_singleton_zero_bot :
+lemma IsGroebnerBasis.singleton_zero_bot :
     m.IsGroebnerBasis {(0 : MvPolynomial σ R)} ⊥ := by
   simp [IsGroebnerBasis]
 
-lemma isGroebnerBasis_empty_bot :
+lemma IsGroebnerBasis.empty_bot :
     m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) ⊥ := by
   simp [IsGroebnerBasis]
 
 @[simp]
-lemma isGroebnerBasis_singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
+lemma IsGroebnerBasis.singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis {(0 : MvPolynomial σ R)} I ↔ I = ⊥ := by
   constructor
   · simp [IsGroebnerBasis, Ideal.span_eq_bot]
     aesop
-  · simp_intro .. [isGroebnerBasis_singleton_zero_bot]
+  · simp_intro .. [IsGroebnerBasis.singleton_zero_bot]
 
 @[simp]
-lemma isGroebnerBasis_empty_iff (I : Ideal (MvPolynomial σ R)) :
+lemma IsGroebnerBasis.empty_iff (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) I ↔ I = ⊥ := by
   constructor
   · simp [IsGroebnerBasis, Ideal.span_eq_bot]
     aesop
-  · simp_intro .. [isGroebnerBasis_empty_bot]
+  · simp_intro .. [IsGroebnerBasis.empty_bot]
 
 @[simp]
-lemma isRemainder_of_subsingleton [Subsingleton (MvPolynomial σ R)]
+lemma IsRemainder.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {p r : MvPolynomial σ R} {s : Set (MvPolynomial σ R)} :
     m.IsRemainder p s r := by
   simp [IsRemainder, Subsingleton.eq_zero (α := MvPolynomial σ R)]
 
 @[simp]
-lemma isGroebnerBasis_of_subsingleton [Subsingleton (MvPolynomial σ R)]
+lemma IsGroebnerBasis.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
     m.IsGroebnerBasis s I := by
   classical
@@ -141,13 +113,13 @@ lemma isGroebnerBasis_of_subsingleton [Subsingleton (MvPolynomial σ R)]
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
 
-lemma isGroebnerBasis_monomial {R : Type*} [CommSemiring R] (s : Set (σ →₀ ℕ)) :
+lemma IsGroebnerBasis.isGroebnerBasis_monomial {R : Type*} [CommSemiring R] (s : Set (σ →₀ ℕ)) :
     m.IsGroebnerBasis ((MvPolynomial.monomial · (1 : R)) '' s)
       (Ideal.span ((MvPolynomial.monomial · 1) '' s)) := by
   classical
   wlog nontrivial : Nontrivial R generalizing
   · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    exact m.isGroebnerBasis_of_subsingleton ..
+    exact IsGroebnerBasis.of_subsingleton ..
   refine ⟨Ideal.subset_span, ?_⟩
   rw [le_antisymm_iff, Ideal.span_le, Ideal.span_le]
   constructor
@@ -161,14 +133,14 @@ lemma isGroebnerBasis_monomial {R : Type*} [CommSemiring R] (s : Set (σ →₀ 
   simp [mem_ideal_span_monomial_image, leadingTerm]
   aesop
 
-lemma isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring R]
+lemma IsGroebnerBasis.isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring R]
     (s : Set (σ →₀ ℕ)) :
     m.IsGroebnerBasis ((MvPolynomial.monomial · (1 : R)) '' {x | Minimal (· ∈ s) x})
       (Ideal.span ((MvPolynomial.monomial · 1) '' s)) := by
   classical
   wlog nontrivial : Nontrivial R generalizing
   · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    exact isGroebnerBasis_of_subsingleton ..
+    exact IsGroebnerBasis.of_subsingleton ..
   constructor
   · apply (subset_trans · Ideal.subset_span)
     exact Set.image_mono <| setOf_minimal_subset s
@@ -189,7 +161,7 @@ lemma isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring R]
   obtain ⟨c, hc⟩ := exists_minimal_le_of_wellFoundedLT _ b hbs
   exact ⟨c, hc.2, le_trans hc.1 hbq⟩
 
-lemma IsGroebnerBasis.isGroebnerBasis_smul
+lemma IsGroebnerBasis.smul
     {ι : Type*} (f : ι → R) (f' : ι → MvPolynomial σ R) (hf : ∀ i : ι, IsUnit (f i))
     (hG : m.IsGroebnerBasis (Set.range f') I) :
     m.IsGroebnerBasis (Set.range (fun i ↦ (f i) • (f' i))) I := by
@@ -218,43 +190,71 @@ lemma IsGroebnerBasis.isGroebnerBasis_smul
   · simp [leadingCoeff, hf i |>.isRegular]
   · exact hg
 
-lemma IsGroebnerBasis.isGroebnerBasis_smul_iff
+lemma IsGroebnerBasis.smul_iff
     {ι : Type*} (f : ι → R) (f' : ι → MvPolynomial σ R) (hf : ∀ i : ι, IsUnit (f i)) :
     m.IsGroebnerBasis (Set.range (fun i ↦ (f i) • (f' i))) I ↔
       m.IsGroebnerBasis (Set.range f') I := by
   classical
-  refine ⟨?_, IsGroebnerBasis.isGroebnerBasis_smul f f' hf⟩
-  convert IsGroebnerBasis.isGroebnerBasis_smul
+  refine ⟨?_, IsGroebnerBasis.smul f f' hf⟩
+  convert IsGroebnerBasis.smul
     (fun i ↦ ↑(hf i).unit⁻¹) (fun i ↦ (f i) • (f' i)) (by simp) (I := I)
   simp [smul_smul]
 
-lemma IsGroebnerBasis.isGroebnerBasis_inv (hG : m.IsGroebnerBasis G I)
+lemma IsGroebnerBasis.inv (hG : m.IsGroebnerBasis G I)
     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis (Set.range fun (g : G) ↦ ↑(hG' _ g.prop).unit⁻¹ • g.val) I := sorry
 
-lemma IsGroebnerBasis.isGroebnerBasis_span_image_leadingTerm
+lemma IsGroebnerBasis.span_image_leadingTerm
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span (m.leadingTerm '' I)) := by
   classical
-  rw [hG.2, Set.image_eq_range, ← IsGroebnerBasis.isGroebnerBasis_smul_iff
+  rw [hG.2, Set.image_eq_range, ← IsGroebnerBasis.smul_iff
     (f := fun (g : G) ↦ ↑(hG' g.1 g.2).unit⁻¹) (hf := by simp), ← Set.image_eq_range,
     m.span_leadingTerm_eq_span_monomial hG']
   simp [leadingTerm, smul_monomial,
     ← Set.image_eq_range (fun g ↦ monomial (m.degree g) (1 : R)) G,
     ← Set.image_image (monomial · (1 : R)),
-    m.isGroebnerBasis_monomial]
+    IsGroebnerBasis.isGroebnerBasis_monomial (σ := σ) (m := m)]
 
 open MvPolynomial MonomialOrder MonomialOrder.IsGroebnerBasis
 namespace IsGroebnerBasis
 
 variable {hG}
 
+-- todo: move
+lemma IsRemainder.self_iff (p : MvPolynomial σ R)
+    (G : Set (MvPolynomial σ R)) :
+    m.IsRemainder p G p ↔
+    ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a :=
+  and_iff_right ⟨0, by simp⟩
+
+lemma IsRemainder.self_tfae (p : MvPolynomial σ R)
+    (G : Set (MvPolynomial σ R)) :
+    [m.IsRemainder p G p, ∀ B' ⊆ G, m.IsRemainder p B' p,
+      ∀ q ∈ G, m.IsRemainder p {q} p,
+      ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a].TFAE := by
+  classical
+  apply List.tfae_of_forall (∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a)
+  intro h h
+  fin_cases h
+  · exact IsRemainder.self_iff ..
+  · simp only [IsRemainder.self_iff]
+    aesop
+  · simp only [IsRemainder.self_iff]
+    aesop
+  rfl
+
+lemma IsRemainder.self {p r : MvPolynomial σ R}
+    (h : m.IsRemainder p G r) :
+    m.IsRemainder r G r :=
+  ⟨⟨0, by simp⟩, h.2⟩
+
 lemma IsReduced.isReduced_def :
     hG.IsReduced ↔
       (∀ p ∈ G, m.Monic p) ∧
       ∀ p ∈ G, ∀ a ∈ p.support, ∀ q ∈ G, q ≠ p → ¬ m.degree q ≤ a := by
   simp? [IsReduced, m.isRemainder_self_iff] says
-    simp only [IsReduced, m.isRemainder_self_iff, mem_support_iff, ne_eq, Set.mem_diff,
+    simp only [IsReduced, IsRemainder.self_iff, mem_support_iff, ne_eq, Set.mem_diff,
       Set.mem_singleton_iff, and_imp, and_congr_right_iff]
   rintro h1
   wlog h : Nontrivial R
@@ -275,14 +275,14 @@ lemma IsReduced.isMinimal : hG.IsReduced → hG.IsMinimal := by
 @[simp]
 lemma IsReduced.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
-    (m.isGroebnerBasis_of_subsingleton (s := s) (I := I)).IsReduced := by
+    (IsGroebnerBasis.of_subsingleton (m := m) (s := s) (I := I)).IsReduced := by
   simp [IsReduced, Subsingleton.eq_zero (α := MvPolynomial σ R), Monic,
     ← (MvPolynomial.C_injective σ R).eq_iff]
 
 @[simp]
 lemma IsMinimal.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
-    (m.isGroebnerBasis_of_subsingleton (s := s) (I := I)).IsMinimal :=
+    (IsGroebnerBasis.of_subsingleton (m := m) (s := s) (I := I)).IsMinimal :=
   IsReduced.isMinimal IsReduced.of_subsingleton
 
 lemma IsReduced.isReduced_monomial {s : Set (σ →₀ ℕ)} {I : Ideal (MvPolynomial σ R)}
@@ -341,7 +341,7 @@ lemma IsMinimal.image_leadingTerm_eq_image_monomial_one (hG' : hG.IsMinimal) :
   simp [leadingTerm, hG'.1]
 
 lemma IsMinimal.isReduced_leadingTerm (hG' : hG.IsMinimal) :
-    IsGroebnerBasis.isGroebnerBasis_span_image_leadingTerm hG (by simp_intro .. [hG'.1])
+    IsGroebnerBasis.span_image_leadingTerm hG (by simp_intro .. [hG'.1])
       |>.IsReduced := by
   classical
   wlog nontrivial : Nontrivial R
@@ -380,7 +380,7 @@ lemma IsMinimal.isReduced_leadingTerm (hG' : hG.IsMinimal) :
 --     (hf : f '' s = f '' t) : s = t ↔ ∀ a ∈ s, ∀ b ∈ t, f s = f t
 
 -- this requires `R` to be nontrivial, or the reduced GB can be `∅` or `{0}`.
-lemma IsReduced.isReduced_unique {R : Type*} [CommRing R] [Nontrivial R]
+lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
     {G₁ G₂ : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     {hG₁ : m.IsGroebnerBasis G₁ I} (hG₁' : hG₁.IsReduced)
     {hG₂ : m.IsGroebnerBasis G₂ I} (hG₂' : hG₂.IsReduced) :
@@ -438,7 +438,7 @@ lemma IsReduced.isReduced_unique {R : Type*} [CommRing R] [Nontrivial R]
     rw [← m.remainder_eq_zero_iff_mem_ideal_of_isGroebner _ hG₁ rem_self, sub_eq_zero] at this
     · exact hp₂' <| this ▸ hp₂
     exact fun p hp ↦ by simp [hG₁'.1 p hp |>.leadingCoeff_eq_one]
-  rw [m.isRemainder_self_iff]
+  rw [IsRemainder.self_iff]
   rintro a ha q hq -
   replace ha' := Finset.mem_union.mp <| Finset.mem_of_subset (support_sub ..) ha
   by_cases hqp : m.degree q = m.degree p₁
