@@ -462,6 +462,18 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   contrapose! hqp
   simp [← hq'.2.1, ← hp₁₂.1, hqp]
 
+lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
+    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) :
+    m.IsGroebnerBasis G I := sorry
+
+lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
+    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : Function.Injective (G.restrict m.leadingTerm)) :
+    (hG'.isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := sorry
+
 lemma IsMinimal.isGroebnerBasis_image_isRemainder (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     m.IsGroebnerBasis (Set.range f) I := sorry
