@@ -510,7 +510,10 @@ lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
               h_lt_neq
       simpa using h_neq
 
-lemma IsMinimal.isGroebnerBasis_image_isRemainder (hG' : hG.IsMinimal)
+lemma IsMinimal.isGroebnerBasis_image_isRemainder
+    {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     m.IsGroebnerBasis (Set.range f) I := by
     classical
@@ -520,7 +523,7 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder (hG' : hG.IsMinimal)
       obtain ⟨coef, h_eq, -⟩ := this
 
       sorry
-    · rw [hG.2]
+    ·
       sorry
 
 lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal (hG' : hG.IsMinimal)
