@@ -230,8 +230,21 @@ lemma IsGroebnerBasis.isGroebnerBasis_smul_iff
 
 lemma IsGroebnerBasis.isGroebnerBasis_inv (hG : m.IsGroebnerBasis G I)
     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    m.IsGroebnerBasis (Set.range fun (g : G) ↦ ↑(hG' _ g.prop).unit⁻¹ • g.val) I := sorry
+    m.IsGroebnerBasis (Set.range fun (g : G) ↦ ↑(hG' _ g.prop).unit⁻¹ • g.val) I := by
+    unfold IsGroebnerBasis
+    constructor
+    ·
+      rintro x ⟨⟨g, hg⟩, rfl⟩
+      unfold IsGroebnerBasis at hG
+      rcases hG with ⟨hG1, hG2⟩
+      dsimp
+      sorry
+    ·
+      unfold IsGroebnerBasis at hG
+      rcases hG with ⟨hG1, hG2⟩
+      rw [hG2]
 
+      sorry
 lemma IsGroebnerBasis.isGroebnerBasis_span_image_leadingTerm
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span (m.leadingTerm '' I)) := by
@@ -464,7 +477,16 @@ lemma IsReduced.isReduced_unique {R : Type*} [CommRing R] [Nontrivial R]
 
 lemma IsMinimal.isGroebnerBasis_image_isRemainder (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
-    m.IsGroebnerBasis (Set.range f) I := sorry
+    m.IsGroebnerBasis (Set.range f) I := by
+    classical
+    refine ⟨?_, ?_⟩
+    · rintro _ ⟨g, rfl⟩
+      have := (hf g).1
+      obtain ⟨coef, h_eq, -⟩ := this
+
+      sorry
+    · rw [hG.2]
+      sorry
 
 lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
