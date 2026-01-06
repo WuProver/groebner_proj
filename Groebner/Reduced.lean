@@ -538,4 +538,91 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
 
 
 
+@[simp]
+theorem _root_.MonomialOrder.leadingCoeff_mul' [IsCancelMulZero R] {f g : MvPolynomial σ R} :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  -- improved version of `MonomialOrder.leadingCoeff_mul`
+  wlog h : f ≠ 0 ∧ g ≠ 0
+  · set_option push_neg.use_distrib true in
+    push_neg at h
+    cases h <;> simp [*]
+  obtain ⟨hf, hg⟩ := h
+  rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
+
+lemma _root_.MonomialOrder.leadingCoeff_mul_of_right_mem_nonZeroDivisors
+    {f g : MvPolynomial σ R} (h : m.leadingCoeff g ∈ nonZeroDivisors _) :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  wlog nontrivial : f ≠ 0
+  · push_neg at nontrivial
+    simp [*]
+  apply leadingCoeff_mul_of_mul_leadingCoeff_ne_zero
+  simpa [mul_right_mem_nonZeroDivisors_eq_zero_iff h] using nontrivial
+
+lemma _root_.MonomialOrder.leadingCoeff_mul_of_left_mem_nonZeroDivisors
+    {f g : MvPolynomial σ R} (h : m.leadingCoeff f ∈ nonZeroDivisors _) :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  rw [mul_comm, mul_comm (G := R)]
+  exact m.leadingCoeff_mul_of_right_mem_nonZeroDivisors h
+
+@[simp]
+lemma _root_.MonomialOrder.leadingCoeff_C {c : R} : m.leadingCoeff (C c) = c := by
+  simp [leadingCoeff]
+
+lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)}
+    (hG : m.IsGroebnerBasis G I)
+    (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I),
+      h.IsReduced ∧ Cardinal.mk B ≤ Cardinal.mk G := by
+  classical
+  wlog nontrivial : Nontrivial R
+  · rw [not_nontrivial_iff_subsingleton] at nontrivial
+    exact ⟨∅, by simp⟩
+  -- monicized basis
+  let monicized := Set.range fun (g : G) ↦ (hG' _ g.prop).unit⁻¹ • g.val
+  have monicized_isGB : m.IsGroebnerBasis monicized I := hG.inv hG'
+  have monicized_monic : ∀ g ∈ monicized, m.Monic g := by
+    unfold monicized
+    simp? says simp only [Set.mem_range, Subtype.exists, forall_exists_index]
+    rintro _ _ hmemG rfl
+    simp [Monic, Units.smul_def, smul_eq_C_mul]
+    convert m.leadingCoeff_mul_of_right_mem_nonZeroDivisors _
+    · simp [m.leadingCoeff_C]
+    · exact (hG' _ hmemG).mem_nonZeroDivisors
+  -- monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
+  letI LTs := m.leadingTerm '' monicized
+  letI LTs' := (monomial · (1 : R)) '' (m.degree '' monicized)
+  have LTs_eq_LTs' : LTs = LTs' := by
+    unfold LTs LTs'
+    rw [Set.image_eq_range, Set.image_image, Set.image_eq_range]
+    simp_rw [leadingTerm, fun (p : monicized) ↦ (monicized_monic _ p.prop).leadingCoeff_eq_one]
+  have LTs'_isGB : m.IsGroebnerBasis LTs' (Ideal.span <| m.leadingTerm '' I) := by
+    rw [monicized_isGB.2, show m.leadingTerm '' monicized = _ from LTs_eq_LTs']
+    exact IsGroebnerBasis.isGroebnerBasis_monomial ..
+  -- minimalized monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
+  let minLTs := (monomial · (1 : R)) '' {x | Minimal (· ∈ (m.degree '' monicized)) x}
+  have minLTs_isGB : m.IsGroebnerBasis minLTs (Ideal.span <| m.leadingTerm '' I) := by
+    rw [ideal_eq_span_of_isGroebner (h := LTs'_isGB) (hG := by simp [LTs'])]
+    exact IsGroebnerBasis.isGroebnerBasis_monomial_minimal ..
+  have minLTs_isReduced : minLTs_isGB.IsReduced := IsReduced.isReduced_monomial ..
+  -- minimalized basis
+  obtain ⟨minimal, minimal_subset_monic, injOn_minimal, LT_minimal_eq⟩ :=
+    Set.SurjOn.exists_subset_injOn_image_eq
+      (s := monicized) (t := minLTs) (f := m.leadingTerm) <| by
+        rw [Set.SurjOn, show m.leadingTerm '' monicized = _ from LTs_eq_LTs']
+        exact Set.image_mono <| fun _ ↦ Minimal.prop
+  rw! [← LT_minimal_eq] at minLTs_isReduced
+  have minimal_isMinimal : IsMinimal (G := minimal) (I := I) _ :=
+    minLTs_isReduced.isMinimal.isMinimal_of_isMinimal_leadingTerm
+      (subset_trans minimal_subset_monic monicized_isGB.1) injOn_minimal
+  -- reduced basis
+  let reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
+    (fun g ↦ Exists.choose <|
+      m.div_set' g.val (B := minimal \ {g.val}) (hB := by simp_intro .. [minimal_isMinimal.1]))
+    (hf := by simp [Exists.choose_spec])
+  refine ⟨_, _, ⟨reduced, ?_⟩⟩
+  apply le_trans Cardinal.mk_range_le
+  apply le_trans (Cardinal.mk_le_mk_of_subset (minimal_subset_monic))
+  exact Cardinal.mk_range_le
+
 end MonomialOrder.IsGroebnerBasis
