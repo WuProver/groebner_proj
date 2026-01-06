@@ -494,8 +494,21 @@ lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm {R} [CommRing R]
 lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
-    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : Function.Injective (G.restrict m.leadingTerm)) :
-    (hG'.isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := sorry
+    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : G.InjOn m.leadingTerm ) :
+    (hG'.isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := by
+    rw [IsMinimal]
+    constructor
+    · intro p hp
+      have h_monic_lt := hG'.1 (m.leadingTerm p) (Set.mem_image_of_mem _ hp)
+      simpa using h_monic_lt
+    · intro p hp q hq h_neq
+      contrapose! h_neq
+      apply hLT hq hp
+      by_contra h_lt_neq
+      apply hG'.2 (m.leadingTerm p) (Set.mem_image_of_mem _ hp)
+              (m.leadingTerm q) (Set.mem_image_of_mem _ hq)
+              h_lt_neq
+      simpa using h_neq
 
 lemma IsMinimal.isGroebnerBasis_image_isRemainder (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
