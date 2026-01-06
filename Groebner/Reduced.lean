@@ -202,7 +202,8 @@ lemma IsGroebnerBasis.smul_iff
 
 lemma IsGroebnerBasis.inv (hG : m.IsGroebnerBasis G I)
     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    m.IsGroebnerBasis (Set.range fun (g : G) ↦ ↑(hG' _ g.prop).unit⁻¹ • g.val) I := sorry
+    m.IsGroebnerBasis (Set.range fun (g : G) ↦ (hG' _ g.prop).unit⁻¹ • g.val) I :=
+  smul (hG := by simp [hG]) (hf := by simp)
 
 lemma IsGroebnerBasis.span_image_leadingTerm
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
@@ -466,7 +467,29 @@ lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
     (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) :
-    m.IsGroebnerBasis G I := sorry
+    m.IsGroebnerBasis G I := by
+    classical
+    refine ⟨hGsubset, ?_⟩
+    have eq := hG.2
+    rw [Set.image_image] at eq
+    have h₁ : m.leadingTerm '' G = (m.leadingTerm ∘ m.leadingTerm) '' G := by
+      apply Set.image_congr
+      intro g hg
+      dsimp
+      rw [leadingTerm_leadingTerm]
+    apply le_antisymm
+    ·
+      simp only [leadingTerm_leadingTerm] at eq
+      rw [← eq]
+      apply Ideal.span_mono
+      rintro x ⟨p, hp, rfl⟩
+      refine ⟨m.leadingTerm p, ?_, leadingTerm_leadingTerm _⟩
+      apply Ideal.subset_span
+      exact ⟨p, hp, rfl⟩
+    ·
+      apply Ideal.span_mono
+      apply Set.image_mono
+      exact hGsubset
 
 lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
