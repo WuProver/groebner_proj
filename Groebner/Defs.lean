@@ -25,6 +25,8 @@ variable (f p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomi
 @[simp]
 lemma zero_le._mathlib (a : m.syn) : 0 ≤ a := bot_le
 
+
+
 -- merged: https://github.com/leanprover-community/mathlib4/pull/26062
 lemma toSyn_eq_zero_iff._mathlib (a : σ →₀ ℕ) :
     m.toSyn a = 0 ↔ a = 0 := AddEquiv.map_eq_zero_iff m.toSyn

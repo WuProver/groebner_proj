@@ -510,7 +510,9 @@ lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
               h_lt_neq
       simpa using h_neq
 
-lemma IsMinimal.isGroebnerBasis_image_isRemainder
+lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
     (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     m.IsGroebnerBasis (Set.range f) I := by
@@ -524,8 +526,16 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder
     ·
       sorry
 
-lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal (hG' : hG.IsMinimal)
+lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
+    (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
-    hG'.isGroebnerBasis_image_isRemainder f hf |>.IsReduced := sorry
+    hG'.isGroebnerBasis_image_isRemainder f hf |>.IsReduced := by
+    
+    sorry
+
+
+
 
 end MonomialOrder.IsGroebnerBasis
