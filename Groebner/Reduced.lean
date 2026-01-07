@@ -493,8 +493,8 @@ lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm {R} [CommRing R]
 
 lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
-    (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
-    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : G.InjOn m.leadingTerm ) :
+    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
+    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : G.InjOn m.leadingTerm) :
     (hG'.isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := by
     rw [IsMinimal]
     constructor
