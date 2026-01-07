@@ -254,7 +254,7 @@ lemma IsReduced.isReduced_def :
     hG.IsReduced ↔
       (∀ p ∈ G, m.Monic p) ∧
       ∀ p ∈ G, ∀ a ∈ p.support, ∀ q ∈ G, q ≠ p → ¬ m.degree q ≤ a := by
-  simp? [IsReduced, m.isRemainder_self_iff] says
+  simp? [IsReduced, IsRemainder.self_iff] says
     simp only [IsReduced, IsRemainder.self_iff, mem_support_iff, ne_eq, Set.mem_diff,
       Set.mem_singleton_iff, and_imp, and_congr_right_iff]
   rintro h1
