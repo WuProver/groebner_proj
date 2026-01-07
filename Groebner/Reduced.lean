@@ -512,28 +512,131 @@ lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
 
 lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
-    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
+    {hG : m.IsGroebnerBasis G I}
     (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     m.IsGroebnerBasis (Set.range f) I := by
+    rw [IsMinimal] at hG'
     classical
+    rcases hG with ⟨hG1, hG2⟩
     refine ⟨?_, ?_⟩
     · rintro _ ⟨g, rfl⟩
       have := (hf g).1
       obtain ⟨coef, h_eq, -⟩ := this
-
-      sorry
+      have : f g = ↑g - (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) coef := by
+        simp_rw [h_eq]
+        ring
+      simp [this]
+      apply Ideal.sub_mem
+      ·
+        apply hG1 g.2
+      · dsimp
+        apply Submodule.sum_mem
+        intro c _
+        apply Ideal.mul_mem_left
+        apply hG1
+        exact c.2.1
     ·
-      sorry
+      rw [hG2]
+      apply congr_arg Ideal.span
+      ext x
+      have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
+        intro g
+        by_contra h_neg
+        let g_val := (g : MvPolynomial σ R)
+        have hg_monic : m.Monic g_val := hG'.1 g_val g.2
+        have h_remainder := hf g
+        rw [IsRemainder] at h_remainder
+        rcases h_remainder with ⟨⟨f', ⟨geq, b_deg⟩⟩ , c_deg⟩
+        have : f g = g_val - (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) f' := by
+          exact eq_sub_of_add_eq' (id (Eq.symm geq))
+
+        sorry
+        -- have exists_dvd : ∃ (h : MvPolynomial σ R), h ∈ G \ {g.val} ∧
+        --   m.degree h ≤ m.degree g.val := by
+        --    sorry
+
+        -- rcases exists_dvd with ⟨h, h_mem, h_le⟩
+        -- rw [Set.mem_diff, Set.mem_singleton_iff] at h_mem
+        -- obtain ⟨h_in_G, h_ne_g⟩ := h_mem
+        -- apply hG'.2 g.val g.2 h h_in_G h_ne_g
+        -- exact h_le
+      constructor
+      ·
+        simp only [Set.mem_image, Set.mem_range]
+
+        intro h₁
+        rcases h₁  with ⟨x₁, hx₁⟩
+        obtain ⟨g_val, hg_in_G, rfl⟩ := hx₁
+        use f ⟨x₁, g_val⟩
+        constructor
+        · use ⟨x₁, g_val⟩
+        ·
+          by_contra h_neq
+          exact h_neq (lt_eq ⟨x₁, g_val⟩)
+      ·
+        rintro ⟨_, ⟨g, rfl⟩, rfl⟩
+        use g.val, g.2
+        rw [lt_eq g]
 
 lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
-    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
+    {hG : m.IsGroebnerBasis G I}
     (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     hG'.isGroebnerBasis_image_isRemainder f hf |>.IsReduced := by
-    
-    sorry
+    rw [isReduced_def]
+    constructor
+    ·
+      intro p hp
+      obtain ⟨g, rfl⟩ := hp
+      have h : m.leadingTerm (f g) = m.leadingTerm ↑g := by
+        sorry
+      unfold Monic
+      rw [← m.leadingCoeff_leadingTerm (f g)]
+      rw [h]
+      have g_monic : m.Monic g.val := by
+        exact hG'.1 g g.2
+      unfold Monic at g_monic
+      rw [m.leadingCoeff_leadingTerm]
+      exact g_monic
+    · intro p hp q hq r hr neq
+      obtain ⟨g, rfl⟩ := hp
+      obtain ⟨g', rfl⟩ := hr
+      ·
+        have h_ne : g' ≠ g := by
+          rintro rfl
+          exact neq rfl
+        have h : m.leadingTerm (f g') = m.leadingTerm ↑g' := by
+          sorry
+        have deg_r_eq_g' : m.degree (f g') = m.degree g'.val := by
+          nth_rw 1 [←degree_leadingTerm']
+          nth_rw 2 [←degree_leadingTerm']
+          rw [h]
+        rw [deg_r_eq_g']
+        apply (hf g).2 q hq g'
+        ·
+          rw [Set.mem_diff, Set.mem_singleton_iff]
+          constructor
+          · exact g'.2
+          · exact Subtype.coe_ne_coe.mpr h_ne
+        · intro h_val_eq
+          have g'_monic : m.Monic g'.val := hG'.1 g' g'.2
+          rw [h_val_eq] at g'_monic
+          simp_rw [Monic] at g'_monic
+          simp at g'_monic
+          have h_fg_zero : f g = 0 := by
+
+            apply MvPolynomial.ext
+            intro m
+            rw [← mul_one (coeff m (f g))]
+            rw [← g'_monic, mul_zero]
+            rw [coeff_zero]
+
+          rw [h_fg_zero] at hq
+          rw [MvPolynomial.support_zero] at hq
+          exact (List.mem_nil_iff q).mp hq
+
 
 
 
