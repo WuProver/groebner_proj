@@ -510,6 +510,25 @@ lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
               h_lt_neq
       simpa using h_neq
 
+lemma leadingCoeff_add_of_lt_right (f g : MvPolynomial σ R)
+    (h : m.toSyn (m.degree f) < m.toSyn (m.degree g)) :
+    m.leadingCoeff (f + g) = m.leadingCoeff g := by
+  have h_deg_eq : m.degree (f + g) = m.degree g :=
+    m.degree_add_eq_right_of_lt h
+  rw [leadingCoeff, leadingCoeff]
+  rw [h_deg_eq]
+  rw [MvPolynomial.coeff_add]
+  have h_coeff_f_zero : MvPolynomial.coeff (m.degree g) f = 0 := by
+    by_contra h_nz
+    rw [coeff] at h_nz
+    have h_in_support : m.degree g ∈ f.support := MvPolynomial.mem_support_iff.mpr h_nz
+    have h_le : m.toSyn (m.degree g) ≤  m.toSyn (m.degree f) := by
+      apply le_degree h_in_support
+    exact not_lt.mpr h_le h
+  rw [h_coeff_f_zero, zero_add]
+
+
+
 lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     {hG : m.IsGroebnerBasis G I}
@@ -542,25 +561,52 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
       ext x
       have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
         intro g
-        by_contra h_neg
-        let g_val := (g : MvPolynomial σ R)
-        have hg_monic : m.Monic g_val := hG'.1 g_val g.2
-        have h_remainder := hf g
-        rw [IsRemainder] at h_remainder
-        rcases h_remainder with ⟨⟨f', ⟨geq, b_deg⟩⟩ , c_deg⟩
-        have : f g = g_val - (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) f' := by
-          exact eq_sub_of_add_eq' (id (Eq.symm geq))
+        by_contra h_ne
+        let diff := ↑g - f g
 
-        sorry
-        -- have exists_dvd : ∃ (h : MvPolynomial σ R), h ∈ G \ {g.val} ∧
-        --   m.degree h ≤ m.degree g.val := by
-        --    sorry
+        have fg_eq : f g = ↑g - diff := by
+          exact Eq.symm (sub_sub_self (↑g) (f g))
 
-        -- rcases exists_dvd with ⟨h, h_mem, h_le⟩
-        -- rw [Set.mem_diff, Set.mem_singleton_iff] at h_mem
-        -- obtain ⟨h_in_G, h_ne_g⟩ := h_mem
-        -- apply hG'.2 g.val g.2 h h_in_G h_ne_g
-        -- exact h_le
+        have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
+            obtain ⟨c, h_eq, b_deg⟩ := (hf g).left
+
+            have h_diff_eq : diff =
+            (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by
+              exact sub_eq_iff_eq_add.mpr h_eq
+
+            have h_all_lt : ∀ b ∈ c.support, m.toSyn (m.degree (b.val * c b)) <
+              m.toSyn (m.degree g.val) := by
+              intro b hb
+              have h_le := b_deg b
+              apply lt_of_le_of_ne h_le
+              intro h_eq_deg
+              have h_div : m.degree b.val ≤ m.degree g.val := by
+                sorry
+
+              exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
+            rw [h_diff_eq]
+            apply lt_of_le_of_lt m.degree_sum_le
+            dsimp
+
+            sorry
+        have h_degree : m.degree (f g) = m.degree g.val := by
+
+          rw [fg_eq]
+          rw [sub_eq_neg_add]
+          apply m.degree_add_eq_right_of_lt
+          rw [m.degree_neg]
+          exact h_deg_diff_lt
+        apply h_ne
+        rw [leadingTerm]
+        rw [leadingTerm]
+        rw [h_degree]
+        have : m.leadingCoeff (f g) = m.leadingCoeff g.val := by
+          rw [fg_eq]
+          rw [sub_eq_add_neg]
+          have : m.degree (-diff) = m.degree diff := by rw [m.degree_neg]
+          rw [←this] at h_deg_diff_lt
+          exact leadingCoeff_add_of_lt h_deg_diff_lt
+        rw [this]
       constructor
       ·
         simp only [Set.mem_image, Set.mem_range]
@@ -586,12 +632,60 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     hG'.isGroebnerBasis_image_isRemainder f hf |>.IsReduced := by
     rw [isReduced_def]
+    have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
+      intro g
+      by_contra h_ne
+      let diff := ↑g - f g
+
+      have fg_eq : f g = ↑g - diff := by
+        exact Eq.symm (sub_sub_self (↑g) (f g))
+
+      have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
+          obtain ⟨c, h_eq, b_deg⟩ := (hf g).left
+
+          have h_diff_eq : diff =
+          (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by
+            exact sub_eq_iff_eq_add.mpr h_eq
+
+          have h_all_lt : ∀ b ∈ c.support, m.toSyn (m.degree (b.val * c b)) <
+            m.toSyn (m.degree g.val) := by
+            intro b hb
+            have h_le := b_deg b
+            apply lt_of_le_of_ne h_le
+            intro h_eq_deg
+            have h_div : m.degree b.val ≤ m.degree g.val := by
+
+              sorry
+
+            exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
+          rw [h_diff_eq]
+          apply lt_of_le_of_lt m.degree_sum_le
+          dsimp
+          sorry
+      have h_degree : m.degree (f g) = m.degree g.val := by
+
+        rw [fg_eq]
+        rw [sub_eq_neg_add]
+        apply m.degree_add_eq_right_of_lt
+        rw [m.degree_neg]
+        exact h_deg_diff_lt
+      apply h_ne
+      rw [leadingTerm]
+      rw [leadingTerm]
+      rw [h_degree]
+      have : m.leadingCoeff (f g) = m.leadingCoeff g.val := by
+        rw [fg_eq]
+        rw [sub_eq_add_neg]
+        have : m.degree (-diff) = m.degree diff := by rw [m.degree_neg]
+        rw [←this] at h_deg_diff_lt
+        exact leadingCoeff_add_of_lt h_deg_diff_lt
+      rw [this]
     constructor
     ·
       intro p hp
       obtain ⟨g, rfl⟩ := hp
       have h : m.leadingTerm (f g) = m.leadingTerm ↑g := by
-        sorry
+        exact lt_eq g
       unfold Monic
       rw [← m.leadingCoeff_leadingTerm (f g)]
       rw [h]
@@ -608,7 +702,7 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
           rintro rfl
           exact neq rfl
         have h : m.leadingTerm (f g') = m.leadingTerm ↑g' := by
-          sorry
+          exact lt_eq g'
         have deg_r_eq_g' : m.degree (f g') = m.degree g'.val := by
           nth_rw 1 [←degree_leadingTerm']
           nth_rw 2 [←degree_leadingTerm']
