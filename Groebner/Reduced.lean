@@ -528,6 +528,16 @@ lemma leadingCoeff_add_of_lt_right (f g : MvPolynomial σ R)
   rw [h_coeff_f_zero, zero_add]
 
 
+lemma MonomialOrder.degree_le_mul_left {σ R : Type*} [CommRing R] [IsDomain R]
+    (m : MonomialOrder σ) (p q : MvPolynomial σ R) (hq : q ≠ 0) :
+    m.degree p ≤ m.degree (p * q) := by
+  by_cases hp : p = 0
+  · rw [hp]
+    simp
+  ·
+    rw [m.degree_mul hp hq]
+    exact le_self_add
+
 
 lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -581,14 +591,37 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
               apply lt_of_le_of_ne h_le
               intro h_eq_deg
               have h_div : m.degree b.val ≤ m.degree g.val := by
-                sorry
-
+                have h_eq_raw : m.degree (b.val * c b) = m.degree g.val := by
+                  exact m.toSyn.injective h_eq_deg
+                rw [← h_eq_raw]
+                have cbn0 : c b ≠ 0 := by
+                  exact Finsupp.mem_support_iff.mp hb
+                have h_b_monic : m.Monic b.val := hG'.1 b.val b.2.1
+                have lc1 : m.leadingCoeff b.val = 1 := by
+                  rw [Monic] at h_b_monic
+                  exact h_b_monic
+                have lc2 : m.leadingCoeff (c b) ≠ 0 := by
+                  rw [leadingCoeff]
+                  simp [cbn0]
+                have lc : m.leadingCoeff b.val * m.leadingCoeff (c b) ≠ 0 := by
+                  simp [lc1, lc2]
+                have : m.degree (b.val * c b) = m.degree b.val + m.degree (c b) := by
+                   exact degree_mul_of_mul_leadingCoeff_ne_zero lc
+                rw [this]
+                simp
               exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
             rw [h_diff_eq]
             apply lt_of_le_of_lt m.degree_sum_le
-            dsimp
+            have : c ≠ 0 := by
+              intro h_c_zero
+              rw [h_c_zero, map_zero] at h_diff_eq
+              rw [h_diff_eq, sub_zero] at fg_eq
+              rw [fg_eq] at h_ne
+              exact h_ne rfl
+            simp [mul_comm (c _)]
+            rwa [← Finset.sup'_eq_sup, Finset.sup'_lt_iff]
+            exact Finsupp.support_nonempty_iff.mpr this
 
-            sorry
         have h_degree : m.degree (f g) = m.degree g.val := by
 
           rw [fg_eq]
@@ -654,14 +687,36 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
             apply lt_of_le_of_ne h_le
             intro h_eq_deg
             have h_div : m.degree b.val ≤ m.degree g.val := by
-
-              sorry
-
+                have h_eq_raw : m.degree (b.val * c b) = m.degree g.val := by
+                  exact m.toSyn.injective h_eq_deg
+                rw [← h_eq_raw]
+                have cbn0 : c b ≠ 0 := by
+                  exact Finsupp.mem_support_iff.mp hb
+                have h_b_monic : m.Monic b.val := hG'.1 b.val b.2.1
+                have lc1 : m.leadingCoeff b.val = 1 := by
+                  rw [Monic] at h_b_monic
+                  exact h_b_monic
+                have lc2 : m.leadingCoeff (c b) ≠ 0 := by
+                  rw [leadingCoeff]
+                  simp [cbn0]
+                have lc : m.leadingCoeff b.val * m.leadingCoeff (c b) ≠ 0 := by
+                  simp [lc1, lc2]
+                have : m.degree (b.val * c b) = m.degree b.val + m.degree (c b) := by
+                   exact degree_mul_of_mul_leadingCoeff_ne_zero lc
+                rw [this]
+                simp
             exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
           rw [h_diff_eq]
           apply lt_of_le_of_lt m.degree_sum_le
-          dsimp
-          sorry
+          have : c ≠ 0 := by
+              intro h_c_zero
+              rw [h_c_zero, map_zero] at h_diff_eq
+              rw [h_diff_eq, sub_zero] at fg_eq
+              rw [fg_eq] at h_ne
+              exact h_ne rfl
+          simp [mul_comm (c _)]
+          rwa [← Finset.sup'_eq_sup, Finset.sup'_lt_iff]
+          exact Finsupp.support_nonempty_iff.mpr this
       have h_degree : m.degree (f g) = m.degree g.val := by
 
         rw [fg_eq]
