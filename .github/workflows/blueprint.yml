@@ -49,26 +49,27 @@ jobs:
           commit_id=$(git rev-parse --short HEAD)
           tar -cf "home_page/${commit_id}-cache.tar" .lake/build/{ir,lib}
 
-      # - name: Cache mathlib API docs
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       .lake/build/doc/Aesop
-      #       .lake/build/doc/Batteries
-      #       .lake/build/doc/ImportGraph
-      #       .lake/build/doc/Init
-      #       .lake/build/doc/Lake
-      #       .lake/build/doc/Lean
-      #       .lake/build/doc/LeanSearchClient
-      #       .lake/build/doc/Plausible
-      #       .lake/build/doc/ProofWidgets
-      #       .lake/build/doc/Qq
-      #       .lake/build/doc/Std
-      #       .lake/build/doc/Mathlib
-      #       .lake/build/doc/*.*
-      #       !.lake/build/doc/declarations/declaration-data-Groebner*
-      #     key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
-      #     restore-keys: MathlibDoc-
+      # todo: migrate to https://github.com/leanprover-community/docgen-action
+      - name: Cache mathlib API docs
+        uses: actions/cache@v4
+        with:
+          path: |
+            .lake/build/doc/Aesop
+            .lake/build/doc/Batteries
+            .lake/build/doc/ImportGraph
+            .lake/build/doc/Init
+            .lake/build/doc/Lake
+            .lake/build/doc/Lean
+            .lake/build/doc/LeanSearchClient
+            .lake/build/doc/Plausible
+            .lake/build/doc/ProofWidgets
+            .lake/build/doc/Qq
+            .lake/build/doc/Std
+            .lake/build/doc/Mathlib
+            .lake/build/doc-data
+            .lake/build/doc/*.*
+          key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
+          restore-keys: MathlibDoc-
 
       - name: Build project API documentation
         run: ~/.elan/bin/lake -R -Kenv=dev build Groebner:docs
