@@ -1,4 +1,6 @@
-import Groebner.Basic
+module
+
+public import Groebner.Groebner
 
 variable {σ R : Type*} [CommSemiring R] {m : MonomialOrder σ}
 variable {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -7,13 +9,6 @@ variable (hG : m.IsGroebnerBasis G I)
 namespace MonomialOrder
 open MonomialOrder
 open MvPolynomial
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/26039
-@[simp]
-lemma leadingTerm_leadingTerm (f : MvPolynomial σ R) :
-    m.leadingTerm (m.leadingTerm f) = m.leadingTerm f := by
-  classical
-  by_cases h : f = 0 <;> simp [leadingTerm, h, degree_monomial]
 
 set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsMinimal (hG : m.IsGroebnerBasis G I) :=
@@ -326,14 +321,6 @@ lemma _root_.MonomialOrder.support_leadingTerm' {p : MvPolynomial σ R} :
   classical
   simp_intro .. [support_leadingTerm]
 
--- merged: https://github.com/leanprover-community/mathlib4/pull/26039
-@[simp]
-lemma _root_.MonomialOrder.degree_leadingTerm' (f : MvPolynomial σ R) :
-    m.degree (m.leadingTerm f) = m.degree f := by
-  classical
-  simp only [leadingTerm, degree_monomial, leadingCoeff_eq_zero_iff, ite_eq_right_iff]
-  simp_intro h
-
 lemma IsMinimal.image_leadingTerm_eq_image_monomial_one (hG' : hG.IsMinimal) :
     m.leadingTerm '' G = (fun p ↦ monomial (m.degree p) 1) '' G := by
   simp_rw [Set.image_eq_range]
@@ -356,7 +343,7 @@ lemma IsMinimal.isReduced_leadingTerm (hG' : hG.IsMinimal) :
   rintro _ ⟨p, ⟨hp, rfl⟩⟩
   simp_rw [support_leadingTerm' (hG'.1 p hp).ne_zero, Finset.mem_singleton]
   rintro _ rfl _ ⟨q, ⟨hq, rfl⟩⟩ hqp
-  simp [degree_leadingTerm', this _ hp _ hq (by aesop)]
+  simp [degree_leadingTerm, this _ hp _ hq (by aesop)]
 
 -- lemσisReduced_span_monomial_iff {R : Type*} [CommSemiring R] {s : Set (σ →₀ ℕ)}
 --     {I : Ideal (MvPolynomial σ R)}
@@ -436,7 +423,7 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   simp [leadingTerm, monomial_eq_monomial_iff, (hG₂'.1 p₂ hp₂).ne_zero] at hp₁₂
   suffices rem_self : m.IsRemainder (p₁ - p₂) G₁ (p₁ - p₂) by
     have := I.sub_mem (Set.mem_of_subset_of_mem hG₁.1 hp₁) (Set.mem_of_subset_of_mem hG₂.1 hp₂)
-    rw [← m.remainder_eq_zero_iff_mem_ideal_of_isGroebner _ hG₁ rem_self, sub_eq_zero] at this
+    rw [← m.remainder_eq_zero_iff_mem_ideal_of_isGroebnerBasis _ hG₁ rem_self, sub_eq_zero] at this
     · exact hp₂' <| this ▸ hp₂
     exact fun p hp ↦ by simp [hG₁'.1 p hp |>.leadingCoeff_eq_one]
   rw [IsRemainder.self_iff]
@@ -759,9 +746,7 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
         have h : m.leadingTerm (f g') = m.leadingTerm ↑g' := by
           exact lt_eq g'
         have deg_r_eq_g' : m.degree (f g') = m.degree g'.val := by
-          nth_rw 1 [←degree_leadingTerm']
-          nth_rw 2 [←degree_leadingTerm']
-          rw [h]
+          simp [← degree_leadingTerm, h]
         rw [deg_r_eq_g']
         apply (hf g).2 q hq g'
         ·
@@ -791,7 +776,7 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
 
 
 @[simp]
-theorem _root_.MonomialOrder.leadingCoeff_mul' [IsCancelMulZero R] {f g : MvPolynomial σ R} :
+theorem _root_.MonomialOrder.leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
   -- improved version of `MonomialOrder.leadingCoeff_mul`
   wlog h : f ≠ 0 ∧ g ≠ 0
@@ -801,35 +786,20 @@ theorem _root_.MonomialOrder.leadingCoeff_mul' [IsCancelMulZero R] {f g : MvPoly
   obtain ⟨hf, hg⟩ := h
   rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
 
-lemma _root_.MonomialOrder.leadingCoeff_mul_of_right_mem_nonZeroDivisors
-    {f g : MvPolynomial σ R} (h : m.leadingCoeff g ∈ nonZeroDivisors _) :
-    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
-  wlog nontrivial : f ≠ 0
-  · push_neg at nontrivial
-    simp [*]
-  apply leadingCoeff_mul_of_mul_leadingCoeff_ne_zero
-  simpa [mul_right_mem_nonZeroDivisors_eq_zero_iff h] using nontrivial
-
-lemma _root_.MonomialOrder.leadingCoeff_mul_of_left_mem_nonZeroDivisors
-    {f g : MvPolynomial σ R} (h : m.leadingCoeff f ∈ nonZeroDivisors _) :
-    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
-  rw [mul_comm, mul_comm (G := R)]
-  exact m.leadingCoeff_mul_of_right_mem_nonZeroDivisors h
-
-@[simp]
-lemma _root_.MonomialOrder.leadingCoeff_C {c : R} : m.leadingCoeff (C c) = c := by
-  simp [leadingCoeff]
-
 lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomial σ R)}
-    {I : Ideal (MvPolynomial σ R)}
-    (hG : m.IsGroebnerBasis G I)
+    {I : Ideal (MvPolynomial σ R)} (hG : m.IsGroebnerBasis G I)
     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I),
-      h.IsReduced ∧ Cardinal.mk B ≤ Cardinal.mk G := by
+      h.IsReduced := by
   classical
   wlog nontrivial : Nontrivial R
-  · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    exact ⟨∅, by simp⟩
+  · -- `push_neg at nontrivial`
+    rw [not_nontrivial_iff_subsingleton] at nontrivial
+    by_cases hG : G = ∅
+    · simp [hG]
+    · push_neg at hG -- `by_cases!`
+      use {0}
+      simp [hG]
   -- monicized basis
   let monicized := Set.range fun (g : G) ↦ (hG' _ g.prop).unit⁻¹ • g.val
   have monicized_isGB : m.IsGroebnerBasis monicized I := hG.inv hG'
@@ -838,9 +808,10 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     simp? says simp only [Set.mem_range, Subtype.exists, forall_exists_index]
     rintro _ _ hmemG rfl
     simp [Monic, Units.smul_def, smul_eq_C_mul]
-    convert m.leadingCoeff_mul_of_right_mem_nonZeroDivisors _
+    convert m.leadingCoeff_mul_of_right_mem_nonZeroDivisors _ _
     · simp [m.leadingCoeff_C]
-    · exact (hG' _ hmemG).mem_nonZeroDivisors
+    · simp
+    exact (hG' _ hmemG).mem_nonZeroDivisors
   -- monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
   letI LTs := m.leadingTerm '' monicized
   letI LTs' := (monomial · (1 : R)) '' (m.degree '' monicized)
@@ -854,7 +825,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
   -- minimalized monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
   let minLTs := (monomial · (1 : R)) '' {x | Minimal (· ∈ (m.degree '' monicized)) x}
   have minLTs_isGB : m.IsGroebnerBasis minLTs (Ideal.span <| m.leadingTerm '' I) := by
-    rw [ideal_eq_span_of_isGroebner (h := LTs'_isGB) (hG := by simp [LTs'])]
+    rw [ideal_eq_span_of_isGroebnerBasis (h := LTs'_isGB) (hG := by simp [LTs'])]
     exact IsGroebnerBasis.isGroebnerBasis_monomial_minimal ..
   have minLTs_isReduced : minLTs_isGB.IsReduced := IsReduced.isReduced_monomial ..
   -- minimalized basis
@@ -868,13 +839,23 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     minLTs_isReduced.isMinimal.isMinimal_of_isMinimal_leadingTerm
       (subset_trans minimal_subset_monic monicized_isGB.1) injOn_minimal
   -- reduced basis
-  let reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
+  have reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
     (fun g ↦ Exists.choose <|
-      m.div_set' g.val (B := minimal \ {g.val}) (hB := by simp_intro .. [minimal_isMinimal.1]))
+      m.exists_isRemainder g.val (B := minimal \ {g.val})
+        (hB := by simp_intro .. [minimal_isMinimal.1]))
     (hf := by simp [Exists.choose_spec])
-  refine ⟨_, _, ⟨reduced, ?_⟩⟩
-  apply le_trans Cardinal.mk_range_le
-  apply le_trans (Cardinal.mk_le_mk_of_subset (minimal_subset_monic))
-  exact Cardinal.mk_range_le
+  exact ⟨_, _, reduced⟩
+
+lemma IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    ∃! (B : Set (MvPolynomial σ R)), ∃ (h : m.IsGroebnerBasis B I),
+      h.IsReduced := by
+  obtain ⟨B, h, h'⟩ := IsReduced.exists_of_isGroebnerBasis hG hG'
+  refine ⟨B, ⟨h, h'⟩, ?_⟩
+  intro s
+  simp only [forall_exists_index]
+  intro hs hs'
+  exact hs'.unique h'
 
 end MonomialOrder.IsGroebnerBasis

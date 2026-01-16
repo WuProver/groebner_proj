@@ -6,13 +6,13 @@ defaultTargets = ["Groebner"]
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 autoImplicit = false
-weak.linter.indentation = true
+# weak.linter.indentation = true
 weak.linter.mathlibStandardSet = true
+weak.linter.flexible = false
 
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.24.0-rc1"
 
 [[require]]
 name = "checkdecls"

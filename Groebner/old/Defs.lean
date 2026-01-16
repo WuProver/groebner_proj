@@ -7,7 +7,6 @@ import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.MvPolynomial.MonomialOrder
 import Mathlib.RingTheory.Ideal.Span
-import Groebner.Indentation
 
 namespace MonomialOrder
 
@@ -82,8 +81,8 @@ lemma degree_mem_support_iff._mathlib_ (f : MvPolynomial σ R) : m.degree f ∈ 
 The leading term in a non-zero multivariate polynomial is the term of the polynomial's degree in
 the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
-noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
+noncomputable def leadingTerm._mathlib_ (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
 
 /--
@@ -611,17 +610,17 @@ theorem isRemainder_def'₁ [IsCancelMulZero R] (p : MvPolynomial σ R) (B : Set
 /--
 The leading term in a multivariate polynomial is zero if and only if this polynomial is zero.
 -/
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 @[simp]
 lemma leadingTerm_eq_zero_iff (p : MvPolynomial σ R) : m.leadingTerm p = 0 ↔ p = 0 := by
   simp only [leadingTerm, monomial_eq_zero, leadingCoeff_eq_zero_iff]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 @[simp]
 lemma leadingTerm_zero : m.leadingTerm (0 : MvPolynomial σ R) = 0 := by
   rw [leadingTerm_eq_zero_iff]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma image_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     m.leadingTerm '' (B \ {0}) = (m.leadingTerm '' B) \ {0} := by
   apply subset_antisymm
@@ -635,7 +634,7 @@ lemma image_leadingTerm_sdiff_singleton_zero (B : Set (MvPolynomial σ R)) :
     rw [←hpq, MonomialOrder.leadingTerm_eq_zero_iff] at hp
     exact ⟨q, ⟨hq, hp⟩, hpq⟩
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma image_leadingTerm_insert_zero (B : Set (MvPolynomial σ R)) :
     m.leadingTerm '' (insert (0 : MvPolynomial σ R) B) = insert 0 (m.leadingTerm '' B) := by
   unfold leadingTerm
@@ -769,7 +768,7 @@ theorem div_set'₀ {B : Set (MvPolynomial σ R)}
 
 -- the following part is some lemma about leadingTerm
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 @[simp]
 lemma degree_leadingTerm (f : MvPolynomial σ R) :
     m.degree (m.leadingTerm f) = m.degree f := by
@@ -785,13 +784,13 @@ lemma leadingCoeff_leadingTerm (f : MvPolynomial σ R) :
     m.leadingCoeff (m.leadingTerm f) = m.leadingCoeff f := by
   simp [leadingTerm, leadingCoeff_monomial]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 theorem degree_sub_leadingTerm_le (f : MvPolynomial σ R) :
     m.degree (f - m.leadingTerm f) ≼[m] m.degree f := by
   apply le_trans degree_sub_le
   simp [degree_leadingTerm]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f ∨ f - m.leadingTerm f = 0 := by
   classical
@@ -803,13 +802,13 @@ lemma degree_sub_leadingTerm (f : MvPolynomial σ R) :
   rw [h', mem_support_iff] at h
   simp [leadingTerm, leadingCoeff] at h
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 variable {m} in
 lemma degree_sub_leadingTerm_lt_degree {f : MvPolynomial σ R} (h : f - m.leadingTerm f ≠ 0) :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f :=
   (or_iff_left h).mp <| m.degree_sub_leadingTerm f
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/26039
+-- merged: https://github.com/leanprover-community/mathlib4/pull/26039
 lemma degree_sub_leadingTerm_lt_iff {f : MvPolynomial σ R} :
     m.degree (f - m.leadingTerm f) ≺[m] m.degree f ↔ m.degree f ≠ 0 := by
   constructor

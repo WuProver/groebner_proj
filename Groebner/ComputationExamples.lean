@@ -1,5 +1,65 @@
 import Groebner.List
-import Groebner.Basic
+import Groebner.Groebner
+
+open MonomialOrder
+variable {σ} {R} [CommSemiring R] {m : MonomialOrder σ} (p : MvPolynomial σ R)
+namespace MonomialOrder
+
+theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
+    (r : MvPolynomial σ R) :
+      m.IsRemainder p (Set.range b) r ↔
+      (∃ g : ι → MvPolynomial σ R,
+          p = ∑ i : ι, (b i * g i) + r ∧
+          ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
+        ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+  classical
+  rw [isRemainder_range]
+  constructor
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    split_ands
+    · use g.toFun
+      split_ands
+      · simp [Finsupp.linearCombination_apply, Finsupp.sum] at h₁
+        rw [h₁]
+        congr 1
+        have h₁: ∑ i, b i * g.toFun i = ∑ i, b i * g i  := by
+          apply Finset.sum_congr rfl
+          intro i _
+          congr 1
+        simp [h₁]
+        have : (∑ i : ι, b i * g i) = ∑ x ∈ g.support, b x * g x := by
+          refine Eq.symm (Fintype.sum_subset ?_)
+          intro _ h
+          contrapose! h
+          simp [Finsupp.notMem_support_iff.mp h]
+        rw [this]
+        simp_rw [mul_comm (g _) (b _)]
+      · exact h₂
+    · exact h₃
+  · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
+    split_ands
+    · use Finsupp.onFinset Finset.univ (fun i => g i) (by simp_intro ..)
+      split_ands
+      · simp [h₁]
+        simp [Finsupp.linearCombination_apply, Finsupp.sum]
+        have : (∑ i : ι, b i * g i) = ∑ x ∈ Finset.univ, b x * g x := by
+          rfl
+        rw [this]
+        congr 1
+        have support_eq : (Finsupp.onFinset Finset.univ (fun i ↦ g i) (by simp)).support =
+          Finset.univ.filter (fun i => g i ≠ 0) := by
+          ext i
+          simp [Finsupp.mem_support_iff, Finsupp.onFinset_apply]
+        rw [support_eq]
+
+        rw [Finset.sum_filter]
+        apply Finset.sum_congr rfl
+        intro i _
+        by_cases hi : g i = 0 <;> simp [hi]
+        exact CommMonoid.mul_comm (b i) (g i)
+      · intro i
+        exact h₂ i
+    · aesop
 
 set_option linter.unusedSimpArgs false in
 example : sorry := by
