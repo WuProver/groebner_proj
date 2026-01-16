@@ -402,6 +402,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero'
     m.IsGroebnerBasis G I ↔ G ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 :=
   m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ G I (by simp [em'])
 
+set_option maxHeartbeats 600000 in
 /-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if 0 is a
 remainder of echo sPolynomial between two polynomials on the basis. -/
 theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial σ k)) :
