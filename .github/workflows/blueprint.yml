@@ -67,6 +67,7 @@ jobs:
             .lake/build/doc/Std
             .lake/build/doc/Mathlib
             .lake/build/doc-data
+            !.lake/build/doc-data/declaration-data-Groebner.*
             .lake/build/doc/*.*
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
           restore-keys: MathlibDoc-
