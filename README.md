@@ -1,4 +1,4 @@
-# groebner
+# Groebner
 
 The goal of this project is formalization of Gröbner basis theory in the Lean 4 theorem prover, establishing the mathematical infrastructure required for computational algebra in Lean. Based on it, we aim to bridge the gap between Lean and some computational algebra problems, such as solving systems of multivariate polynomial equations, ideal membership problems, and so on.
 
@@ -14,8 +14,10 @@ This project is still work in process. There are some errors and out-of-date inf
 
 - [`MonomialOrder.leadingTerm`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.leadingTerm): leading term
 - [`MonomialOrder.sPolynomial`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.sPolynomial): S-polynomial
-- [`MonomialOrder.IsRemainder`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsRemainder)
-- [`MonomialOrder.IsGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsGroebnerBasis)
+- [`MonomialOrder.IsRemainder`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsRemainder): remainder
+- [`MonomialOrder.IsGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsGroebnerBasis): Gröbner basis
+- [`MonomialOrder.IsGroebnerBasis.IsMinimal`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsGroebnerBasis.IsMinimal): minimal Gröbner basis
+- [`MonomialOrder.IsGroebnerBasis.IsReduced`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsGroebnerBasis.IsReduced): reduced Gröbner basis
 
 ### Main Statements
 
@@ -26,7 +28,8 @@ Given a monomial order, a field $k$, and an index set $\sigma$, we will show the
 - [`MonomialOrder.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero): given an ideal $I\subseteq k[x_i:i\in\sigma]$ and a set $G\subseteq k[x_i:i\in\sigma]$, then $G$ is a Gröbner basis of $I$ if and only if $G \subseteq I$ and $0$ is a remainder of each $p\in I$ on division by $G$.
 - [`MonomialOrder.existsUnique_isRemainder_of_isGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.existsUnique_isRemainder_of_isGroebnerBasis): remainder of any polynomial on division by Gröbner basis is unique.
 - [`MonomialOrder.ideal_eq_span_of_isGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.ideal_eq_span_of_isGroebnerBasis): if $G$ is a Gröbner basis of $I\subseteq k[x_i:i\in\sigma]$, then $I=\langle G\rangle$.
-- [`MonomialOrder.isGroebnerBasis_iff_isRemainder_sPolynomial_zero`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.isGroebnerBasis_iff_isRemainder_sPolynomial_zero): a set $G\subseteq k[x_i:i\in\sigma]$ is Gröbner basis of $\langle G\rangle$, if and only if $0$ is the remainder of the S-polynomial of each two elements in $G$ on division by $G$.
+- [`MonomialOrder.isGroebnerBasis_iff_isRemainder_sPolynomial_zero`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.isGroebnerBasis_iff_isRemainder_sPolynomial_zero): (Buchberger's criterion) a set $G\subseteq k[x_i:i\in\sigma]$ is Gröbner basis of $\langle G\rangle$, if and only if $0$ is the remainder of the S-polynomial of each two elements in $G$ on division by $G$.
+- [`MonomialOrder.IsReduced.uniqueExists_of_isGroebnerBasis`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.IsGroebnerBasis.IsReduced.uniqueExists_of_isGroebnerBasis): unique existence of reduced Groebner basis.
 
 ## Project Resources
 
