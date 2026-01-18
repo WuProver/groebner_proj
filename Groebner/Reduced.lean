@@ -6,6 +6,8 @@ variable {σ R : Type*} [CommSemiring R] {m : MonomialOrder σ}
 variable {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
 variable (hG : m.IsGroebnerBasis G I)
 
+@[expose] public section
+
 namespace MonomialOrder
 open MonomialOrder
 open MvPolynomial
