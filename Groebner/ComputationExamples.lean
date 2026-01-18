@@ -10,7 +10,7 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
       m.IsRemainder p (Set.range b) r ↔
       (∃ g : ι → MvPolynomial σ R,
           p = ∑ i : ι, (b i * g i) + r ∧
-          ∀ i : ι, m.degree (b i * g i) ≼[m] m.degree p) ∧
+          ∀ i : ι, m.withBotDegree (b i * g i) ≼'[m] m.withBotDegree p) ∧
         ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
   classical
   rw [isRemainder_range]

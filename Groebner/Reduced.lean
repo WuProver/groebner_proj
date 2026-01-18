@@ -94,12 +94,6 @@ lemma IsGroebnerBasis.empty_iff (I : Ideal (MvPolynomial σ R)) :
   · simp_intro .. [IsGroebnerBasis.empty_bot]
 
 @[simp]
-lemma IsRemainder.of_subsingleton [Subsingleton (MvPolynomial σ R)]
-    {p r : MvPolynomial σ R} {s : Set (MvPolynomial σ R)} :
-    m.IsRemainder p s r := by
-  simp [IsRemainder, Subsingleton.eq_zero (α := MvPolynomial σ R)]
-
-@[simp]
 lemma IsGroebnerBasis.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
     m.IsGroebnerBasis s I := by
@@ -565,7 +559,11 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
           exact Eq.symm (sub_sub_self (↑g) (f g))
 
         have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-            obtain ⟨c, h_eq, b_deg⟩ := (hf g).left
+            have := m.isRemainder_iff_degree g (G \ {↑g}) (f g) <| by
+              simp
+              rintro b hbG -
+              simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
+            obtain ⟨c, h_eq, b_deg⟩ := (this.mp <| hf g).left
 
             have h_diff_eq : diff =
             (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by
@@ -661,7 +659,11 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
         exact Eq.symm (sub_sub_self (↑g) (f g))
 
       have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-          obtain ⟨c, h_eq, b_deg⟩ := (hf g).left
+          have := m.isRemainder_iff_degree g (G \ {↑g}) (f g) <| by
+            simp
+            rintro b hbG -
+            simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
+          obtain ⟨c, h_eq, b_deg⟩ := (this.mp <| hf g).left
 
           have h_diff_eq : diff =
           (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by

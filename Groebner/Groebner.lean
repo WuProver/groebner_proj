@@ -234,8 +234,7 @@ theorem isGroebnerBasis_iff_span_eq_and_degree_le (G : Set (MvPolynomial σ R))
   · intro h
     exists (m.ideal_eq_span_of_isGroebnerBasis hG h).symm
     intro p hp hp0
-    apply m.exists_degree_le_degree_of_isRemainder_zero _ hp0 ↑G
-      (by simp_intro .. [(hG _ _).mem_nonZeroDivisors])
+    apply m.exists_degree_le_degree_of_isRemainder_zero hp0 fun _ ↦ (hG _ · |>.mem_nonZeroDivisors)
     exact (m.isRemainder_zero_iff_mem_ideal_of_isGroebnerBasis hG h).mpr hp
   rintro ⟨hG', h_degree⟩
   constructor
@@ -278,7 +277,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
       specialize h_remainder p hp
       exact m.mem_ideal_of_isRemainder_of_mem_ideal Ideal.subset_span h_remainder (Ideal.zero_mem _)
     · intro p hp hp0
-      exact m.exists_degree_le_degree_of_isRemainder_zero p hp0 G
+      exact m.exists_degree_le_degree_of_isRemainder_zero hp0
         (by simp_intro .. [(hG _ _).mem_nonZeroDivisors]) (h_remainder p hp)
 
 /-- A set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal
@@ -402,7 +401,9 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero'
     m.IsGroebnerBasis G I ↔ G ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 :=
   m.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ G I (by simp [em'])
 
-set_option maxHeartbeats 600000 in
+set_option maxHeartbeats 400000 in
+-- It reaches the default max heart beats with option `says.verify` set to `true`, without which the
+-- proof can pass with default max heart beats.
 /-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if 0 is a
 remainder of echo sPolynomial between two polynomials on the basis. -/
 theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial σ k)) :
@@ -413,6 +414,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
   instead of LaTeX commands are used for readability. And every block roughly corresponds with codes
   below it and above the next comment block (if it exists). And inline comments are technical
   details in formalization. -/
+  -- TODO: simplify this proof with `withBotDegree`.
   classical
   constructor
   · /- (←) Easy to prove. -/
@@ -422,6 +424,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
     apply m.sPolynomial_mem_ideal <;> exact Set.mem_of_mem_of_subset (by simp) h.1
   /- (→)
   We only need to prove for all $p ∈ ⟨G⟩$ (`p ∈ Ideal.span G`),
+  (with loss of generality, assuming $p ≠ 0$)
   $0$ is a remainder of $p$ on division by $G$ (`m.IsRemainder p G 0`), i.e.
   to prove that these exists finite subset $G'$ of $G$ and $f$
   s.t. $p = ∑_{g ∈ G'} f(g) * g$ and $∀ g ∈ G', degree(f(g) * g) ≤ degree(p)$. -/
@@ -429,7 +432,9 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
   rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero']
   exists Ideal.subset_span
   intro p hp
-  simp_rw [isRemainder_def'', add_zero]
+  wlog! hpne0 : p ≠ 0
+  · simp [hpne0]
+  simp_rw [isRemainder_def'', add_zero, m.withBotDegree_le_withBotDegree_iff_of_ne_zero _ hpne0]
   refine ⟨?_, by simp⟩
   -- todo: Ideal.mem_span_iff_exists_finset_subset
   apply Submodule.mem_span_iff_exists_finset_subset.mp at hp
@@ -522,9 +527,11 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
     - $sPoly(g₁, g₂) = ∑ g ∈ G, q_{g₁, g₂}(g) * g$,
     - $∀ g ∈ G, degree(q_{g₁, g₂}(g) * g) ≤ degree(sPoly(g₁, g₂))$, and
     - if $sPoly(g₁, g₂) = 0$ then $q_{g₁, g₂} = 0$. -/
-  simp? [isRemainder_def'₁, -Subtype.forall] at hsPoly says
-    simp only [isRemainder_def'₁, add_zero, support_zero, Finset.notMem_empty, ne_eq,
-      IsEmpty.forall_iff, implies_true, and_true] at hsPoly
+  simp? [isRemainder_def', -Subtype.forall, -withBotDegree_mul, withBotDegree_le_withBotDegree_iff]
+       at hsPoly says
+    simp only [isRemainder_def', add_zero, withBotDegree_le_withBotDegree_iff, mul_eq_zero,
+      support_zero, Finset.notMem_empty, ne_eq, IsEmpty.forall_iff, implies_true,
+      and_true] at hsPoly
   replace hsPoly (g₁ g₂ : G'.filter degFgEqA) :=
     hsPoly ⟨g₁, hG'subsetG <| G'.mem_of_mem_filter _ g₁.2⟩
       ⟨g₂, hG'subsetG <| G'.mem_of_mem_filter _ g₂.2⟩
@@ -645,8 +652,8 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
       rcases hg' with hg' | ⟨a, -, b, -, hh'⟩
       · exact Set.mem_of_subset_of_mem hG'subsetG hg'
       · exact h_q_support_subset_G _ _ hh'
-    wlog! hsPoly_ne_0 : m.sPolynomial g₁.val g₂.val ≠ 0
-    · simp [h_q_eq_0_of_sPoly_eq_0 hsPoly_ne_0, h_a_gt_zero]
+    wlog! hsPoly_ne_0 : m.sPolynomial g₁.val g₂.val ≠ 0 generalizing
+    · rcases h_q_eq_0_of_sPoly_eq_0 hsPoly_ne_0 with h0 | h0 <;> simp [h0, h_a_gt_zero]
     rw [mul_assoc]
     apply lt_of_le_of_lt degree_mul_le
     rw [AddEquiv.map_add]

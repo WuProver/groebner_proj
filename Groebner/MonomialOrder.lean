@@ -224,6 +224,20 @@ def withBotDegree : WithBot (σ →₀ ℕ) :=
 variable (m) in
 def toWithBotSyn : WithBot (σ →₀ ℕ) ≃+ WithBot m.syn := m.toSyn.withBotCongr
 
+@[simp]
+lemma toWithBotSyn_apply_bot : m.toWithBotSyn ⊥ = ⊥ := rfl
+
+@[simp]
+lemma toWithBotSyn_symm_apply_bot : m.toWithBotSyn.symm ⊥ = ⊥ := rfl
+
+@[simp]
+lemma toWithBotSyn_apply_eq_bot_iff (a) : m.toWithBotSyn a = ⊥ ↔ a = ⊥ := by
+  simp [← m.toWithBotSyn.eq_symm_apply]
+
+@[simp]
+lemma toWithBotSyn_symm_apply_eq_bot (a) : m.toWithBotSyn.symm a = ⊥ ↔ a = ⊥ := by
+  simp [m.toWithBotSyn.symm_apply_eq]
+
 lemma toWithBotSyn_apply (a : WithBot (σ →₀ ℕ)) : m.toWithBotSyn a = a.map m.toSyn := rfl
 
 /-- Given a monomial order with bot, notation for the corresponding strict order relation on
@@ -255,7 +269,7 @@ lemma withBotDegree_eq_bot_iff : m.withBotDegree f = ⊥ ↔ f = 0 := by
   classical
   simp [withBotDegree_eq]
 
-lemma degree_eq_withBotDegree : m.degree f = (m.withBotDegree f).unbotD 0 := by
+lemma degree_eq_unbotD_withBotDegree : m.degree f = (m.withBotDegree f).unbotD 0 := by
   classical
   by_cases h : f = 0 <;> simp [withBotDegree_eq, h]
 
@@ -310,6 +324,11 @@ lemma withBotDegree_mul_of_left_mem_nonZeroDivisors (hf : m.leadingCoeff f ∈ n
     h0.2
   simp [m.withBotDegree_eq, h0, m.degree_mul_of_left_mem_nonZeroDivisors hf, this]
 
+variable {f g} in
+lemma withBotDegree_mul_of_right_mem_nonZeroDivisors (hf : m.leadingCoeff g ∈ nonZeroDivisors _) :
+    m.withBotDegree (f * g) = m.withBotDegree f + m.withBotDegree g := by
+  rw [mul_comm, add_comm, withBotDegree_mul_of_left_mem_nonZeroDivisors (hf := hf)]
+
 @[simp]
 lemma withBotDegree_mul [NoZeroDivisors R] :
     m.withBotDegree (f * g) = m.withBotDegree f + m.withBotDegree g := by
@@ -320,7 +339,7 @@ lemma withBotDegree_mul [NoZeroDivisors R] :
   rw [← m.leadingCoeff_ne_zero_iff] at hf
   exact m.withBotDegree_mul_of_left_mem_nonZeroDivisors (mem_nonZeroDivisors_iff_ne_zero.mpr hf)
 
-lemma withBotDegree_le_iff :
+lemma withBotDegree_le_withBotDegree_iff :
     m.withBotDegree f ≼'[m] m.withBotDegree g ↔
       (m.degree f ≼[m] m.degree g ∧ (g = 0 → f = 0)) := by
   classical
@@ -331,7 +350,12 @@ lemma withBotDegree_le_iff :
       aesop
   simp [m.withBotDegree_eq, h, m.toWithBotSyn_apply]
 
-lemma withBotDegree_lt_iff :
+variable {g} in
+lemma withBotDegree_le_withBotDegree_iff_of_ne_zero (hg : g ≠ 0) :
+    m.withBotDegree f ≼'[m] m.withBotDegree g ↔ m.degree f ≼[m] m.degree g := by
+  simp [withBotDegree_le_withBotDegree_iff, hg]
+
+lemma withBotDegree_lt_withBotDegree_iff :
     m.withBotDegree f ≺'[m] m.withBotDegree g ↔
       (m.degree f ≺[m] m.degree g ∨ (f = 0 ∧ g ≠ 0)) := by
   classical
@@ -342,7 +366,7 @@ lemma withBotDegree_lt_iff :
   · simp [hg, hf, bot_lt_iff_ne_bot, toWithBotSyn_apply]
   simp [m.withBotDegree_eq, hf, hg, m.toWithBotSyn_apply]
 
-lemma withBotDegree_eq_iff :
+lemma withBotDegree_eq_withBotDegree_iff :
     m.withBotDegree f = m.withBotDegree g ↔ (m.degree f = m.degree g ∧ (f = 0 ↔ g = 0)) := by
   classical
   wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
@@ -358,7 +382,7 @@ lemma withBotDegree_add_le :
       (m.toWithBotSyn <| m.withBotDegree f) ⊔ (m.toWithBotSyn <| m.withBotDegree g) := by
   wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
   · rcases h with h | h <;> simp [h, m.toWithBotSyn_apply]
-  simpa [withBotDegree_le_iff, h] using degree_add_le (R := R)
+  simpa [withBotDegree_le_withBotDegree_iff, h] using degree_add_le (R := R)
 
 lemma _root_.and_iff_and_left_imp {a b : Prop} : a ∧ b ↔ a ∧ (a → b) :=
   ⟨fun ⟨a, b⟩ ↦ ⟨a, fun _ ↦ b⟩, fun ⟨a, b'⟩ ↦ ⟨a, b' a⟩⟩
@@ -367,15 +391,34 @@ lemma withBotDegree_add_of_lt (h : m.withBotDegree g ≺'[m] m.withBotDegree f) 
     m.withBotDegree (f + g) = m.withBotDegree f := by
   wlog! hg : g ≠ 0
   · simp [hg]
-  simp? [withBotDegree_lt_iff, hg] at h says
-    simp only [withBotDegree_lt_iff, hg, ne_eq, false_and, or_false] at h
-  simp? [withBotDegree_eq_iff, show f ≠ 0 by contrapose h with rfl; simp] says
-    simp only [withBotDegree_eq_iff, show f ≠ 0 by contrapose h with rfl; simp, iff_false]
+  simp? [withBotDegree_lt_withBotDegree_iff, hg] at h says
+    simp only [withBotDegree_lt_withBotDegree_iff, hg, ne_eq, false_and, or_false] at h
+  simp? [withBotDegree_eq_withBotDegree_iff, show f ≠ 0 by contrapose h; simp [h]] says
+    simp only [withBotDegree_eq_withBotDegree_iff, show f ≠ 0 by contrapose h; simp [h], iff_false]
   rw [and_iff_and_left_imp]
   refine ⟨m.degree_add_of_lt h, ?_⟩
   intro h'
   contrapose! h
   simp [← h ▸ h']
+
+lemma withBotDegree_add_of_right_lt (h : m.withBotDegree f ≺'[m] m.withBotDegree g) :
+    m.withBotDegree (f + g) = m.withBotDegree g := by
+  rw [add_comm]
+  exact m.withBotDegree_add_of_lt _ _ h
+
+lemma withBotDegree_sum_le {α : Type*} {s : Finset α} {f : α → MvPolynomial σ R} :
+    (m.toWithBotSyn <| m.withBotDegree <| ∑ x ∈ s, f x) ≤
+      s.sup fun x ↦ (m.toWithBotSyn <| m.withBotDegree <| f x) := by
+  induction s using Finset.cons_induction_on with
+  | empty => simp
+  | cons a s haA h =>
+    rw [Finset.sum_cons, Finset.sup_cons]
+    exact le_trans (m.withBotDegree_add_le _ _) (max_le_max le_rfl h)
+
+lemma le_withBotDegree {f : MvPolynomial σ R} {d : σ →₀ ℕ} (hd : d ∈ f.support) :
+    d ≼'[m] m.withBotDegree f := by
+  classical
+  simp [withBotDegree_eq, toWithBotSyn_apply, ne_zero_iff.mpr ⟨d, by simpa using hd⟩, le_degree hd]
 
 end Semiring
 
