@@ -71,10 +71,12 @@ lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
 --   -- rw [monomial_notMem_span_leadingTerm]
 --   sorry
 
+@[simp]
 lemma IsGroebnerBasis.singleton_zero_bot :
     m.IsGroebnerBasis {(0 : MvPolynomial σ R)} ⊥ := by
   simp [IsGroebnerBasis]
 
+@[simp]
 lemma IsGroebnerBasis.empty_bot :
     m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) ⊥ := by
   simp [IsGroebnerBasis]
@@ -85,7 +87,7 @@ lemma IsGroebnerBasis.singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
   constructor
   · simp [IsGroebnerBasis, Ideal.span_eq_bot]
     aesop
-  · simp_intro .. [IsGroebnerBasis.singleton_zero_bot]
+  · simp_intro ..
 
 @[simp]
 lemma IsGroebnerBasis.empty_iff (I : Ideal (MvPolynomial σ R)) :
@@ -93,7 +95,7 @@ lemma IsGroebnerBasis.empty_iff (I : Ideal (MvPolynomial σ R)) :
   constructor
   · simp [IsGroebnerBasis, Ideal.span_eq_bot]
     aesop
-  · simp_intro .. [IsGroebnerBasis.empty_bot]
+  · simp_intro ..
 
 @[simp]
 lemma IsGroebnerBasis.of_subsingleton [Subsingleton (MvPolynomial σ R)]
@@ -108,9 +110,8 @@ lemma IsGroebnerBasis.isGroebnerBasis_monomial {R : Type*} [CommSemiring R] (s :
     m.IsGroebnerBasis ((MvPolynomial.monomial · (1 : R)) '' s)
       (Ideal.span ((MvPolynomial.monomial · 1) '' s)) := by
   classical
-  wlog nontrivial : Nontrivial R generalizing
-  · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    exact IsGroebnerBasis.of_subsingleton ..
+  wlog! nontrivial : Nontrivial R generalizing
+  · exact IsGroebnerBasis.of_subsingleton ..
   refine ⟨Ideal.subset_span, ?_⟩
   rw [le_antisymm_iff, Ideal.span_le, Ideal.span_le]
   constructor
@@ -129,9 +130,8 @@ lemma IsGroebnerBasis.isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring
     m.IsGroebnerBasis ((MvPolynomial.monomial · (1 : R)) '' {x | Minimal (· ∈ s) x})
       (Ideal.span ((MvPolynomial.monomial · 1) '' s)) := by
   classical
-  wlog nontrivial : Nontrivial R generalizing
-  · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    exact IsGroebnerBasis.of_subsingleton ..
+  wlog! nontrivial : Nontrivial R generalizing
+  · exact IsGroebnerBasis.of_subsingleton ..
   constructor
   · apply (subset_trans · Ideal.subset_span)
     exact Set.image_mono <| setOf_minimal_subset s
@@ -174,9 +174,8 @@ lemma IsGroebnerBasis.smul
   convert Submodule.span_singleton_smul_eq (hunit i) (m.leadingTerm (f' i)) |>.symm using 3
   simp [leadingTerm, C_mul_monomial, leadingCoeff]
   suffices m.degree (C (f i) * (f' i)) = m.degree (f' i) by simp [this]
-  wlog hg : f' i ≠ 0
-  · push_neg at hg
-    simp [hg]
+  wlog! hg : f' i ≠ 0
+  · simp [hg]
   rw [m.degree_mul_of_isRegular_left, m.degree_C, zero_add]
   · simp [leadingCoeff, hf i |>.isRegular]
   · exact hg
@@ -249,8 +248,8 @@ lemma IsReduced.isReduced_def :
     simp only [IsReduced, IsRemainder.self_iff, mem_support_iff, ne_eq, Set.mem_diff,
       Set.mem_singleton_iff, and_imp, and_congr_right_iff]
   rintro h1
-  wlog h : Nontrivial R
-  · simp [(not_nontrivial_iff_subsingleton.mp h).eq_zero]
+  wlog! h : Nontrivial R
+  · simp [Subsingleton.eq_zero]
   have (g) (hg : g ∈ G) : g ≠ 0 := (h1 g hg).ne_zero
   aesop
 
@@ -259,9 +258,8 @@ lemma IsReduced.isMinimal : hG.IsReduced → hG.IsMinimal := by
   intro h
   refine ⟨h.1, ?_⟩
   intro p hp q hq
-  wlog nontrivial : Nontrivial R
-  · have := not_nontrivial_iff_subsingleton.mp nontrivial
-    simp [Subsingleton.eq_zero]
+  wlog! nontrivial : Nontrivial R
+  · simp [Subsingleton.eq_zero]
   exact h.2 p hp (m.degree p) (by simp [h.1 p hp |>.ne_zero]) q hq
 
 @[simp]
@@ -328,9 +326,8 @@ lemma IsMinimal.isReduced_leadingTerm (hG' : hG.IsMinimal) :
     IsGroebnerBasis.span_image_leadingTerm hG (by simp_intro .. [hG'.1])
       |>.IsReduced := by
   classical
-  wlog nontrivial : Nontrivial R
-  · rw [not_nontrivial_iff_subsingleton] at nontrivial
-    simp
+  wlog! nontrivial : Nontrivial R
+  · simp
   rw [IsReduced.isReduced_def]
   constructor
   · simpa using hG'.1
@@ -404,7 +401,6 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
     simp at this
     obtain ⟨b₁, hb₁G₁, hb₁p⟩ := this
     exact ⟨b₁, hb₁G₁, lt_of_le_of_lt hb₁p hb₂p⟩
-
   /- We suppose there exists `p₁ ∈ G₁` and `p₂ ∈ G₂` s.t. `m.degree p₁ = m.degree p₂` and `p₁ ≠ p₂`,
   and prove contradiction about remainder of `p₁ - p₂` that it is unique but can be both `0` and
   `p₁ - p₂`. This contradiction is easy to obtain in informal proof. -/
@@ -783,10 +779,8 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
 theorem _root_.MonomialOrder.leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
   -- improved version of `MonomialOrder.leadingCoeff_mul`
-  wlog h : f ≠ 0 ∧ g ≠ 0
-  · set_option push_neg.use_distrib true in
-    push_neg at h
-    cases h <;> simp [*]
+  wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
+  · cases h <;> simp [*]
   obtain ⟨hf, hg⟩ := h
   rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
 
@@ -796,14 +790,11 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I),
       h.IsReduced := by
   classical
-  wlog nontrivial : Nontrivial R
-  · -- `push_neg at nontrivial`
-    rw [not_nontrivial_iff_subsingleton] at nontrivial
-    by_cases hG : G = ∅
-    · simp [hG]
-    · push_neg at hG -- `by_cases!`
-      use {0}
-      simp [hG]
+  wlog! nontrivial : Nontrivial R
+  · by_cases! hG : G = ∅
+    · simp
+    · use {0}
+      simp
   -- monicized basis
   let monicized := Set.range fun (g : G) ↦ (hG' _ g.prop).unit⁻¹ • g.val
   have monicized_isGB : m.IsGroebnerBasis monicized I := hG.inv hG'
@@ -850,7 +841,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     (hf := by simp [Exists.choose_spec])
   exact ⟨_, _, reduced⟩
 
-lemma IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R]
+theorem IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     ∃! (B : Set (MvPolynomial σ R)), ∃ (h : m.IsGroebnerBasis B I),
