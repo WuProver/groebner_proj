@@ -12,7 +12,8 @@ weak.linter.flexible = false
 
 [[require]]
 name = "mathlib"
-scope = "leanprover-community"
+git = "https://github.com/WuProver/mathlib4.git"
+rev = "forGroebner"
 
 [[require]]
 name = "checkdecls"
