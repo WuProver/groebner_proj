@@ -13,7 +13,7 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
           ∀ i : ι, m.withBotDegree (b i * g i) ≼'[m] m.withBotDegree p) ∧
         ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
   classical
-  rw [isRemainder_range]
+  rw [IsRemainder.isRemainder_range]
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     split_ands

@@ -9,8 +9,7 @@ variable (hG : m.IsGroebnerBasis G I)
 @[expose] public section
 
 namespace MonomialOrder
-open MonomialOrder
-open MvPolynomial
+open MvPolynomial MonomialOrder IsRemainder IsGroebnerBasis
 
 set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsMinimal (hG : m.IsGroebnerBasis G I) :=
@@ -46,7 +45,7 @@ lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
 --     (r : G → MvPolynomial σ R) (hr : ∀ g : G, m.IsRemainder ↑g (G \ {↑g}) (r g)) :
 --     m.IsGroebnerBasis (Set.range r) I := by
 --   have rmemI (g : G) : r g ∈ I := by
---     rw [m.mem_ideal_iff_of_isRemainder _ (hr g)]
+--     rw [m.mem_ideal_iff _ (hr g)]
 --     · exact Set.mem_of_subset_of_mem hG.1 g.2
 --     rw [Set.diff_singleton_subset_iff, Set.subset_insert_iff]
 --     simp [hG.1]
@@ -415,7 +414,7 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   simp [leadingTerm, monomial_eq_monomial_iff, (hG₂'.1 p₂ hp₂).ne_zero] at hp₁₂
   suffices rem_self : m.IsRemainder (p₁ - p₂) G₁ (p₁ - p₂) by
     have := I.sub_mem (Set.mem_of_subset_of_mem hG₁.1 hp₁) (Set.mem_of_subset_of_mem hG₂.1 hp₂)
-    rw [← m.remainder_eq_zero_iff_mem_ideal_of_isGroebnerBasis _ hG₁ rem_self, sub_eq_zero] at this
+    rw [← remainder_eq_zero_iff_mem_ideal _ hG₁ rem_self, sub_eq_zero] at this
     · exact hp₂' <| this ▸ hp₂
     exact fun p hp ↦ by simp [hG₁'.1 p hp |>.leadingCoeff_eq_one]
   rw [IsRemainder.self_iff]
@@ -557,7 +556,7 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
           exact Eq.symm (sub_sub_self (↑g) (f g))
 
         have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-            have := m.isRemainder_iff_degree g (G \ {↑g}) (f g) <| by
+            have := isRemainder_iff_degree (m := m) g (G \ {↑g}) (f g) <| by
               simp
               rintro b hbG -
               simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
@@ -657,7 +656,7 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
         exact Eq.symm (sub_sub_self (↑g) (f g))
 
       have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-          have := m.isRemainder_iff_degree g (G \ {↑g}) (f g) <| by
+          have := isRemainder_iff_degree (m := m) g (G \ {↑g}) (f g) <| by
             simp
             rintro b hbG -
             simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
@@ -820,7 +819,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
   -- minimalized monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
   let minLTs := (monomial · (1 : R)) '' {x | Minimal (· ∈ (m.degree '' monicized)) x}
   have minLTs_isGB : m.IsGroebnerBasis minLTs (Ideal.span <| m.leadingTerm '' I) := by
-    rw [ideal_eq_span_of_isGroebnerBasis (h := LTs'_isGB) (hG := by simp [LTs'])]
+    rw [ideal_eq_span (h := LTs'_isGB) (hG := by simp [LTs'])]
     exact IsGroebnerBasis.isGroebnerBasis_monomial_minimal ..
   have minLTs_isReduced : minLTs_isGB.IsReduced := IsReduced.isReduced_monomial ..
   -- minimalized basis
@@ -836,7 +835,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
   -- reduced basis
   have reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
     (fun g ↦ Exists.choose <|
-      m.exists_isRemainder g.val (B := minimal \ {g.val})
+      exists_isRemainder (m := m) g.val (B := minimal \ {g.val})
         (hB := by simp_intro .. [minimal_isMinimal.1]))
     (hf := by simp [Exists.choose_spec])
   exact ⟨_, _, reduced⟩
