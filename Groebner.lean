@@ -1,4 +1,5 @@
 import Groebner.MonomialOrder
+import Groebner.MonomialOrderEmbedding
 import Groebner.Remainder
 import Groebner.Groebner
 import Groebner.Reduced
