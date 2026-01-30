@@ -1,6 +1,7 @@
 module
 
 public import Groebner.Groebner
+public import Groebner.Ideal
 
 variable {σ R : Type*} [CommSemiring R] {m : MonomialOrder σ}
 variable {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -15,6 +16,17 @@ set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsMinimal (hG : m.IsGroebnerBasis G I) :=
   (∀ p ∈ G, m.Monic p) ∧ (∀ p ∈ G, ∀ q ∈ G, q ≠ p → ¬ m.degree q ≤ m.degree p)
 
+def IsGroebnerBasis.IsMinimal.isMinimal_def (hG : m.IsGroebnerBasis G I) :
+    hG.IsMinimal ↔ (∀ p ∈ G, m.Monic p) ∧ G.Pairwise (¬ m.degree · ≤ m.degree ·) := by
+  rw [IsMinimal, Set.Pairwise]
+  tauto
+
+def IsGroebnerBasis.IsMinimal.monic {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {p}
+    (h : p ∈ G) : m.Monic p := hG'.1 _ h
+
+def IsGroebnerBasis.IsMinimal.pairwise {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) :
+    G.Pairwise (¬ m.degree · ≤ m.degree ·) := (isMinimal_def .. |>.mp hG').2
+
 set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsReduced (hG : m.IsGroebnerBasis G I) :=
   (∀ p ∈ G, m.Monic p) ∧ ∀ p ∈ G, m.IsRemainder p (G \ {p}) p
@@ -26,10 +38,6 @@ def IsGroebnerBasis.IsReduced (hG : m.IsGroebnerBasis G I) :=
 --       ∀ g ∈ G, ¬ m.degree g ≤ m.degree p := by
 --   unfold IsRemainder at hG
 --   sorry
-
-lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
-    (ha : a ∈ p.support) : a ≼[m] m.degree p := by
-  simp [degree, Finset.le_sup ha]
 
 -- lemma leadingTerm_eq_iff_of_isRemainder {p r : MvPolynomial σ R}
 --     (hG : m.IsRemainder p G r)
@@ -105,7 +113,23 @@ lemma IsGroebnerBasis.of_subsingleton [Subsingleton (MvPolynomial σ R)]
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
 
-lemma IsGroebnerBasis.isGroebnerBasis_monomial {R : Type*} [CommSemiring R] (s : Set (σ →₀ ℕ)) :
+-- `hG` can be generalized more.
+lemma IsGroebnerBasis.isGroebnerBasis_minimal (hG : m.IsGroebnerBasis G I)
+    {G' : Set (MvPolynomial σ R)} (h : G' ⊆ I) (hG' : ∀ g ∈ G', IsUnit (m.leadingCoeff g))
+    (h' : {a | Minimal (· ∈ m.degree '' (G \ {0})) a} ⊆ m.degree '' G') :
+    m.IsGroebnerBasis G' I := by
+  rw [isGroebnerBasis_iff, m.span_leadingTerm_eq_span_monomial hG']
+  exists h
+  have := hG.span_leadingTerm_image
+  apply (le_of_eq_of_le · <| m.span_leadingTerm_le_span_monomial ..) at this
+  rw [Ideal.span_le] at this
+  apply le_trans this
+  simp_rw [← Set.image_image (monomial · (1 : R)) m.degree]
+  rw [ideal_span_monomial_image_eq_ideal_span_monomial_image_minimal]
+  apply Ideal.span_mono
+  exact Set.image_mono h'
+
+lemma IsGroebnerBasis.isGroebnerBasis_monomial (s : Set (σ →₀ ℕ)) :
     m.IsGroebnerBasis ((MvPolynomial.monomial · (1 : R)) '' s)
       (Ideal.span ((MvPolynomial.monomial · 1) '' s)) := by
   classical
@@ -134,22 +158,9 @@ lemma IsGroebnerBasis.isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring
   constructor
   · apply (subset_trans · Ideal.subset_span)
     exact Set.image_mono <| setOf_minimal_subset s
-  rw [le_antisymm_iff, Ideal.span_le, Ideal.span_le]
-  constructor
-  case right =>
-    apply (subset_trans · Ideal.subset_span)
-    apply Set.image_mono
-    apply (subset_trans · Ideal.subset_span)
-    exact Set.image_mono <| setOf_minimal_subset s
-  rw [m.span_leadingTerm_eq_span_monomial (by simp), Set.image_image]
-  simp [-Set.image_subset_iff, m.degree_monomial]
-  intro p
-  simp_rw [Set.mem_image, SetLike.mem_coe, mem_ideal_span_monomial_image, Set.mem_setOf]
-  rintro ⟨q, ⟨hq, rfl⟩⟩ a ha
-  simp [leadingTerm] at ha
-  obtain ⟨b, hbs, hbq⟩ := hq a (by aesop)
-  obtain ⟨c, hc⟩ := exists_minimal_le_of_wellFoundedLT _ b hbs
-  exact ⟨c, hc.2, le_trans hc.1 hbq⟩
+  simpa [Set.image_image,
+      ← MvPolynomial.ideal_span_monomial_image_eq_ideal_span_monomial_image_minimal] using
+    isGroebnerBasis_monomial (m := m) (s := s) (R := R) |>.2
 
 lemma IsGroebnerBasis.smul
     {ι : Type*} (f : ι → R) (f' : ι → MvPolynomial σ R) (hf : ∀ i : ι, IsUnit (f i))
@@ -300,20 +311,6 @@ lemma IsReduced.isReduced_monomial {s : Set (σ →₀ ℕ)} {I : Ideal (MvPolyn
 --   -- easy
 --   sorry
 
-@[simp]
-lemma _root_.MonomialOrder.monic_leadingTerm (p : MvPolynomial σ R) :
-    m.Monic (m.leadingTerm p) ↔ m.Monic p := by simp [leadingTerm, Monic]
-
-lemma _root_.MonomialOrder.support_leadingTerm (p : MvPolynomial σ R) [Decidable (p = 0)] :
-    support (m.leadingTerm p) = if p = 0 then ∅ else {m.degree p} := by
-  classical
-  simp [leadingTerm, support_monomial]
-
-lemma _root_.MonomialOrder.support_leadingTerm' {p : MvPolynomial σ R} :
-    p ≠ 0 → support (m.leadingTerm p) = {m.degree p} := by
-  classical
-  simp_intro .. [support_leadingTerm]
-
 lemma IsMinimal.image_leadingTerm_eq_image_monomial_one (hG' : hG.IsMinimal) :
     m.leadingTerm '' G = (fun p ↦ monomial (m.degree p) 1) '' G := by
   simp_rw [Set.image_eq_range]
@@ -359,6 +356,106 @@ lemma IsMinimal.isReduced_leadingTerm (hG' : hG.IsMinimal) :
 -- lemma _root_.Set.eq_iff_of_image_eq {α β : Type*} {f : α → β} {s t : Set α}
 --     (hf : f '' s = f '' t) : s = t ↔ ∀ a ∈ s, ∀ b ∈ t, f s = f t
 
+lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm
+    (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
+    (hGsubset : G ⊆ I) :
+    m.IsGroebnerBasis G I := by
+  classical
+  refine ⟨hGsubset, ?_⟩
+  have eq := hG.2
+  rw [Set.image_image] at eq
+  apply le_antisymm
+  · simp only [leadingTerm_leadingTerm] at eq
+    rw [← eq]
+    apply Ideal.span_mono
+    rintro x ⟨p, hp, rfl⟩
+    refine ⟨m.leadingTerm p, ?_, leadingTerm_leadingTerm _⟩
+    apply Ideal.subset_span
+    exact ⟨p, hp, rfl⟩
+  · apply Ideal.span_mono
+    apply Set.image_mono
+    exact hGsubset
+
+lemma IsMinimal.injOn_degree (hG' : hG.IsMinimal) : G.InjOn m.degree := by
+  rw [Set.injOn_iff_pairwise_ne]
+  exact hG'.pairwise.imp fun _ _ ↦ ne_of_not_le
+
+lemma IsMinimal.minimal_degree (hG' : hG.IsMinimal) {g} (h : g ∈ G) :
+    Minimal (· ∈ m.degree '' G) (m.degree g) := by
+  by_contra!
+  rw [not_minimal_iff_exists_lt <| Set.mem_image_of_mem _ h] at this
+  obtain ⟨_, hqp, ⟨q, hqG, rfl⟩⟩ := this
+  exact hG'.2 _ h _ hqG (by aesop) hqp.le
+
+variable (hG) in
+lemma IsMinimal.isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm :
+    hG.IsMinimal ↔
+      (∀ g ∈ G, m.Monic g) ∧ (∀ g ∈ G, Minimal (· ∈ m.degree '' G) (m.degree g)) ∧
+      G.InjOn m.degree := by
+  constructor
+  · exact fun hG' ↦ ⟨hG'.1, fun _ ↦ hG'.minimal_degree, hG'.injOn_degree⟩
+  intro h
+  rw [isMinimal_def]
+  refine ⟨h.1, fun p hp q hq hpq ↦ ?_⟩
+  by_contra!
+  exact h.2.2.ne hp hq hpq <| h.2.1 q hq |>.eq_of_le (Set.mem_image_of_mem _ hp) this
+
+lemma IsMinimal.degree_image_eq_setOf_minimal (hG' : hG.IsMinimal) :
+    m.degree '' G = {a | Minimal (· ∈ m.degree '' G) a} := by
+  ext
+  constructor
+  · rintro ⟨p, hpG, rfl⟩
+    exact hG'.minimal_degree hpG
+  intro h
+  exact h.prop
+
+-- lemma IsMinimal.isGroebnerBasis_and_isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm
+--     {R : Type*} [CommRing R] [Nontrivial R] {G : Set <| MvPolynomial σ R}
+--     (I : Ideal <| MvPolynomial σ R) (hG : m.IsGroebnerBasis G I)
+--     (h : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+--     hG.IsMinimal ↔
+--       (∀ g ∈ G, m.Monic g) ∧
+--       m.degree '' G = {x | Minimal (· ∈ m.degree '' (I \ {(0 : MvPolynomial σ R)})) x} ∧
+--       G.InjOn m.degree := by
+--   rw [isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm]
+--   constructor
+--   · intro hG'
+--     refine ⟨hG'.1, ?_, hG'.2.2⟩
+--     have := hG.ideal_eq_span h
+
+--     have := (isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le (hG := h) ..).mp hG
+
+--     sorry
+--   · intro hG'
+--     refine ⟨hG'.1, ?_, hG'.2.2⟩
+--     simp_rw [hG'.2.1, Set.mem_setOf, minimal_minimal]
+--     intro g hg
+--     exact Set.ext_iff.mp hG'.2.1 (m.degree g) |>.mp <| Set.mem_image_of_mem _ hg
+
+lemma IsMinimal.degree_image_eq_of_isMinimal [Nontrivial R]
+    (hG' : hG.IsMinimal) {G₁ : Set (MvPolynomial σ R)} {hG₁ : m.IsGroebnerBasis G₁ I}
+    (hG₁' : hG₁.IsMinimal) : m.degree '' G = m.degree '' G₁ := by
+  rw [hG'.degree_image_eq_setOf_minimal, hG₁'.degree_image_eq_setOf_minimal, Set.ext_iff]
+  simp_rw [Set.mem_setOf, ← ideal_span_monomial_image_eq_ideal_span_monomial_image_iff (R := R),
+    Set.image_image]
+  rw [
+    ← m.span_leadingTerm_eq_span_monomial (fun _ h ↦ by simp [hG'.monic h |>.leadingCoeff_eq_one]),
+    ← m.span_leadingTerm_eq_span_monomial (fun _ h ↦ by simp [hG₁'.monic h |>.leadingCoeff_eq_one]),
+    ← hG.span_leadingTerm_image, ← hG₁.span_leadingTerm_image
+  ]
+
+lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm
+    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
+    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : G.InjOn m.degree) :
+    (isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := by
+  rw [IsMinimal.isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm] at ⊢ hG'
+  aesop
+
+lemma leadingCoeff_add_of_lt_right {f g : MvPolynomial σ R}
+    (h : m.degree f ≺[m] m.degree g) :
+    m.leadingCoeff (f + g) = m.leadingCoeff g :=
+  add_comm f g ▸ leadingCoeff_add_of_lt h
+
 -- this requires `R` to be nontrivial, or the reduced GB can be `∅` or `{0}`.
 lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
     {G₁ G₂ : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -367,39 +464,12 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
     G₁ = G₂ := by
   classical
   have : m.leadingTerm '' G₁ = m.leadingTerm '' G₂ := by
-    ext p
-    wlog hp : p ∈ m.leadingTerm '' G₁ ∧ p ∉ m.leadingTerm '' G₂ generalizing G₁ G₂ with h
-    · by_contra!
-      specialize h hG₂' hG₁' (by tauto)
-      tauto
-    obtain hLTG₁ := hG₁'.isMinimal.isReduced_leadingTerm.isMinimal
-    unfold IsMinimal at hLTG₁
-    set_option push_neg.use_distrib true in
-    contrapose! hLTG₁
-    right
-    have h₁ := hG₁.2
-    have h₂ := hG₂.2
-    rw! [hG₁'.isMinimal.image_leadingTerm_eq_image_monomial_one,
-      hG₂'.isMinimal.image_leadingTerm_eq_image_monomial_one] at *
-    simp [m.degree_monomial, and_comm (a := _ ≠ _), ← lt_iff_le_and_ne]
-    have : p ∈ Ideal.span ((fun p ↦ monomial (m.degree p) 1) '' G₂) := by
-      rw [← h₂, h₁]
-      exact Set.mem_of_subset_of_mem Ideal.subset_span hp.1
-    obtain ⟨p, hpG₁, rfl⟩ := (Set.mem_image ..).mp hp.1
-    use p, hpG₁
-    rw [← Set.image_image (monomial · 1) m.degree G₂, mem_ideal_span_monomial_image] at this
-    simp at this hp
-    obtain ⟨b₂, hb₂G₂, hb₂p⟩ := this
-    replace hb₂p := lt_of_le_of_ne hb₂p <| hp.2 _ hb₂G₂
-    clear hp
-    have : monomial (m.degree b₂) (1 : R) ∈
-      Ideal.span ((fun p ↦ monomial (m.degree p) 1) '' G₁) := by
-      rw [← h₁, h₂]
-      exact Set.mem_of_subset_of_mem Ideal.subset_span <| Set.mem_image_of_mem _ hb₂G₂
-    rw [← Set.image_image (monomial · 1) m.degree G₁, mem_ideal_span_monomial_image] at this
-    simp at this
-    obtain ⟨b₁, hb₁G₁, hb₁p⟩ := this
-    exact ⟨b₁, hb₁G₁, lt_of_le_of_lt hb₁p hb₂p⟩
+    rw [hG₁'.isMinimal.image_leadingTerm_eq_image_monomial_one,
+      hG₂'.isMinimal.image_leadingTerm_eq_image_monomial_one,
+      ← Set.image_image (monomial · (1 : R)) m.degree,
+      ← Set.image_image (monomial · (1 : R)) m.degree]
+    congr 1
+    exact hG₁'.isMinimal.degree_image_eq_of_isMinimal hG₂'.isMinimal
   /- We suppose there exists `p₁ ∈ G₁` and `p₂ ∈ G₂` s.t. `m.degree p₁ = m.degree p₂` and `p₁ ≠ p₂`,
   and prove contradiction about remainder of `p₁ - p₂` that it is unique but can be both `0` and
   `p₁ - p₂`. This contradiction is easy to obtain in informal proof. -/
@@ -441,81 +511,14 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   contrapose! hqp
   simp [← hq'.2.1, ← hp₁₂.1, hqp]
 
-lemma IsMinimal.isGroebnerBasis_of_isMinimal_leadingTerm {R} [CommRing R]
-    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
-    (hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I))
-    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) :
-    m.IsGroebnerBasis G I := by
-    classical
-    refine ⟨hGsubset, ?_⟩
-    have eq := hG.2
-    rw [Set.image_image] at eq
-    have h₁ : m.leadingTerm '' G = (m.leadingTerm ∘ m.leadingTerm) '' G := by
-      apply Set.image_congr
-      intro g hg
-      dsimp
-      rw [leadingTerm_leadingTerm]
-    apply le_antisymm
-    ·
-      simp only [leadingTerm_leadingTerm] at eq
-      rw [← eq]
-      apply Ideal.span_mono
-      rintro x ⟨p, hp, rfl⟩
-      refine ⟨m.leadingTerm p, ?_, leadingTerm_leadingTerm _⟩
-      apply Ideal.subset_span
-      exact ⟨p, hp, rfl⟩
-    ·
-      apply Ideal.span_mono
-      apply Set.image_mono
-      exact hGsubset
-
-lemma IsMinimal.isMinimal_of_isMinimal_leadingTerm {R} [CommRing R]
-    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
-    {hG : m.IsGroebnerBasis (m.leadingTerm '' G) (Ideal.span <| m.leadingTerm '' I)}
-    (hG' : hG.IsMinimal) (hGsubset : G ⊆ I) (hLT : G.InjOn m.leadingTerm) :
-    (hG'.isGroebnerBasis_of_isMinimal_leadingTerm hG hGsubset).IsMinimal := by
-    rw [IsMinimal]
-    constructor
-    · intro p hp
-      have h_monic_lt := hG'.1 (m.leadingTerm p) (Set.mem_image_of_mem _ hp)
-      simpa using h_monic_lt
-    · intro p hp q hq h_neq
-      contrapose! h_neq
-      apply hLT hq hp
-      by_contra h_lt_neq
-      apply hG'.2 (m.leadingTerm p) (Set.mem_image_of_mem _ hp)
-              (m.leadingTerm q) (Set.mem_image_of_mem _ hq)
-              h_lt_neq
-      simpa using h_neq
-
-lemma leadingCoeff_add_of_lt_right (f g : MvPolynomial σ R)
-    (h : m.toSyn (m.degree f) < m.toSyn (m.degree g)) :
-    m.leadingCoeff (f + g) = m.leadingCoeff g := by
-  have h_deg_eq : m.degree (f + g) = m.degree g :=
-    m.degree_add_eq_right_of_lt h
-  rw [leadingCoeff, leadingCoeff]
-  rw [h_deg_eq]
-  rw [MvPolynomial.coeff_add]
-  have h_coeff_f_zero : MvPolynomial.coeff (m.degree g) f = 0 := by
-    by_contra h_nz
-    rw [coeff] at h_nz
-    have h_in_support : m.degree g ∈ f.support := MvPolynomial.mem_support_iff.mpr h_nz
-    have h_le : m.toSyn (m.degree g) ≤  m.toSyn (m.degree f) := by
-      apply le_degree h_in_support
-    exact not_lt.mpr h_le h
-  rw [h_coeff_f_zero, zero_add]
-
-
 lemma MonomialOrder.degree_le_mul_left {σ R : Type*} [CommRing R] [IsDomain R]
     (m : MonomialOrder σ) (p q : MvPolynomial σ R) (hq : q ≠ 0) :
     m.degree p ≤ m.degree (p * q) := by
   by_cases hp : p = 0
   · rw [hp]
     simp
-  ·
-    rw [m.degree_mul hp hq]
+  · rw [m.degree_mul hp hq]
     exact le_self_add
-
 
 lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -806,32 +809,25 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     · simp [m.leadingCoeff_C]
     · simp
     exact (hG' _ hmemG).mem_nonZeroDivisors
-  -- monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
-  letI LTs := m.leadingTerm '' monicized
-  letI LTs' := (monomial · (1 : R)) '' (m.degree '' monicized)
-  have LTs_eq_LTs' : LTs = LTs' := by
-    unfold LTs LTs'
-    rw [Set.image_eq_range, Set.image_image, Set.image_eq_range]
-    simp_rw [leadingTerm, fun (p : monicized) ↦ (monicized_monic _ p.prop).leadingCoeff_eq_one]
-  have LTs'_isGB : m.IsGroebnerBasis LTs' (Ideal.span <| m.leadingTerm '' I) := by
-    rw [monicized_isGB.2, show m.leadingTerm '' monicized = _ from LTs_eq_LTs']
-    exact IsGroebnerBasis.isGroebnerBasis_monomial ..
-  -- minimalized monomials (basis of `Ideal.span (m.leadingTerm '' I)`)
-  let minLTs := (monomial · (1 : R)) '' {x | Minimal (· ∈ (m.degree '' monicized)) x}
-  have minLTs_isGB : m.IsGroebnerBasis minLTs (Ideal.span <| m.leadingTerm '' I) := by
-    rw [ideal_eq_span (h := LTs'_isGB) (hG := by simp [LTs'])]
-    exact IsGroebnerBasis.isGroebnerBasis_monomial_minimal ..
-  have minLTs_isReduced : minLTs_isGB.IsReduced := IsReduced.isReduced_monomial ..
   -- minimalized basis
-  obtain ⟨minimal, minimal_subset_monic, injOn_minimal, LT_minimal_eq⟩ :=
+  obtain ⟨minimal, minimal_subset_monic, injOn_degree, degree_minimal_eq⟩ :=
     Set.SurjOn.exists_subset_injOn_image_eq
-      (s := monicized) (t := minLTs) (f := m.leadingTerm) <| by
-        rw [Set.SurjOn, show m.leadingTerm '' monicized = _ from LTs_eq_LTs']
-        exact Set.image_mono <| fun _ ↦ Minimal.prop
-  rw! [← LT_minimal_eq] at minLTs_isReduced
+      (s := monicized) (t := {x | Minimal (· ∈ (m.degree '' monicized)) x})
+      (f := m.degree) (fun _ ↦ Minimal.prop)
+  have minimal_isGB :=
+    monicized_isGB.isGroebnerBasis_minimal (subset_trans minimal_subset_monic monicized_isGB.subset)
+      (by simp [monicized_monic · <| minimal_subset_monic ·]) <| subset_of_eq <| by
+        rw [degree_minimal_eq, sdiff_eq_left.mpr]
+        rw [Set.disjoint_singleton_right]
+        by_contra! h
+        simpa [Monic] using monicized_monic _ h
   have minimal_isMinimal : IsMinimal (G := minimal) (I := I) _ :=
-    minLTs_isReduced.isMinimal.isMinimal_of_isMinimal_leadingTerm
-      (subset_trans minimal_subset_monic monicized_isGB.1) injOn_minimal
+    IsMinimal.isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm minimal_isGB |>.mpr
+      ⟨(monicized_monic · <| minimal_subset_monic ·), ?min, injOn_degree⟩
+  case min =>
+    intro g h
+    simpa only [degree_minimal_eq, Set.mem_setOf, minimal_minimal] using
+      Set.ext_iff.mp degree_minimal_eq (m.degree g) |>.mp (Set.mem_image_of_mem _ h)
   -- reduced basis
   have reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
     (fun g ↦ Exists.choose <|

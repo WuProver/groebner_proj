@@ -1,7 +1,9 @@
 module
 
 public import Mathlib
-public import Groebner.AddEquiv
+public import Groebner.ToMathlib.AddEquiv
+public import Groebner.ToMathlib.PropLemma
+public import Groebner.ToMathlib.MvPolynomial
 
 open MvPolynomial
 namespace MonomialOrder
@@ -210,7 +212,61 @@ end Ring
 
 end MergedsPolynomial''
 
-@[expose] public section WithBotDegree
+@[expose] public section
+
+section misc
+
+variable {R : Type*} [CommSemiring R] (f g : MvPolynomial σ R)
+
+@[simp]
+lemma monic_leadingTerm (p : MvPolynomial σ R) :
+    m.Monic (m.leadingTerm p) ↔ m.Monic p := by simp [leadingTerm, Monic]
+
+lemma support_leadingTerm (p : MvPolynomial σ R) [Decidable (p = 0)] :
+    support (m.leadingTerm p) = if p = 0 then ∅ else {m.degree p} := by
+  classical
+  simp [leadingTerm, support_monomial]
+
+lemma support_leadingTerm' {p : MvPolynomial σ R} (hp : p ≠ 0) :
+    support (m.leadingTerm p) = {m.degree p} := by
+  classical
+  simp [leadingTerm, support_monomial, hp]
+
+lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
+    (ha : a ∈ p.support) : a ≼[m] m.degree p := by
+  simp [degree, Finset.le_sup ha]
+
+lemma leadingTerm_eq_leadingTerm_iff {p q : MvPolynomial σ R} :
+    m.leadingTerm p = m.leadingTerm q ↔
+    m.leadingCoeff p = m.leadingCoeff q ∧ m.degree p = m.degree q := by
+  rw [leadingTerm, leadingTerm, monomial_eq_monomial_iff]
+  aesop
+
+@[simp]
+lemma monic_one' : m.Monic (1 : MvPolynomial σ R) := monic_one
+
+@[simp]
+lemma monic_of_subsingleton [Subsingleton (MvPolynomial σ R)] (p : MvPolynomial σ R) :
+    m.Monic p := by
+  simp [Subsingleton.eq_one (α := MvPolynomial σ R)]
+
+lemma degree_le_degree_of_support_subset {p q : MvPolynomial σ R} (h : p.support ⊆ q.support) :
+    m.degree p ≼[m] m.degree q := by
+  simp_rw [degree, m.toSyn.apply_symm_apply]
+  exact Finset.sup_mono h
+
+end misc
+
+section killCompl
+
+lemma degree_rename_killCompl_le_degree {σ' R : Type*} [CommSemiring R]
+    {f : σ' → σ} (hf : f.Injective) {p : MvPolynomial σ R} :
+    m.degree ((p.killCompl hf).rename f) ≼[m] m.degree p :=
+  m.degree_le_degree_of_support_subset (support_rename_killCompl_subset hf)
+
+end killCompl
+
+section WithBotDegree
 
 section Semiring
 
@@ -233,6 +289,14 @@ lemma toWithBotSyn_symm_apply_bot : m.toWithBotSyn.symm ⊥ = ⊥ := rfl
 @[simp]
 lemma toWithBotSyn_apply_eq_bot_iff (a) : m.toWithBotSyn a = ⊥ ↔ a = ⊥ := by
   simp [← m.toWithBotSyn.eq_symm_apply]
+
+@[simp]
+lemma toWithBotSyn_apply_le_bot_iff (a) : m.toWithBotSyn a ≤ ⊥ ↔ a = ⊥ := by
+  simp [← m.toWithBotSyn.eq_symm_apply]
+
+@[simp]
+lemma bot_lt_toWithBotSyn_apply_iff (a) : ⊥ < m.toWithBotSyn a ↔ a ≠ ⊥ := by
+  simp [bot_lt_iff_ne_bot]
 
 @[simp]
 lemma toWithBotSyn_symm_apply_eq_bot (a) : m.toWithBotSyn.symm a = ⊥ ↔ a = ⊥ := by
@@ -366,6 +430,10 @@ lemma withBotDegree_lt_withBotDegree_iff :
   · simp [hg, hf, bot_lt_iff_ne_bot, toWithBotSyn_apply]
   simp [m.withBotDegree_eq, hf, hg, m.toWithBotSyn_apply]
 
+lemma withBotDegree_lt_withBotDegree_iff_of_ne_zero (hf : f ≠ 0) :
+    m.withBotDegree f ≺'[m] m.withBotDegree g ↔ m.degree f ≺[m] m.degree g := by
+  simp [withBotDegree_lt_withBotDegree_iff, hf]
+
 lemma withBotDegree_eq_withBotDegree_iff :
     m.withBotDegree f = m.withBotDegree g ↔ (m.degree f = m.degree g ∧ (f = 0 ↔ g = 0)) := by
   classical
@@ -384,9 +452,6 @@ lemma withBotDegree_add_le :
   · rcases h with h | h <;> simp [h, m.toWithBotSyn_apply]
   simpa [withBotDegree_le_withBotDegree_iff, h] using degree_add_le (R := R)
 
-lemma _root_.and_iff_and_left_imp {a b : Prop} : a ∧ b ↔ a ∧ (a → b) :=
-  ⟨fun ⟨a, b⟩ ↦ ⟨a, fun _ ↦ b⟩, fun ⟨a, b'⟩ ↦ ⟨a, b' a⟩⟩
-
 lemma withBotDegree_add_of_lt (h : m.withBotDegree g ≺'[m] m.withBotDegree f) :
     m.withBotDegree (f + g) = m.withBotDegree f := by
   wlog! hg : g ≠ 0
@@ -395,7 +460,7 @@ lemma withBotDegree_add_of_lt (h : m.withBotDegree g ≺'[m] m.withBotDegree f) 
     simp only [withBotDegree_lt_withBotDegree_iff, hg, ne_eq, false_and, or_false] at h
   simp? [withBotDegree_eq_withBotDegree_iff, show f ≠ 0 by contrapose h; simp [h]] says
     simp only [withBotDegree_eq_withBotDegree_iff, show f ≠ 0 by contrapose h; simp [h], iff_false]
-  rw [and_iff_and_left_imp]
+  rw [← and_imp_iff_and]
   refine ⟨m.degree_add_of_lt h, ?_⟩
   intro h'
   contrapose! h
@@ -420,8 +485,23 @@ lemma le_withBotDegree {f : MvPolynomial σ R} {d : σ →₀ ℕ} (hd : d ∈ f
   classical
   simp [withBotDegree_eq, toWithBotSyn_apply, ne_zero_iff.mpr ⟨d, by simpa using hd⟩, le_degree hd]
 
+lemma withBotDegree_le_withBotDegree_of_support_subset
+    {p q : MvPolynomial σ R} (h : p.support ⊆ q.support) :
+    m.withBotDegree p ≼'[m] m.withBotDegree q := by
+  wlog! hq : q ≠ 0
+  · simpa [hq] using h
+  rw [m.withBotDegree_le_withBotDegree_iff_of_ne_zero _ hq]
+  exact m.degree_le_degree_of_support_subset h
+
+lemma withBotDegree_rename_killCompl_le_withBotDegree {σ'} {f : σ' → σ}
+    (hf : f.Injective) (p : MvPolynomial σ R) :
+    m.withBotDegree ((p.killCompl hf).rename f) ≼'[m] m.withBotDegree p :=
+  m.withBotDegree_le_withBotDegree_of_support_subset (support_rename_killCompl_subset hf)
+
 end Semiring
 
 end WithBotDegree
+
+end
 
 end MonomialOrder

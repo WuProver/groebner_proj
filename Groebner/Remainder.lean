@@ -7,6 +7,8 @@ module
 
 public import Mathlib
 public import Groebner.MonomialOrder
+public import Groebner.MonomialOrderEmbedding
+public import Groebner.ToMathlib.Finsupp
 
 /-! # Remainder
 
@@ -535,6 +537,98 @@ lemma of_subsingleton [Subsingleton (MvPolynomial σ R)]
     m.IsRemainder p s r := by
   simp [IsRemainder, Subsingleton.eq_zero (α := MvPolynomial σ R)]
 
+lemma _root_.MonomialOrder.Embedding.isRemainder_killCompl_of_isRemainder_rename
+    {σ' σ} {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+    (e : Embedding m' m) {p : MvPolynomial σ' R} {B : Set (MvPolynomial σ' R)}
+    (hB : ∀ b ∈ B, m'.leadingCoeff b ∈ nonZeroDivisors _)
+    {r : MvPolynomial σ R} (h : m.IsRemainder (p.rename e) (rename e '' B) r) :
+    m'.IsRemainder p B (r.killCompl e.coe_injective) := by
+  classical
+  rw [isRemainder_def'] at h ⊢
+  obtain ⟨⟨g, hg, hsum, hdeg⟩, hdeg'⟩ := h
+  constructor
+  · use g.mapDomain (killCompl e.coe_injective) |>.mapRange (killCompl e.coe_injective) (by simp)
+    split_ands
+    · apply subset_trans (SetLike.coe_subset_coe.mpr Finsupp.support_mapRange)
+      apply subset_trans (SetLike.coe_subset_coe.mpr Finsupp.mapDomain_support)
+      apply Set.image_mono (f := killCompl e.coe_injective) at hg
+      simp_rw [← Set.image_comp, ← AlgHom.coe_comp,
+        MvPolynomial.killCompl_comp_rename e.coe_injective, AlgHom.coe_id, Set.image_id] at hg
+      rwa [Finset.coe_image]
+    · apply congrArg (killCompl e.coe_injective) at hsum
+      rw [← Function.comp_apply (f := killCompl e.coe_injective), ← AlgHom.coe_comp,
+        killCompl_comp_rename, AlgHom.coe_id, id] at hsum
+      simp [hsum, Finsupp.linearCombination]
+      rw [Finsupp.sum_mapRange_index (by simp), g.sum_mapDomain_index (by simp) (by simp [add_mul]),
+        map_finsuppSum]
+      simp
+    · intro b hb
+      specialize hdeg (b.rename e) (Set.mem_image_of_mem _ hb)
+      rw [← e.withBotDegree_le_withBotDegree_iff]
+      apply le_trans' hdeg
+      nth_rw 2 [← b.killCompl_rename_app e.coe_injective]
+      rw [Finsupp.mapRange_apply, g.mapDomain_apply' (rename e '' B) hg, map_mul]
+      · simp_rw [
+          m.withBotDegree_mul_of_left_mem_nonZeroDivisors (f := b.rename e) (by simp [hB b hb]),
+          map_add]
+        apply add_le_add_right
+        exact withBotDegree_rename_killCompl_le_withBotDegree ..
+      · apply Set.InjOn.image_of_comp
+        simp
+      · exact Set.mem_image_of_mem _ hb
+  intro c hc g' hg' hg'0
+  rw [support_killCompl] at hc
+  specialize hdeg' (c.mapDomain e) (by simpa using hc) (g'.rename e) (Set.mem_image_of_mem _ hg')
+    (by simpa)
+  rwa [e.degree_rename, Finsupp.mapDomain_le_iff_le_of_injective e.coe_injective] at hdeg'
+
+lemma _root_.MonomialOrder.Embedding.isRemainder_rename_of_isRemainder {σ' σ}
+    {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+    (e : Embedding m' m) {p : MvPolynomial σ' R} {B : Set (MvPolynomial σ' R)}
+    {r : MvPolynomial σ' R} (h : m'.IsRemainder p B r) :
+    m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) := by
+  classical
+  rw [isRemainder_def'] at h ⊢
+  obtain ⟨⟨g, hg, hsum, hdeg⟩, hdeg'⟩ := h
+  constructor
+  · use g.mapDomain (rename e) |>.mapRange (rename e) (by simp)
+    split_ands
+    · apply subset_trans (SetLike.coe_subset_coe.mpr Finsupp.support_mapRange)
+      apply subset_trans (SetLike.coe_subset_coe.mpr Finsupp.mapDomain_support)
+      rw [Finset.coe_image]
+      exact Set.image_mono hg
+    · simp [hsum, Finsupp.linearCombination]
+      rw [Finsupp.sum_mapRange_index (by simp),
+        Finsupp.sum_mapDomain_index_inj <| rename_injective _ e.coe_injective]
+      simp_rw [← map_mul, map_finsuppSum]
+    · simpa [← map_mul, Finsupp.mapDomain_apply (rename_injective _ e.coe_injective)] using hdeg
+  · simpa [e.coe_injective, MvPolynomial.support_rename_of_injective, Embedding.degree_rename,
+      Finsupp.mapDomain_le_iff_le_of_injective] using hdeg'
+
+lemma _root_.MonomialOrder.Embedding.isRemainder_iff_isRemainder_rename {σ' σ}
+    {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+    (e : Embedding m' m) (p : MvPolynomial σ' R) {B : Set (MvPolynomial σ' R)}
+    (hB : ∀ b ∈ B, m'.leadingCoeff b ∈ nonZeroDivisors _)
+    (r : MvPolynomial σ' R) :
+    m'.IsRemainder p B r ↔
+      m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
+  ⟨e.isRemainder_rename_of_isRemainder,
+    (by simpa using e.isRemainder_killCompl_of_isRemainder_rename hB ·)⟩
+
+lemma _root_.MonomialOrder.Embedding.isRemainder_iff_isRemainder_rename₀ {σ' σ}
+    {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+    (e : Embedding m' m) (p : MvPolynomial σ' R) {B : Set (MvPolynomial σ' R)}
+    (hB : ∀ b ∈ B, m'.leadingCoeff b ∈ nonZeroDivisors _ ∨ b = 0)
+    (r : MvPolynomial σ' R) :
+    m'.IsRemainder p B r ↔
+      m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) := by
+  nth_rw 1 [← isRemainder_sdiff_singleton_zero_iff_isRemainder]
+  nth_rw 2 [← isRemainder_sdiff_singleton_zero_iff_isRemainder]
+  convert_to _ ↔ m.IsRemainder _ ((rename e) '' (B \ {0})) _ using 2
+  · aesop
+  apply e.isRemainder_iff_isRemainder_rename
+  simp_intro .. [or_iff_not_imp_right.mp (hB _ _)]
+
 end CommSemiring
 
 section CommRing
@@ -638,6 +732,14 @@ lemma exists_degree_le_degree_of_zero' (p : MvPolynomial σ k) (hp : p ≠ 0)
     (B : Set (MvPolynomial σ k)) (h : m.IsRemainder p B 0) :
     ∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree p :=
   exists_degree_le_degree_of_zero₀ hp (by simp [em']) h
+
+lemma _root_.MonomialOrder.Embedding.isRemainder_iff_isRemainder_rename' {σ' σ}
+    {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+    (e : Embedding m' m) (p : MvPolynomial σ' k) {B : Set (MvPolynomial σ' k)}
+    (r : MvPolynomial σ' k) :
+    m'.IsRemainder p B r ↔
+      m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
+  e.isRemainder_iff_isRemainder_rename₀ p (by simp [em']) r
 
 end Field
 

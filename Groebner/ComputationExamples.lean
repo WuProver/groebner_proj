@@ -1,9 +1,17 @@
-import Groebner.List
+import Groebner.ToMathlib.List
 import Groebner.Groebner
 
 open MonomialOrder
 variable {σ} {R} [CommSemiring R] {m : MonomialOrder σ} (p : MvPolynomial σ R)
 namespace MonomialOrder
+
+theorem isRemainder_range_iff_tsum {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
+    (r : MvPolynomial σ R) :
+      m.IsRemainder p (Set.range b) r ↔
+      (∃ g : ι → MvPolynomial σ R,
+          p = ∑ i : ι, (b i * g i) + r ∧
+          ∀ i : ι, m.withBotDegree (b i * g i) ≼'[m] m.withBotDegree p) ∧
+        ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c)
 
 theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
     (r : MvPolynomial σ R) :

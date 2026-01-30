@@ -1,7 +1,9 @@
 module
 
 public import Mathlib
-public import Groebner.MulEquiv
+public import Groebner.ToMathlib.MulEquiv
+public import Groebner.ToMathlib.Finsupp
+public import Groebner.MonomialOrder
 
 @[expose] public section
 
@@ -58,9 +60,11 @@ noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) 
       by exact inferInstanceAs <| IsWellFounded (Syn m f) fun x1 x2 ↦ map x1 < map x2
   }
 
-structure Embedding where
-  toFun : σ' → σ
-  toFun_injective : toFun.Injective
+/-- An embedding from a monomial order `m' : MonomialOrder σ'` and `m : MonomialOrder σ` consists:
+
+1. a injective mapping from index `σ'` of `m'` to `σ` of `m`.
+2. this mapping "preserves" the order. -/
+structure Embedding extends σ' ↪ σ where
   monotone' : Monotone (m.toSyn ∘ Finsupp.mapDomain toFun ∘ m'.toSyn.symm)
 
 namespace Embedding
@@ -69,19 +73,22 @@ variable {m' m} (e : Embedding m' m) {R} [CommSemiring R]
 variable (p q : MvPolynomial σ' R)
 
 instance instFunLike : FunLike (Embedding m' m) σ' σ where
-  coe := Embedding.toFun
-  coe_injective' e₁ e₂ h := by
-    convert_to (Embedding.mk _ _ _) = ⟨_, _, _⟩
-    congr
+  coe m := m.toFun
+  coe_injective' a b h := by
+    convert_to (Embedding.mk _ _) = ⟨_, _⟩
+    simpa using h
 
 @[ext] lemma ext {e₁ e₂ : Embedding m' m} (h : ⇑e₁ = ⇑e₂) : e₁ = e₂ :=
   (instFunLike ..).coe_injective' h
+
+@[simp] lemma coe_toEmbedding_eq_coe : ⇑e.toEmbedding = ⇑e := rfl
 
 @[simp] lemma toFun_eq_coe : e.toFun = ⇑e := rfl
 
 lemma monotone : Monotone (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) := e.monotone'
 
-lemma coe_injective : Function.Injective e := e.toFun_injective
+@[simp]
+lemma coe_injective : Function.Injective e := e.toEmbedding.inj'
 
 def toStrictMono : StrictMono (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) :=
   e.monotone'.strictMono_of_injective <| by
@@ -89,28 +96,34 @@ def toStrictMono : StrictMono (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm
 
 noncomputable def toOrderEmbedding : OrderEmbedding m'.syn m.syn := .ofStrictMono _ e.toStrictMono
 
+@[simp]
 def le_iff_le (a b : m'.syn) :
     Finsupp.mapDomain e (m'.toSyn.symm a) ≼[m] Finsupp.mapDomain e (m'.toSyn.symm b) ↔ a ≤ b :=
   e.toOrderEmbedding.le_iff_le
 
+@[simp]
 def le_iff_le' (a b : σ' →₀ ℕ) :
     Finsupp.mapDomain e a ≼[m] Finsupp.mapDomain e b ↔ a ≼[m'] b := by
   nth_rw 1 [← m'.toSyn.symm_apply_apply a, ← m'.toSyn.symm_apply_apply b]
   exact e.le_iff_le ..
 
+@[simp]
 def lt_iff_lt (a b : m'.syn) :
     Finsupp.mapDomain e (m'.toSyn.symm a) ≺[m] Finsupp.mapDomain e (m'.toSyn.symm b) ↔ a < b :=
   e.toOrderEmbedding.lt_iff_lt
 
+@[simp]
 def lt_iff_lt' (a b : σ' →₀ ℕ) :
     Finsupp.mapDomain e a ≺[m] Finsupp.mapDomain e b ↔ a ≺[m'] b := by
   nth_rw 1 [← m'.toSyn.symm_apply_apply a, ← m'.toSyn.symm_apply_apply b]
   exact e.lt_iff_lt ..
 
 variable (m) in
+/-- Given a monomial order `m : MonomialOrder σ` and a injective function `f : σ' → σ`, there exists
+an embedding `ofInjective`, from an `m' : MonomialOrder σ'` to `m : MonomialOrder σ` with mapping
+`f`. -/
 def ofInjective {f : σ' → σ} (hf : f.Injective) : Embedding (m.ofInjective hf) m where
-  toFun := f
-  toFun_injective := hf
+  toEmbedding := ⟨f, hf⟩
   monotone' := by
     intro a b h
     letI map := m.toSyn ∘ Finsupp.mapDomain f
@@ -118,8 +131,9 @@ def ofInjective {f : σ' → σ} (hf : f.Injective) : Embedding (m.ofInjective h
     simpa [MonomialOrder.ofInjective, ofInjective.toSyn', map] using h
 
 variable (m) in
-lemma ofInjective_coe {f : σ' → σ} (hf : f.Injective) : ofInjective m hf = f := rfl
+lemma coe_ofInjective {f : σ' → σ} (hf : f.Injective) : ofInjective m hf = f := rfl
 
+/-- Renaming with an monomial ordering embedding preserves `degree`. -/
 lemma degree_rename : m.degree (p.rename e) = (m'.degree p).mapDomain e := by
   classical
   simp? [degree, support_rename_of_injective e.coe_injective] says
@@ -131,11 +145,55 @@ lemma degree_rename : m.degree (p.rename e) = (m'.degree p).mapDomain e := by
   · simp [← Finset.comp_sup_eq_sup_comp_of_is_total _ e.monotone (by simp)]
 
 @[simp]
+lemma degree_le_degree (p q : MvPolynomial σ' R) :
+    m.degree (p.rename e) ≼[m] m.degree (q.rename e) ↔ m'.degree p ≼[m'] m'.degree q := by
+  simp [e.degree_rename]
+
+@[simp]
+lemma degree_lt_degree (p q : MvPolynomial σ' R) :
+    m.degree (p.rename e) ≺[m] m.degree (q.rename e) ↔ m'.degree p ≺[m'] m'.degree q := by
+  simp [e.degree_rename]
+
+/-- Renaming with an monomial ordering embedding preserves `degree`. -/
+lemma withBotDegree_rename :
+    m.withBotDegree (p.rename e) = (m'.withBotDegree p).map (·.mapDomain e) := by
+  wlog! hp : p ≠ 0
+  · simp [hp]
+  rw [m.withBotDegree_eq_coe_degree_iff .. |>.mpr, m'.withBotDegree_eq_coe_degree_iff .. |>.mpr hp]
+  · simp [e.degree_rename]
+  · simp [rename_eq_zero_of_injective _ (R := R) e.coe_injective, hp]
+
+@[simp]
+lemma withBotDegree_le_withBotDegree_iff (p q : MvPolynomial σ' R) :
+    m.withBotDegree (p.rename e) ≼'[m] m.withBotDegree (q.rename e) ↔
+      m'.withBotDegree p ≼'[m'] m'.withBotDegree q := by
+  wlog! hq : q ≠ 0
+  · simp [hq]
+  rw [m'.withBotDegree_le_withBotDegree_iff_of_ne_zero (hg := hq),
+    m.withBotDegree_le_withBotDegree_iff_of_ne_zero (hg := by simp [hq]),
+    degree_le_degree]
+
+@[simp]
+lemma withBotDegree_lt_withBotDegree_iff (p q : MvPolynomial σ' R) :
+    m.withBotDegree (p.rename e) ≺'[m] m.withBotDegree (q.rename e) ↔
+      m'.withBotDegree p ≺'[m'] m'.withBotDegree q := by
+  wlog! hp : p ≠ 0
+  · simp [hp, withBotDegree_rename]
+  rw [m'.withBotDegree_lt_withBotDegree_iff_of_ne_zero (hf := hp),
+    m.withBotDegree_lt_withBotDegree_iff_of_ne_zero (hf := by simp [hp]),
+    degree_lt_degree]
+
+@[simp]
 lemma leadingCoeff_rename : m.leadingCoeff (p.rename e) = m'.leadingCoeff p := by
-  simp [leadingCoeff, ← coeff_rename_mapDomain _ (e.coe_injective), degree_rename]
+  simp [leadingCoeff, degree_rename]
 
 lemma leadingTerm_rename : m.leadingTerm (p.rename e) = (m'.leadingTerm p).rename e := by
   simp [leadingTerm, degree_rename, rename_monomial]
+
+lemma sPolynomial_rename {R} [CommRing R] (p q : MvPolynomial σ' R) :
+    m.sPolynomial (p.rename e) (q.rename e) = (m'.sPolynomial p q).rename e := by
+  simp [sPolynomial, degree_rename, leadingCoeff_rename, rename_monomial,
+    Finsupp.mapDomain_tsub_mapDomain e.coe_injective]
 
 end Embedding
 
