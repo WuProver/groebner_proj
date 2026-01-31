@@ -23,6 +23,8 @@ lemma range_subtype' (s : Submonoid M) :
 lemma _root_.MonoidHom.mrangeRestrict_eq_rangeFactorization {N} [MulOneClass N] (f : M →* N) :
     ⇑f.mrangeRestrict = Set.rangeFactorization f := rfl
 
+#check AddMonoidHom.mrangeRestrict
+
 /-- A monoid homomorphism `f : M →* N` with a left-inverse `g : N → M` defines a multiplicative
 equivalence between `M` and `f.mrange`.
 This is a bidirectional version of `MonoidHom.mrange_restrict`. -/
@@ -50,33 +52,33 @@ def ofLeftInverse'' (f : M →* N) (g : MonoidHom.mrange f → M)
 --   intro _ _ _
 --   exact Subsingleton.allEq ..
 
-@[simp]
-lemma _root_.Function.LeftInverse.of_subsingleton {α : Sort*} {β : Sort*} [Subsingleton β]
-    (g : α → β) (f : β → α) : Function.LeftInverse g f := fun _ ↦ Subsingleton.allEq ..
+-- @[simp]
+-- lemma _root_.Function.LeftInverse.of_subsingleton {α : Sort*} {β : Sort*} [Subsingleton β]
+--     (g : α → β) (f : β → α) : Function.LeftInverse g f := fun _ ↦ Subsingleton.allEq ..
 
-@[simp]
-lemma _root_.Function.RightInverse.of_subsingleton {α : Sort*} [Subsingleton α] {β : Sort*}
-    (g : α → β) (f : β → α) : Function.RightInverse g f := fun _ ↦ Subsingleton.allEq ..
+-- @[simp]
+-- lemma _root_.Function.RightInverse.of_subsingleton {α : Sort*} [Subsingleton α] {β : Sort*}
+--     (g : α → β) (f : β → α) : Function.RightInverse g f := fun _ ↦ Subsingleton.allEq ..
 
-@[simp]
-lemma _root_.Function.LeftInverse.of_empty {α : Sort*} [IsEmpty α] {β : Sort*} (g : α → β)
-    (f : β → α) :
-    Function.LeftInverse g f := have := Function.isEmpty f; LeftInverse.of_subsingleton g f
+-- @[simp]
+-- lemma _root_.Function.LeftInverse.of_empty {α : Sort*} [IsEmpty α] {β : Sort*} (g : α → β)
+--     (f : β → α) :
+--     Function.LeftInverse g f := have := Function.isEmpty f; LeftInverse.of_subsingleton g f
 
-@[simp]
-lemma _root_.Function.RightInverse.of_empty {α : Sort*} {β : Sort*} [IsEmpty β] (g : α → β)
-    (f : β → α) :
-    Function.RightInverse g f := have := Function.isEmpty g; RightInverse.of_subsingleton g f
+-- @[simp]
+-- lemma _root_.Function.RightInverse.of_empty {α : Sort*} {β : Sort*} [IsEmpty β] (g : α → β)
+--     (f : β → α) :
+--     Function.RightInverse g f := have := Function.isEmpty g; RightInverse.of_subsingleton g f
 
-lemma _root_.Set.leftInverse_rangeFactorization {α : Type u_1} {β : Type u_2} (f : α → β) :
-    Function.LeftInverse (Set.rangeSplitting f) (Set.rangeFactorization f) ↔ f.Injective := by
-  constructor
-  · intro h x y heq
-    rw [← Set.rangeFactorization_eq_rangeFactorization_iff] at heq
-    apply congrArg (Set.rangeSplitting f) at heq
-    rwa [h.eq, h.eq] at heq
-  · intro h a
-    rw [← h.eq_iff, Set.apply_rangeSplitting f, Set.rangeFactorization_coe]
+-- lemma _root_.Set.leftInverse_rangeFactorization {α : Type u_1} {β : Type u_2} (f : α → β) :
+--     Function.LeftInverse (Set.rangeSplitting f) (Set.rangeFactorization f) ↔ f.Injective := by
+--   constructor
+--   · intro h x y heq
+--     rw [← Set.rangeFactorization_eq_rangeFactorization_iff] at heq
+--     apply congrArg (Set.rangeSplitting f) at heq
+--     rwa [h.eq, h.eq] at heq
+--   · intro h a
+--     rw [← h.eq_iff, Set.apply_rangeSplitting f, Set.rangeFactorization_coe]
 
 -- example (f : M →* N) (hf : Injective f) :
 --     Function.LeftInverse (Set.rangeSplitting f) (MonoidHom.mrangeRestrict f) := by

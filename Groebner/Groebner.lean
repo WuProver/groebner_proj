@@ -146,6 +146,39 @@ theorem exists_isGroebnerBasis_finite [inst : IsNoetherianRing (MvPolynomial σ 
   · rwa [hG₁.image_eq]
   · simp [Set.BijOn.finite_iff_finite hG₁]
 
+lemma singleton_zero_bot :
+    m.IsGroebnerBasis {(0 : MvPolynomial σ R)} ⊥ := by
+  simp [IsGroebnerBasis]
+
+lemma empty_bot :
+    m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) ⊥ := by
+  simp [IsGroebnerBasis]
+
+@[simp]
+lemma singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
+    m.IsGroebnerBasis {(0 : MvPolynomial σ R)} I ↔ I = ⊥ := by
+  constructor
+  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
+    aesop
+  · simp_intro .. [singleton_zero_bot]
+
+@[simp]
+lemma empty_iff (I : Ideal (MvPolynomial σ R)) :
+    m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) I ↔ I = ⊥ := by
+  constructor
+  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
+    aesop
+  · simp_intro .. [empty_bot]
+
+@[simp, nontriviality]
+lemma of_subsingleton [Subsingleton (MvPolynomial σ R)]
+    {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
+    m.IsGroebnerBasis s I := by
+  classical
+  simp [IsGroebnerBasis, Subsingleton.eq_zero (α := MvPolynomial σ R),
+    Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
+    Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
+
 end CommSemiring
 
 section CommRing

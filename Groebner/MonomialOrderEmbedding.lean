@@ -4,6 +4,7 @@ public import Mathlib
 public import Groebner.ToMathlib.MulEquiv
 public import Groebner.ToMathlib.Finsupp
 public import Groebner.ToMathlib.WithBot
+public import Groebner.ToMathlib.Set
 public import Groebner.MonomialOrder
 
 @[expose] public section

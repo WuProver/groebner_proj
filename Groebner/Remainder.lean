@@ -84,8 +84,8 @@ hypotheses.
   former one.
 
 * Remainder irreducibility is formalized as `∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)`,
-  where `¬ (m.degree b ≤ c)` is necessary but insufficient for the indivisibility between
-  the leading term of `b` (`m.leadingTerm b`) and the term of `r` with exponents `c`
+  where `¬ (m.degree b ≤ c)` is sufficient but unnecessary for the indivisibility between the
+  leading term of `b` (`m.leadingTerm b`) and the term of `r` with exponents `c`
   (`monomial c (b.coeff c)`).
 
 ## Reference : [Cox2015]
@@ -584,7 +584,7 @@ lemma exists_degree_le_degree_of_zero (hp : p ≠ 0) (h : m.IsRemainder p B 0) :
   · simp [hb0]
   simpa [(withBotDegree_eq_coe_degree_iff _).mpr _, hb0, hp] using hb
 
-@[simp]
+@[simp, nontriviality]
 lemma of_subsingleton [Subsingleton (MvPolynomial σ R)]
     {p r : MvPolynomial σ R} {s : Set (MvPolynomial σ R)} :
     m.IsRemainder p s r := by

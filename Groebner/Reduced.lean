@@ -78,41 +78,6 @@ def IsGroebnerBasis.IsReduced (hG : m.IsGroebnerBasis G I) :=
 --   -- rw [monomial_notMem_span_leadingTerm]
 --   sorry
 
-@[simp]
-lemma IsGroebnerBasis.singleton_zero_bot :
-    m.IsGroebnerBasis {(0 : MvPolynomial σ R)} ⊥ := by
-  simp [IsGroebnerBasis]
-
-@[simp]
-lemma IsGroebnerBasis.empty_bot :
-    m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) ⊥ := by
-  simp [IsGroebnerBasis]
-
-@[simp]
-lemma IsGroebnerBasis.singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
-    m.IsGroebnerBasis {(0 : MvPolynomial σ R)} I ↔ I = ⊥ := by
-  constructor
-  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
-    aesop
-  · simp_intro ..
-
-@[simp]
-lemma IsGroebnerBasis.empty_iff (I : Ideal (MvPolynomial σ R)) :
-    m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) I ↔ I = ⊥ := by
-  constructor
-  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
-    aesop
-  · simp_intro ..
-
-@[simp]
-lemma IsGroebnerBasis.of_subsingleton [Subsingleton (MvPolynomial σ R)]
-    {s : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)} :
-    m.IsGroebnerBasis s I := by
-  classical
-  simp [IsGroebnerBasis, Subsingleton.eq_zero (α := MvPolynomial σ R),
-    Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
-    Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
-
 -- `hG` can be generalized more.
 lemma IsGroebnerBasis.isGroebnerBasis_minimal (hG : m.IsGroebnerBasis G I)
     {G' : Set (MvPolynomial σ R)} (h : G' ⊆ I) (hG' : ∀ g ∈ G', IsUnit (m.leadingCoeff g))
@@ -772,19 +737,6 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
           rw [h_fg_zero] at hq
           rw [MvPolynomial.support_zero] at hq
           exact (List.mem_nil_iff q).mp hq
-
-
-
-
-
-@[simp]
-theorem _root_.MonomialOrder.leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
-    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
-  -- improved version of `MonomialOrder.leadingCoeff_mul`
-  wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
-  · cases h <;> simp [*]
-  obtain ⟨hf, hg⟩ := h
-  rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
 
 lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)} (hG : m.IsGroebnerBasis G I)

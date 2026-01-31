@@ -245,7 +245,7 @@ lemma leadingTerm_eq_leadingTerm_iff {p q : MvPolynomial σ R} :
 @[simp]
 lemma monic_one' : m.Monic (1 : MvPolynomial σ R) := monic_one
 
-@[simp]
+@[simp, nontriviality]
 lemma monic_of_subsingleton [Subsingleton (MvPolynomial σ R)] (p : MvPolynomial σ R) :
     m.Monic p := by
   simp [Subsingleton.eq_one (α := MvPolynomial σ R)]
@@ -258,6 +258,15 @@ lemma degree_le_degree_of_support_subset {p q : MvPolynomial σ R} (h : p.suppor
 theorem degree_mul_le' {f g : MvPolynomial σ R} :
     m.toSyn (m.degree (f * g)) ≤ m.toSyn (m.degree f) + m.toSyn (m.degree g) :=
   map_add m.toSyn _ _ ▸ degree_mul_le
+
+@[simp]
+theorem leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  -- improved version of `MonomialOrder.leadingCoeff_mul`
+  wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
+  · cases h <;> simp [*]
+  obtain ⟨hf, hg⟩ := h
+  rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
 
 end misc
 
