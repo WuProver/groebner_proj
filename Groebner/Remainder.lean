@@ -14,18 +14,20 @@ public import Groebner.ToMathlib.Finsupp
 
 The following definition is abstracted from the "remainder" as in `MonomialOrder.div_set`. And more
 properties of it is covered in this file.
-namespace
-* `MonomialOrder.IsRemainder m f B r`: Given a multivariate polynomial `f` and a set `B` of
-  multivariate polynomials over a commutative semiring `R`, with respect to a monomial order `m`.
-  A polynomial `r` is called a remainder of `f` on division by `B` if there exists:
-  (1) A finite linear combination:
-    `f = ∑ (g(b) * b) + r` where `g : B →hB₀ R[X]` (finitely supported coefficients).
-  (2) Degree condition:
-    For each `b ∈ B`, the degree of `g(b) * b` is ≤ the degree of `f` under `m`.
-  (3) Remainder irreducibility:
+
+* `MonomialOrder.IsRemainder m f B r`: Given a multivariate polynomial `f` and a "divisors" set `B`
+  of with respect to a monomial order `m`. A polynomial `r` is called a remainder of `f` on
+  division by `B` if there exists:
+
+  1. Finite linear combination:
+    `f = ∑ (g(b) * b) + r`;
+  2. Degree condition:
+     For each `b ∈ B`, the degree (with bot) of `g(b) * b` ≤ the degree (with bot) of `f` w.r.t.
+     monomial order `m`;
+  3. Remainder irreducibility:
     No term of `r` is divisible by the leading monomial of any non-zero `b ∈ B`.
 
-And there're also some variant equivalent statements.
+And there're also some equivalent variants.
 
 * `MonomialOrder.IsRemainder.isRemainder_def'`: A variant of `MonomialOrder.IsRemainder`
   without coercion of a `Set (MvPolynomial σ R)`.
@@ -34,8 +36,16 @@ And there're also some variant equivalent statements.
   `g : MvPolynomial σ R →₀ MvPolynomial σ R` is replaced with a
   function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its support.
 
+* `MonomialOrder.IsRemainder.isRemainder_def_degree`: A variant where the degree condition is
+  formalized with `m.degree`, which matches the statement of `MonomialOrder.div_set`.
+
 * `MonomialOrder.IsRemainder.isRemainder_range`: A variant of `MonomialOrder.IsRemainder` where
   divisors are given as a family of polynomials.
+
+There exists a remainder when the polynomial ring is communitive and any divisor either has an
+invertible leading coefficient or is 0.
+
+* `MonomialOrder.IsRemainder.exists_isRemainder`.
 
 ## Naming convention
 
@@ -50,6 +60,34 @@ respectively:
 * with suffix `'`: no hypotheses on leading coefficients, while requiring `R` to be a field
   (`Field k`, where the ring is denoted as `k` instead).
 
+## Implementation notes
+
+The definition of remainder makes sense when `R` is a communitive ring and any polynomial in `B`
+either has an invertible leading coefficient or is 0, while for simplicity we try to formalize
+it without applying these restrictions as its hypotheses.
+
+We try to adjust its formal definition s.t. it corresponds with the informal definition well when
+the above condition holds, while keeps simple and still shares some common properties without these
+hypotheses.
+
+* Degree condition is formalized as
+  ```lean
+  m.toWithBotSyn (m.withBotDegree b.val) + m.toWithBotSyn (m.withBotDegree (g b)) ≤
+    m.toWithBotSyn (m.withBotDegree f)
+  ```
+  instead of `m.withBotDegree (b.val * g b) ≼'[m] m.withBotDegree f`.
+
+  If `IsRemainder` was formalized with the latter one, some properties would require polynomials in
+  `B` to have non-zero divisor leading coefficients since they need
+  `m.withBotDegree (b.val * g b) = m.withBotDegree (b.val) + m.withBotDegree (g b)` with this
+  formalization of `IsRemainder`. They no longer require this if `IsRemainder` is formalized with
+  former one.
+
+* Remainder irreducibility is formalized as `∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c)`,
+  where `¬ (m.degree b ≤ c)` is necessary but insufficient for the indivisibility between
+  the leading term of `b` (`m.leadingTerm b`) and the term of `r` with exponents `c`
+  (`monomial c (b.coeff c)`).
+
 ## Reference : [Cox2015]
 
 -/
@@ -63,15 +101,18 @@ open MvPolynomial
 /-- Given a multivariate polynomial `f` and a set `B` of multivariate polynomials over `R`.
 A polynomial `r` is called a remainder of `f` on division by `B` with respect to a monomial order
 `m`, if there exists `g : B →₀ R[X]` and a polynomial `r` s.t.
-(1) Finite linear combination:
+
+1. Finite linear combination:
   `f = ∑ (g(b) * b) + r`;
-(2) Degree condition:
+2. Degree condition:
   For eacho `b ∈ B`, the degree (with bot) of `g(b) * b` ≤ the degree (with bot) of `f` w.r.t. `m`;
-(3) Remainder irreducibility:
+3. Remainder irreducibility:
   No term of `r` is divisible by the leading monomial of any non-zero `b ∈ B`.
 
-This definition makes sense only when `R` is a communitive ring and any polynomial in `B` has an
-invertible or zero leading coefficient. -/
+The definition of remainder makes sense when `R` is a communitive ring and any polynomial in `B`
+either has an invertible leading coefficient or is 0. See the implementation note for the
+formalization unaligned with the informal definition when not in this case.
+-/
 def IsRemainder {σ : Type*} (m : MonomialOrder σ) {R : Type*} [CommSemiring R]
     (f : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :=
   (∃ (g : B →₀ MvPolynomial σ R),
@@ -628,7 +669,6 @@ section CommRing
 
 variable {σ : Type*} {m : MonomialOrder σ} {R : Type*} [CommRing R]
 
-/-- A variant of `MonomialOrder.div_set` using `MonomialOrder.IsRemainder`. -/
 theorem exists_isRemainder {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, IsUnit <| m.leadingCoeff b) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
