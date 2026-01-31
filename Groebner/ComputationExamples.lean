@@ -5,36 +5,23 @@ open MonomialOrder
 variable {σ} {R} [CommSemiring R] {m : MonomialOrder σ} (p : MvPolynomial σ R)
 namespace MonomialOrder
 
-theorem isRemainder_range_iff_tsum {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
-    (r : MvPolynomial σ R) :
-      m.IsRemainder p (Set.range b) r ↔
-      (∃ g : ι → MvPolynomial σ R,
-          p = ∑ i : ι, (b i * g i) + r ∧
-          ∀ i : ι, m.withBotDegree (b i * g i) ≼'[m] m.withBotDegree p) ∧
-        ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c)
-
 theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
     (r : MvPolynomial σ R) :
       m.IsRemainder p (Set.range b) r ↔
       (∃ g : ι → MvPolynomial σ R,
           p = ∑ i : ι, (b i * g i) + r ∧
-          ∀ i : ι, m.withBotDegree (b i * g i) ≼'[m] m.withBotDegree p) ∧
+          ∀ i : ι, m.withBotDegree (b i) + m.withBotDegree (g i) ≼'[m] m.withBotDegree p) ∧
         ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
   classical
   rw [IsRemainder.isRemainder_range]
   constructor
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     split_ands
-    · use g.toFun
+    · use g
       split_ands
       · simp [Finsupp.linearCombination_apply, Finsupp.sum] at h₁
         rw [h₁]
         congr 1
-        have h₁: ∑ i, b i * g.toFun i = ∑ i, b i * g i  := by
-          apply Finset.sum_congr rfl
-          intro i _
-          congr 1
-        simp [h₁]
         have : (∑ i : ι, b i * g i) = ∑ x ∈ g.support, b x * g x := by
           refine Eq.symm (Fintype.sum_subset ?_)
           intro _ h
@@ -42,7 +29,7 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
           simp [Finsupp.notMem_support_iff.mp h]
         rw [this]
         simp_rw [mul_comm (g _) (b _)]
-      · exact h₂
+      · simpa using h₂
     · exact h₃
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     split_ands
@@ -65,8 +52,7 @@ theorem isRemainder_range_fin {ι : Type*} [Fintype ι] (b : ι → MvPolynomial
         intro i _
         by_cases hi : g i = 0 <;> simp [hi]
         exact CommMonoid.mul_comm (b i) (g i)
-      · intro i
-        exact h₂ i
+      · simpa using h₂
     · aesop
 
 set_option linter.unusedSimpArgs false in
@@ -119,9 +105,8 @@ example :
   rw [isRemainder_range_fin, ← exists_and_right]
   use [X 3 ^ 4, 0].get
   split_ands
-  · split_ands
-    · simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
-      try grind-- PIT, we will rely on reflection
+  · simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
+    try grind-- PIT, we will rely on reflection later
   · intro i
     fin_cases i
     all_goals {

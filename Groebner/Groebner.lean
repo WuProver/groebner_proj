@@ -261,7 +261,7 @@ theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le (G : Set (MvPo
   · intro h
     exists h.subset
     intro p hp hp0
-    apply exists_degree_le_degree_of_zero hp0 fun _ ↦ (hG _ · |>.mem_nonZeroDivisors)
+    apply exists_degree_le_degree_of_zero hp0
     exact (isRemainder_zero_iff_mem_ideal hG h).mpr hp
   rintro ⟨hG', h_degree⟩
   rw [isGroebnerBasis_iff]
@@ -295,8 +295,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
     constructor
     · apply h_G
     · intro p hp hp0
-      exact exists_degree_le_degree_of_zero hp0
-        (by simp_intro .. [(hG _ _).mem_nonZeroDivisors]) (h_remainder p hp)
+      exact exists_degree_le_degree_of_zero hp0 (h_remainder p hp)
 
 /-- A set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal
 and 0 is a remainder of each member of this ideal on division by this set.
@@ -454,7 +453,8 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
   intro p hp
   wlog! hpne0 : p ≠ 0
   · simp [hpne0]
-  simp_rw [isRemainder_def'', add_zero, m.withBotDegree_le_withBotDegree_iff_of_ne_zero _ hpne0]
+  simp_rw [isRemainder_def'', add_zero, ← map_add, ← m.withBotDegree_mul,
+    m.withBotDegree_le_withBotDegree_iff_of_ne_zero _ hpne0]
   refine ⟨?_, by simp⟩
   -- todo: Ideal.mem_span_iff_exists_finset_subset
   apply Submodule.mem_span_iff_exists_finset_subset.mp at hp
@@ -547,11 +547,14 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
     - $sPoly(g₁, g₂) = ∑ g ∈ G, q_{g₁, g₂}(g) * g$,
     - $∀ g ∈ G, degree(q_{g₁, g₂}(g) * g) ≤ degree(sPoly(g₁, g₂))$, and
     - if $sPoly(g₁, g₂) = 0$ then $q_{g₁, g₂} = 0$. -/
-  simp? [isRemainder_def', -Subtype.forall, -withBotDegree_mul, withBotDegree_le_withBotDegree_iff]
-       at hsPoly says
-    simp only [isRemainder_def', add_zero, withBotDegree_le_withBotDegree_iff, mul_eq_zero,
-      support_zero, Finset.notMem_empty, ne_eq, IsEmpty.forall_iff, implies_true,
-      and_true] at hsPoly
+  simp? [isRemainder_def', -Subtype.forall, -withBotDegree_mul, ← map_add, ← m.withBotDegree_mul,
+      withBotDegree_le_withBotDegree_iff]  at hsPoly says
+    simp only [isRemainder_def', add_zero, ← map_add, ← m.withBotDegree_mul,
+      withBotDegree_le_withBotDegree_iff, mul_eq_zero, support_zero, Finset.notMem_empty, ne_eq,
+      IsEmpty.forall_iff, implies_true, and_true] at hsPoly
+    -- simp only [isRemainder_def', add_zero, withBotDegree_le_withBotDegree_iff, mul_eq_zero,
+    --   support_zero, Finset.notMem_empty, ne_eq, IsEmpty.forall_iff, implies_true,
+    --   and_true] at hsPoly
   replace hsPoly (g₁ g₂ : G'.filter degFgEqA) :=
     hsPoly ⟨g₁, hG'subsetG <| G'.mem_of_mem_filter _ g₁.2⟩
       ⟨g₂, hG'subsetG <| G'.mem_of_mem_filter _ g₂.2⟩
@@ -755,7 +758,7 @@ lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename 
       apply congrArg (Ideal.map (killCompl e.coe_injective)) at h
       simpa [Ideal.map_mapₐ, killCompl_comp_rename, Ideal.map_span, ← Set.image_comp] using h
   · simp [e.sPolynomial_rename, ← rename_zero (R := k) e, -rename_zero, -map_zero,
-       ← e.isRemainder_iff_isRemainder_rename']
+      ← e.isRemainder_iff_isRemainder_rename]
 
 -- todo: generalize to ring.
 lemma exists_isGroebnerBasis_finite_of_exists_span_finite {B : Set (MvPolynomial σ k)}

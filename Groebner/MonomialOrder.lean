@@ -255,6 +255,10 @@ lemma degree_le_degree_of_support_subset {p q : MvPolynomial σ R} (h : p.suppor
   simp_rw [degree, m.toSyn.apply_symm_apply]
   exact Finset.sup_mono h
 
+theorem degree_mul_le' {f g : MvPolynomial σ R} :
+    m.toSyn (m.degree (f * g)) ≤ m.toSyn (m.degree f) + m.toSyn (m.degree g) :=
+  map_add m.toSyn _ _ ▸ degree_mul_le
+
 end misc
 
 section killCompl
@@ -293,6 +297,9 @@ lemma toWithBotSyn_apply_eq_bot_iff (a) : m.toWithBotSyn a = ⊥ ↔ a = ⊥ := 
 @[simp]
 lemma toWithBotSyn_apply_le_bot_iff (a) : m.toWithBotSyn a ≤ ⊥ ↔ a = ⊥ := by
   simp [← m.toWithBotSyn.eq_symm_apply]
+
+@[simp]
+lemma toWithBotSyn_apply_coe (a : σ →₀ ℕ) : m.toWithBotSyn a = m.toSyn a := rfl
 
 @[simp]
 lemma bot_lt_toWithBotSyn_apply_iff (a) : ⊥ < m.toWithBotSyn a ↔ a ≠ ⊥ := by
@@ -403,6 +410,37 @@ lemma withBotDegree_mul [NoZeroDivisors R] :
   rw [← m.leadingCoeff_ne_zero_iff] at hf
   exact m.withBotDegree_mul_of_left_mem_nonZeroDivisors (mem_nonZeroDivisors_iff_ne_zero.mpr hf)
 
+lemma withBotDegree_mul_le :
+    m.withBotDegree (f * g) ≼'[m] m.withBotDegree f + m.withBotDegree g := by
+  wlog! +distrib h0 : f * g ≠ 0
+  · simp [h0]
+  simp [m.withBotDegree_eq_coe_degree_iff f |>.mpr (by aesop),
+    m.withBotDegree_eq_coe_degree_iff g |>.mpr (by aesop),
+    m.withBotDegree_eq_coe_degree_iff _ |>.mpr h0, ← WithBot.coe_add,
+    ← map_add, -- the warning here is a bug?
+    m.degree_mul_le]
+
+lemma withBotDegree_mul_le' :
+    m.toWithBotSyn (m.withBotDegree (f * g)) ≤
+      m.toWithBotSyn (m.withBotDegree f) + m.toWithBotSyn (m.withBotDegree g) := by
+  wlog! +distrib h0 : f * g ≠ 0
+  · simp [h0]
+  simp [m.withBotDegree_eq_coe_degree_iff f |>.mpr (by aesop),
+    m.withBotDegree_eq_coe_degree_iff g |>.mpr (by aesop),
+    m.withBotDegree_eq_coe_degree_iff _ |>.mpr h0, ← WithBot.coe_add,
+    m.degree_mul_le']
+
+-- lemma le_withBotDegree_iff (a) :
+--     a ≤ m.toWithBotSyn (m.withBotDegree g) ↔
+--       (a ≤ m.toSyn (m.degree g) ∧ (g = 0 → a = ⊥)) := by
+--   classical
+--   wlog! +distrib h : a ≠ ⊥ ∧ g ≠ 0
+--   · rcases h with h | h
+--     · simp [h, m.toWithBotSyn_apply]
+--     · simp_rw [m.toWithBotSyn_apply]
+--       aesop
+--   simp [m.withBotDegree_eq, h, m.toWithBotSyn_apply]
+
 lemma withBotDegree_le_withBotDegree_iff :
     m.withBotDegree f ≼'[m] m.withBotDegree g ↔
       (m.degree f ≼[m] m.degree g ∧ (g = 0 → f = 0)) := by
@@ -413,6 +451,14 @@ lemma withBotDegree_le_withBotDegree_iff :
     · simp_rw [m.toWithBotSyn_apply]
       aesop
   simp [m.withBotDegree_eq, h, m.toWithBotSyn_apply]
+
+-- lemma le_withBotDegree_iff_of_ne_zero (a) (hg : g ≠ 0) :
+--     a ≤ m.toWithBotSyn (m.withBotDegree g) ↔ a.unbotD 0 ≤ m.toSyn (m.degree g) := by
+--   rw [le_withBotDegree_iff]
+--   wlog! ha : a ≠ ⊥
+--   · simp [ha]
+--   rw [← a.coe_unbot ha, WithBot.coe_le_coe, WithBot.unbotD_coe]
+--   simp [hg, ha]
 
 variable {g} in
 lemma withBotDegree_le_withBotDegree_iff_of_ne_zero (hg : g ≠ 0) :

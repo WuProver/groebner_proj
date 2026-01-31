@@ -3,6 +3,7 @@ module
 public import Mathlib
 public import Groebner.ToMathlib.MulEquiv
 public import Groebner.ToMathlib.Finsupp
+public import Groebner.ToMathlib.WithBot
 public import Groebner.MonomialOrder
 
 @[expose] public section
@@ -163,25 +164,48 @@ lemma withBotDegree_rename :
   · simp [e.degree_rename]
   · simp [rename_eq_zero_of_injective _ (R := R) e.coe_injective, hp]
 
+lemma toWithBotSyn_withBotDegree_rename :
+    m.toWithBotSyn (m.withBotDegree (p.rename e)) =
+      (m'.toWithBotSyn (m'.withBotDegree p)).map
+        (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) := by
+  wlog! hp : p ≠ 0
+  · simp [hp]
+  rw [m.withBotDegree_eq_coe_degree_iff .. |>.mpr, m'.withBotDegree_eq_coe_degree_iff .. |>.mpr hp]
+  · simp [e.degree_rename]
+  · simp [rename_eq_zero_of_injective _ (R := R) e.coe_injective, hp]
+
 @[simp]
 lemma withBotDegree_le_withBotDegree_iff (p q : MvPolynomial σ' R) :
     m.withBotDegree (p.rename e) ≼'[m] m.withBotDegree (q.rename e) ↔
       m'.withBotDegree p ≼'[m'] m'.withBotDegree q := by
-  wlog! hq : q ≠ 0
-  · simp [hq]
-  rw [m'.withBotDegree_le_withBotDegree_iff_of_ne_zero (hg := hq),
-    m.withBotDegree_le_withBotDegree_iff_of_ne_zero (hg := by simp [hq]),
-    degree_le_degree]
+  simp [e.toWithBotSyn_withBotDegree_rename]
+  rw [WithBot.map_le_iff _]
+  exact e.le_iff_le _ _
+
+lemma withBotDegree_add_withBotDegree_le_withBotDegree_iff (r p q : MvPolynomial σ' R) :
+    m.withBotDegree (r.rename e) +
+      m.withBotDegree (p.rename e) ≼'[m] m.withBotDegree (q.rename e) ↔
+      m'.withBotDegree r + m'.withBotDegree p ≼'[m'] m'.withBotDegree q := by
+  simp only [map_add, e.toWithBotSyn_withBotDegree_rename]
+  rw [← WithBot.map_add', WithBot.map_le_iff _]
+  · exact e.le_iff_le _ _
+  · simp [Finsupp.mapDomain_add]
+
+@[simp]
+lemma withBotDegree_add_withBotDegree_le_withBotDegree_iff' (r p q : MvPolynomial σ' R) :
+    m.toWithBotSyn (m.withBotDegree (r.rename e)) + m.toWithBotSyn (m.withBotDegree (p.rename e)) ≤
+      m.toWithBotSyn (m.withBotDegree (q.rename e)) ↔
+    m'.toWithBotSyn (m'.withBotDegree r) + m'.toWithBotSyn (m'.withBotDegree p) ≤
+      m'.toWithBotSyn (m'.withBotDegree q) := by
+  simpa using e.withBotDegree_add_withBotDegree_le_withBotDegree_iff r p q
 
 @[simp]
 lemma withBotDegree_lt_withBotDegree_iff (p q : MvPolynomial σ' R) :
     m.withBotDegree (p.rename e) ≺'[m] m.withBotDegree (q.rename e) ↔
       m'.withBotDegree p ≺'[m'] m'.withBotDegree q := by
-  wlog! hp : p ≠ 0
-  · simp [hp, withBotDegree_rename]
-  rw [m'.withBotDegree_lt_withBotDegree_iff_of_ne_zero (hf := hp),
-    m.withBotDegree_lt_withBotDegree_iff_of_ne_zero (hf := by simp [hp]),
-    degree_lt_degree]
+  simp [e.toWithBotSyn_withBotDegree_rename]
+  rw [WithBot.map_lt_iff _]
+  exact e.lt_iff_lt _ _
 
 @[simp]
 lemma leadingCoeff_rename : m.leadingCoeff (p.rename e) = m'.leadingCoeff p := by
