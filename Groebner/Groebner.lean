@@ -50,16 +50,16 @@ Other main theroems:
 
 ## Naming convention
 
-Some theorems with an argument in type `Set (MvPolynomial σ R)` have 3 variants, named as following
+Some theorems with an argument in type `Set (MvPolynomial σ R)` and a hypothesis that leading
+coefficients of all polynomials in the set are invertible have 2 variants, named as following
 respectively:
 
-* without suffix `'` or `₀`: leading coefficients of all polynomials in the set are non-zero
-  divisors `· ∈ nonZeroDivisors (MvPolynomial σ R)` (or invertible `IsUnit ·`, depending on the
-  theorem);
-* with suffix `₀`: leading coefficients of echo polynomial in the set is non-zero divisors (or
-  invertible) or 0 `· = 0`;
-* with suffix `'`: no hypotheses on leading coefficients, while requiring `R` be a ring with no zero
-  divisors `NoZeroDivisors R` (or be a field `Field k`, where the ring is denoted as `k`).
+* without suffix `'` or `₀`: any polynomial `b` in the set has an invertible leading coefficient
+  (`IsUnit (m.leadingCoeff p)`);
+* with suffix `₀`: any polynomial `b` in the set either has an invertible leading coefficient or is
+  equal to 0 (`IsUnit (m.leadingCoeff p) ∨ b = 0`);
+* with suffix `'`: no hypotheses on leading coefficients, while requiring `R` to be a field
+  (`Field k`, where the ring is denoted as `k` instead).
 
 ## Reference : [Cox2015]
 

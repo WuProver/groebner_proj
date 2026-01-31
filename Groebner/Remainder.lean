@@ -47,7 +47,8 @@ respectively:
   (`IsUnit (m.leadingCoeff p)`);
 * with suffix `₀`: any polynomial `b` in the set either has an invertible leading coefficient or is
   equal to 0 (`IsUnit (m.leadingCoeff p) ∨ b = 0`);
-* with suffix `'`: `R` is a field.
+* with suffix `'`: no hypotheses on leading coefficients, while requiring `R` to be a field
+  (`Field k`, where the ring is denoted as `k` instead).
 
 ## Reference : [Cox2015]
 
