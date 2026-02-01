@@ -179,6 +179,73 @@ lemma of_subsingleton [Subsingleton (MvPolynomial σ R)]
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
 
+theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le
+    {G : Set (MvPolynomial σ R)} (I : Ideal (MvPolynomial σ R))
+    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    m.IsGroebnerBasis G I ↔
+      G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, m.degree g ≤ m.degree p := by
+  classical
+  constructor
+  · intro h
+    exists h.subset
+    intro p hp hp0
+    apply Set.mem_image_of_mem m.leadingTerm at hp
+    apply Ideal.subset_span at hp
+    rw [h.span_leadingTerm_image, SetLike.mem_coe,
+      m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
+      ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image,
+      m.support_leadingTerm' hp0] at hp
+    simpa using hp
+  rintro ⟨hG', h_degree⟩
+  rw [isGroebnerBasis_iff]
+  constructor
+  · exact hG'
+  intro p' hp
+  rcases hp with ⟨p, hp', hp'₁⟩
+  rw [←hp'₁, leadingTerm, SetLike.mem_coe,
+    m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
+    ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
+  intro j hj
+  specialize h_degree p
+  simp_all [MonomialOrder.leadingCoeff_eq_zero_iff]
+
+theorem span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)}
+    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    Ideal.span (m.leadingTerm '' ↑G) =
+    Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
+  classical
+  wlog hR : Nontrivial R
+  · rw [not_nontrivial_iff_subsingleton] at hR
+    exact ((Submodule.subsingleton_iff _).mpr inferInstance).elim _ _
+  rw [m.span_leadingTerm_eq_span_monomial (B := (↑G : Set (MvPolynomial σ R))) hG]
+  apply le_antisymm
+  · rw [Ideal.span_le]
+    refine subset_trans ?_ Submodule.subset_span
+    apply Set.image_mono
+    apply Set.subset_diff_singleton h.subset
+    contrapose! hG
+    use 0
+    simpa
+  · rw [Ideal.span_le]
+    intro x
+    simp? says
+      simp only [Set.mem_image, Set.mem_diff, SetLike.mem_coe, Set.mem_singleton_iff, ne_eq,
+        forall_exists_index, and_imp]
+    intro y hy hy0 hxy
+    rw [← hxy, ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
+    simpa using ((isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le _ hG).mp h).2 y hy hy0
+
+theorem span_leadingTerm_eq_span_monomial₀ {G : Set (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)}
+    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+    Ideal.span (m.leadingTerm '' ↑G) =
+    Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
+  rw [← isGroebnerBasis_sdiff_singleton_zero] at h
+  convert span_leadingTerm_eq_span_monomial h _ using 1
+  · simp [m.image_leadingTerm_sdiff_singleton_zero]
+  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
 end CommSemiring
 
 section CommRing
@@ -284,31 +351,6 @@ theorem isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span₀ (G : Set (
   apply isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span
   simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
--- todo: can be generalized to `SemiCommring`
-theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le (G : Set (MvPolynomial σ R))
-    (I : Ideal (MvPolynomial σ R)) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    m.IsGroebnerBasis G I ↔
-      G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, m.degree g ≤ m.degree p := by
-  classical
-  constructor
-  · intro h
-    exists h.subset
-    intro p hp hp0
-    apply exists_degree_le_degree_of_zero hp0
-    exact (isRemainder_zero_iff_mem_ideal hG h).mpr hp
-  rintro ⟨hG', h_degree⟩
-  rw [isGroebnerBasis_iff]
-  constructor
-  · exact hG'
-  intro p' hp
-  rcases hp with ⟨p, hp', hp'₁⟩
-  rw [←hp'₁, leadingTerm, SetLike.mem_coe,
-    m.span_leadingTerm_eq_span_monomial (by simp_intro .. [hG]),
-    ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
-  intro j hj
-  specialize h_degree p
-  simp_all [MonomialOrder.leadingCoeff_eq_zero_iff]
-
 /-- A set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal
 and 0 is a remainder of each member of this ideal on division by this set.
 
@@ -324,7 +366,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
     rwa [isRemainder_zero_iff_mem_ideal hG h]
   · intro h
     rcases h with ⟨h_G, h_remainder⟩
-    rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le G I hG]
+    rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le I hG]
     constructor
     · apply h_G
     · intro p hp hp0
@@ -343,43 +385,6 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ (G : Set (MvPol
   convert isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero (G \ {0}) I _ using 2
   · simp
   · simp [isRemainder_sdiff_singleton_zero_iff_isRemainder]
-  · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
-
-theorem span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
-    {I : Ideal (MvPolynomial σ R)}
-    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    Ideal.span (m.leadingTerm '' ↑G) =
-    Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
-  classical
-  wlog hR : Nontrivial R
-  · rw [not_nontrivial_iff_subsingleton] at hR
-    exact ((Submodule.subsingleton_iff _).mpr inferInstance).elim _ _
-  rw [m.span_leadingTerm_eq_span_monomial (B := (↑G : Set (MvPolynomial σ R))) hG]
-  apply le_antisymm
-  · rw [Ideal.span_le]
-    refine subset_trans ?_ Submodule.subset_span
-    apply Set.image_mono
-    apply Set.subset_diff_singleton h.subset
-    contrapose! hG
-    use 0
-    simpa
-  · rw [Ideal.span_le]
-    intro x
-    simp? says
-      simp only [Set.mem_image, Set.mem_diff, SetLike.mem_coe, Set.mem_singleton_iff, ne_eq,
-        forall_exists_index, and_imp]
-    intro y hy hy0 hxy
-    rw [← hxy, ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
-    simpa using ((isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le _ _ hG).mp h).2 y hy hy0
-
-theorem span_leadingTerm_eq_span_monomial₀ {G : Set (MvPolynomial σ R)}
-    {I : Ideal (MvPolynomial σ R)}
-    (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
-    Ideal.span (m.leadingTerm '' ↑G) =
-    Ideal.span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (I \ {(0 : MvPolynomial σ R)})) := by
-  rw [← isGroebnerBasis_sdiff_singleton_zero] at h
-  convert span_leadingTerm_eq_span_monomial h _ using 1
-  · simp [m.image_leadingTerm_sdiff_singleton_zero]
   · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
 /-- Remainder of any polynomial on division by a Gröbner basis exists and is unique.
