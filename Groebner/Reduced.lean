@@ -741,8 +741,7 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
 lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)} (hG : m.IsGroebnerBasis G I)
     (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I),
-      h.IsReduced := by
+    ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I), h.IsReduced := by
   classical
   wlog! nontrivial : Nontrivial R
   · by_cases! hG : G = ∅
@@ -788,6 +787,17 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     (hf := by simp [Exists.choose_spec])
   exact ⟨_, _, reduced⟩
 
+lemma IsReduced.exists_of_isGroebnerBasis₀ {R} [CommRing R] {G : Set (MvPolynomial σ R)}
+    {I : Ideal (MvPolynomial σ R)} (hG : m.IsGroebnerBasis G I)
+    (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+    ∃ (B : Set (MvPolynomial σ R)) (h : m.IsGroebnerBasis B I), h.IsReduced := by
+  apply exists_of_isGroebnerBasis (isGroebnerBasis_sdiff_singleton_zero .. |>.mpr hG)
+  simp_intro .. [or_iff_not_imp_right.mp (hG' _ _)]
+
+lemma IsReduced.exists_of_isGroebnerBasis' {k} [Field k] {I : Ideal (MvPolynomial σ k)} :
+    ∃ (B : Set (MvPolynomial σ k)) (h : m.IsGroebnerBasis B I), h.IsReduced :=
+  IsReduced.exists_of_isGroebnerBasis₀ (isGroebnerBasis_self (m := m) I) (by simp [em'])
+
 theorem IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
@@ -799,5 +809,16 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R
   simp only [forall_exists_index]
   intro hs hs'
   exact hs'.unique h'
+
+theorem IsReduced.uniqueExists_of_isGroebnerBasis₀ {R} [Nontrivial R] [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+    ∃! (B : Set (MvPolynomial σ R)), ∃ (h : m.IsGroebnerBasis B I), h.IsReduced := by
+  apply IsReduced.uniqueExists_of_isGroebnerBasis ((isGroebnerBasis_sdiff_singleton_zero ..).mpr hG)
+  simp_intro .. [or_iff_not_imp_right.mp (hG' _ _)]
+
+theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
+    ∃! (B : Set (MvPolynomial σ k)), ∃ (h : m.IsGroebnerBasis B I), h.IsReduced :=
+  IsReduced.uniqueExists_of_isGroebnerBasis₀ (isGroebnerBasis_self (m := m) I) (by simp [em'])
 
 end MonomialOrder.IsGroebnerBasis
