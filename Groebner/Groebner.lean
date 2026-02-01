@@ -420,6 +420,23 @@ theorem existsUnique_isRemainder₀ {G : Set (MvPolynomial σ R)}
   convert existsUnique_isRemainder h _ p
   simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
+-- lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename {σ'}
+--     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+--     (e : Embedding m' m) (G : Set (MvPolynomial σ' R))
+--     (I : Ideal (MvPolynomial σ' R)) :
+--     m'.IsGroebnerBasis G I ↔
+--       m.IsGroebnerBasis (MvPolynomial.rename e '' G) (I.map (MvPolynomial.rename e)) := by
+--   classical
+--   apply and_congr
+--   · refine ⟨fun h ↦ subset_trans (Set.image_mono h) Ideal.subset_span, ?_⟩
+--     intro h
+--     apply Set.image_mono (f := killCompl e.coe_injective) at h
+--     apply (subset_trans · Ideal.subset_span) at h
+--     rw [← Ideal.map, Ideal.map_mapₐ, Set.image_image] at h
+--     simpa [killCompl_comp_rename] using h
+--   · simp_rw [Set.image_image, e.leadingTerm_rename, ← Set.image_image]
+--     sorry
+
 end CommRing
 
 section Field
@@ -816,6 +833,13 @@ lemma exists_isGroebnerBasis_finite_of_exists_span_finite {B : Set (MvPolynomial
   apply p.rename_killCompl_app
   rw [Embedding.coe_ofInjective, Subtype.range_coe, SetLike.coe_subset_coe]
   apply Finset.subset_biUnion_of_mem vars (hB.mem_toFinset.mpr hpB)
+
+lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ k)}
+    {I : Ideal (MvPolynomial σ k)}
+    (h : ∀ s ⊆ G, s.Finite →
+      ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
+        s ⊆ Set.range (rename e) ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
+    m.IsGroebnerBasis G I := sorry
 
 end Field
 
