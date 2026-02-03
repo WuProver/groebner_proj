@@ -311,6 +311,19 @@ theorem isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
         simp
     · aesop
 
+theorem isRemainder_range_fintype {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
+    (r : MvPolynomial σ R) :
+      m.IsRemainder p (Set.range b) r ↔
+      (∃ g : ι → MvPolynomial σ R,
+          p = ∑ i : ι, (b i * g i) + r ∧
+          ∀ i : ι,
+            m.toWithBotSyn (m.withBotDegree (b i)) + m.toWithBotSyn (m.withBotDegree (g i)) ≤
+            m.toWithBotSyn (m.withBotDegree p)) ∧
+        ∀ c ∈ r.support, ∀ i : ι, b i ≠ 0 → ¬ (m.degree (b i) ≤ c) := by
+  simp [IsRemainder.isRemainder_range,
+    Function.Surjective.exists (Finsupp.equivFunOnFinite.surjective),
+    Finsupp.linearCombination, Finsupp.sum_fintype, mul_comm]
+
 /--
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
