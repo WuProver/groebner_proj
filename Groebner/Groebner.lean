@@ -87,12 +87,12 @@ section CommSemiring
 variable {σ : Type*} {m : MonomialOrder σ} {R : Type*} [CommSemiring R]
 variable (f p : MvPolynomial σ R) (r : MvPolynomial σ R)
 
-def subset {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) : G ⊆ I := h.1
+lemma subset {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) : G ⊆ I := h.1
 
-def span_leadingTerm_image {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) :
+lemma span_leadingTerm_image {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) :
     Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G) := h.2
 
-def isGroebnerBasis_iff (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
+lemma isGroebnerBasis_iff (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis G I ↔
       G ⊆ I ∧ m.leadingTerm '' ↑I ⊆ (Ideal.span (m.leadingTerm '' G) : Set (MvPolynomial σ R)) := by
   constructor
@@ -245,6 +245,45 @@ theorem span_leadingTerm_eq_span_monomial₀ {G : Set (MvPolynomial σ R)}
   convert span_leadingTerm_eq_span_monomial h _ using 1
   · simp [m.image_leadingTerm_sdiff_singleton_zero]
   · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
+lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial σ R)}
+    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0)
+    {I : Ideal (MvPolynomial σ R)}
+    (h : ∀ s : Finset σ,
+      ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
+        ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
+    m.IsGroebnerBasis G I := by
+  rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀ (hG := hG)]
+  constructor
+  · intro p hp
+    obtain ⟨σ', m', e, h, h', -⟩ := h p.vars
+    -- todo: `Injective` is not necessary for `MvPolynomial.exists_rename_eq_of_vars_subset_range`
+    obtain ⟨p', rfl⟩ := MvPolynomial.exists_rename_eq_of_vars_subset_range _ _ e.coe_injective h
+    -- why are they defeq?
+    apply Set.mem_of_mem_of_subset (Set.mem_preimage.mpr <| hp) h'
+  rintro p hp hp0
+  obtain ⟨σ', m', e, h, h'⟩ := h p.vars
+  obtain ⟨p', rfl⟩ := MvPolynomial.exists_rename_eq_of_vars_subset_range _ _ e.coe_injective h
+  rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀] at h'
+  case hG =>
+    intro g
+    simpa using hG (g.rename e)
+  simp? at hp0 says
+    simp only [ne_eq, Embedding.coe_injective, rename_eq_zero_of_injective] at hp0
+  -- again: why is `hp` defeq with the hypothesis
+  replace ⟨g', h⟩ := h'.2 p' hp hp0
+  -- todo: why is here a extra space?
+  simp? at h says simp only [Set.mem_preimage] at h
+  refine ⟨g'.rename e, h.1, by simpa using h.2⟩
+
+lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ R)}
+    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g))
+    {I : Ideal (MvPolynomial σ R)}
+    (h : ∀ s : Finset σ,
+      ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
+        ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
+    m.IsGroebnerBasis G I :=
+  isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (fun g hg ↦ Or.inl (hG g hg)) h
 
 end CommSemiring
 

@@ -83,3 +83,4 @@ def ofLeftInverse'' (f : M →* N) (g : MonoidHom.mrange f → M)
 -- example (f : M →* N) (hf : Injective f) :
 --     Function.LeftInverse (Set.rangeSplitting f) (MonoidHom.mrangeRestrict f) := by
 --   rwa [f.mrangeRestrict_eq_rangeFactorization, Set.leftInverse_rangeFactorization]
+end MulEquiv

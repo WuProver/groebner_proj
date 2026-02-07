@@ -1,28 +1,31 @@
 module
 
 public import Mathlib
-
 public section
 namespace MvPolynomial
 
-variable {σ σ' R : Type*} [CommSemiring R] {f : σ' → σ} (hf : f.Injective) {p q : MvPolynomial σ R}
+variable {τ σ R : Type*} [CommSemiring R] {f : σ → τ} (hf : f.Injective) {p q : MvPolynomial τ R}
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 variable (f) in
 @[simp]
 lemma rename_zero :
-    (0 : MvPolynomial σ' R).rename f = 0 := rfl
+    (0 : MvPolynomial σ R).rename f = 0 := rfl
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 @[simp]
-lemma rename_eq_zero_of_injective (p : MvPolynomial σ' R)
+lemma rename_eq_zero_of_injective (p : MvPolynomial σ R)
     (hf : f.Injective) : p.rename f = 0 ↔ p = 0 := by
   rw [← rename_zero f, (MvPolynomial.rename_injective _ hf).eq_iff]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 @[simp]
-lemma killCompl_monomial_mapDomain {s : σ' →₀ ℕ} {c : R} :
+lemma killCompl_monomial_mapDomain {s : σ →₀ ℕ} {c : R} :
     (monomial (s.mapDomain f) c).killCompl hf = monomial s c := by
   simp [← rename_monomial]
 
-lemma killCompl_monomial_eq_zero {s : σ →₀ ℕ} {c : R} (hs : ∃ a ∈ s.support, a ∉ Set.range f) :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+lemma killCompl_monomial_eq_zero {s : τ →₀ ℕ} {c : R} (hs : ∃ a ∈ s.support, a ∉ Set.range f) :
     (monomial s c).killCompl hf = 0 := by
   unfold killCompl
   rw [aeval_monomial, Finsupp.prod]
@@ -31,14 +34,17 @@ lemma killCompl_monomial_eq_zero {s : σ →₀ ℕ} {c : R} (hs : ∃ a ∈ s.s
   apply Finset.prod_eq_zero ha.1
   simp [ha.2, zero_pow (Finsupp.mem_support_iff.mp ha.1)]
 
-lemma killCompl_monomial_eq_zero' {s : σ →₀ ℕ} {c : R} (hs : ¬ ↑s.support ⊆ Set.range f) :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+lemma killCompl_monomial_eq_zero' {s : τ →₀ ℕ} {c : R} (hs : ¬ ↑s.support ⊆ Set.range f) :
     (monomial s c).killCompl hf = 0 := killCompl_monomial_eq_zero hf (Set.not_subset.mp hs)
 
-lemma killCompl_monomial_eq_monomial_comapDomain {s : σ →₀ ℕ} {c : R}
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+lemma killCompl_monomial_eq_monomial_comapDomain {s : τ →₀ ℕ} {c : R}
     (hs : ↑s.support ⊆ Set.range f) :
     (monomial s c).killCompl hf = monomial (s.comapDomain f hf.injOn) c := by
   nth_rw 1 [← s.mapDomain_comapDomain f hf hs, killCompl_monomial_mapDomain]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma killCompl_monomial {s} {c : R} [Decidable (↑s.support ⊆ Set.range f)] :
     (monomial s c).killCompl hf =
       if ↑s.support ⊆ Set.range f then monomial (s.comapDomain f hf.injOn) c else 0 := by
@@ -46,6 +52,7 @@ lemma killCompl_monomial {s} {c : R} [Decidable (↑s.support ⊆ Set.range f)] 
   · exact killCompl_monomial_eq_monomial_comapDomain hf h
   · exact killCompl_monomial_eq_zero' hf h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma coeff_killCompl {s} :
     (p.killCompl hf).coeff s = p.coeff (s.mapDomain f) := by
   classical
@@ -61,20 +68,23 @@ lemma coeff_killCompl {s} :
       simp
   · simp_intro ..
 
-lemma support_killCompl {p : MvPolynomial σ R} :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+lemma support_killCompl {p : MvPolynomial τ R} :
     (p.killCompl hf).support =
       p.support.preimage (Finsupp.mapDomain f) (Finsupp.mapDomain_injective hf).injOn := by
   classical
   ext x
   simp [coeff_killCompl]
 
-lemma support_rename_killCompl_subset {p : MvPolynomial σ R} :
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+lemma support_rename_killCompl_subset {p : MvPolynomial τ R} :
     ((p.killCompl hf).rename f).support ⊆ p.support := by
   classical
   rw [MvPolynomial.support_rename_of_injective hf, support_killCompl, Finset.image_preimage]
   exact Finset.filter_subset ..
 
-lemma rename_killCompl_app (hf : Function.Injective f) {p : MvPolynomial σ R}
+-- not yet submitted
+lemma rename_killCompl_app (hf : Function.Injective f) {p : MvPolynomial τ R}
     (hp : ↑p.vars ⊆ Set.range f) : (p.killCompl hf).rename f = p := by
   classical
   rw [← MvPolynomial.support_sum_monomial_coeff p, map_sum, map_sum, ← Finset.sum_attach]

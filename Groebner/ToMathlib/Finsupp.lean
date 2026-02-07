@@ -84,4 +84,20 @@ lemma mapDomain_tsub_mapDomain {σ α κ} [AddCommMonoid α] [PartialOrder α] [
   obtain ⟨x, rfl⟩ := h
   simp [mapDomain_apply h _ x]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34872
+@[simp]
+theorem comapDomain_embDomain {α β M} [Zero M] (f : α ↪ β) (l : α →₀ M) :
+    comapDomain f (embDomain f l) f.injective.injOn = l := by
+  ext; rw [comapDomain_apply, embDomain_apply_self]
+
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34872
+lemma comapDomain_surjective' {α} {β} {M} [Zero M] {f : α → β} (hf : Function.Injective f) :
+    Function.Surjective fun l : β →₀ M ↦ Finsupp.comapDomain f l hf.injOn := by
+  intro l'
+  use l'.embDomain ⟨f, hf⟩
+  exact Finsupp.comapDomain_embDomain ..
+
+-- #loogle Finsupp.comapDomain, Finsupp.embDomain
+-- #loogle Finsupp.comapDomain, Finsupp.mapDomain
+
 end Finsupp

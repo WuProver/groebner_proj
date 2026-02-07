@@ -218,47 +218,68 @@ section misc
 
 variable {R : Type*} [CommSemiring R] (f g : MvPolynomial σ R)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 @[simp]
 lemma monic_leadingTerm (p : MvPolynomial σ R) :
     m.Monic (m.leadingTerm p) ↔ m.Monic p := by simp [leadingTerm, Monic]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma support_leadingTerm (p : MvPolynomial σ R) [Decidable (p = 0)] :
     support (m.leadingTerm p) = if p = 0 then ∅ else {m.degree p} := by
   classical
   simp [leadingTerm, support_monomial]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma support_leadingTerm' {p : MvPolynomial σ R} (hp : p ≠ 0) :
     support (m.leadingTerm p) = {m.degree p} := by
   classical
   simp [leadingTerm, support_monomial, hp]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma le_degree_of_mem_support {p : MvPolynomial σ R} {a : σ →₀ ℕ}
     (ha : a ∈ p.support) : a ≼[m] m.degree p := by
   simp [degree, Finset.le_sup ha]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma leadingTerm_eq_leadingTerm_iff {p q : MvPolynomial σ R} :
     m.leadingTerm p = m.leadingTerm q ↔
     m.leadingCoeff p = m.leadingCoeff q ∧ m.degree p = m.degree q := by
   rw [leadingTerm, leadingTerm, monomial_eq_monomial_iff]
   aesop
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 @[simp]
 lemma monic_one' : m.Monic (1 : MvPolynomial σ R) := monic_one
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 @[simp, nontriviality]
 lemma monic_of_subsingleton [Subsingleton (MvPolynomial σ R)] (p : MvPolynomial σ R) :
     m.Monic p := by
   simp [Subsingleton.eq_one (α := MvPolynomial σ R)]
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 lemma degree_le_degree_of_support_subset {p q : MvPolynomial σ R} (h : p.support ⊆ q.support) :
     m.degree p ≼[m] m.degree q := by
   simp_rw [degree, m.toSyn.apply_symm_apply]
   exact Finset.sup_mono h
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
 theorem degree_mul_le' {f g : MvPolynomial σ R} :
     m.toSyn (m.degree (f * g)) ≤ m.toSyn (m.degree f) + m.toSyn (m.degree g) :=
   map_add m.toSyn _ _ ▸ degree_mul_le
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
+variable {f} in
+lemma mem_nonZeroDivisors_of_leadingCoeff_mem_nonZeroDivisors
+    (hf : m.leadingCoeff f ∈ nonZeroDivisors _) : f ∈ nonZeroDivisors _ := by
+  rw [← nonZeroDivisorsLeft_eq_nonZeroDivisors, mem_nonZeroDivisorsLeft_iff]
+  intro g
+  rw [← not_imp_not, ← m.leadingCoeff_eq_zero_iff (f := f * g)]
+  intro h
+  rwa [m.leadingCoeff_mul_of_left_mem_nonZeroDivisors hf h,
+    mul_left_mem_nonZeroDivisors_eq_zero_iff hf, m.leadingCoeff_eq_zero_iff]
+
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/34765
 @[simp]
 theorem leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
@@ -383,16 +404,6 @@ lemma withBotDegree_one [Nontrivial R] : m.withBotDegree (R := R) 1 = 0 := by
   classical
   simp [withBotDegree_eq]
 
-variable {f} in
-lemma mem_nonZeroDivisors_of_leadingCoeff_mem_nonZeroDivisors
-    (hf : m.leadingCoeff f ∈ nonZeroDivisors _) : f ∈ nonZeroDivisors _ := by
-  rw [← nonZeroDivisorsLeft_eq_nonZeroDivisors, mem_nonZeroDivisorsLeft_iff]
-  intro g
-  rw [← not_imp_not, ← m.leadingCoeff_eq_zero_iff (f := f * g)]
-  intro h
-  rwa [m.leadingCoeff_mul_of_left_mem_nonZeroDivisors hf h,
-    mul_left_mem_nonZeroDivisors_eq_zero_iff hf, m.leadingCoeff_eq_zero_iff]
-
 variable {f g} in
 lemma withBotDegree_mul_of_left_mem_nonZeroDivisors (hf : m.leadingCoeff f ∈ nonZeroDivisors _) :
     m.withBotDegree (f * g) = m.withBotDegree f + m.withBotDegree g := by
@@ -495,9 +506,9 @@ lemma withBotDegree_eq_withBotDegree_iff :
   wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
   · rcases h with h | h
     all_goals
-      simp [h, m.withBotDegree_eq]
-      intro rfl
-      rw [m.degree_zero]
+      simp_rw [h]
+      revert f g
+      simp [m.withBotDegree_eq, m.degree_zero]
   simp [h, m.withBotDegree_eq]
 
 lemma withBotDegree_add_le :
