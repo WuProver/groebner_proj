@@ -6,7 +6,7 @@ public section
 
 namespace Finsupp
 
-lemma mapDomain_le_iff_le_of_injective {ι : Type*} {κ : Type*} {α : Type*}
+lemma mapDomain_le_mapDomain_iff_le {ι : Type*} {κ : Type*} {α : Type*}
     [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
     (a b : ι →₀ α) : a.mapDomain f ≤ b.mapDomain f ↔ a ≤ b := by
   classical
@@ -15,6 +15,11 @@ lemma mapDomain_le_iff_le_of_injective {ι : Type*} {κ : Type*} {α : Type*}
   rw [Finsupp.le_def] at h' ⊢
   intro i
   simpa [Finsupp.mapDomain_apply h] using h' (f i)
+
+lemma mapDomain_lt_mapDomain_iff_lt {ι : Type*} {κ : Type*} {α : Type*}
+    [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
+    (a b : ι →₀ α) : a.mapDomain f < b.mapDomain f ↔ a < b := by
+  simp [lt_iff_le_and_ne, mapDomain_le_mapDomain_iff_le h, (mapDomain_injective h).eq_iff]
 
 -- #check Finsupp.mapDomain_appl
 -- theorem sum_tsub_index {M N α} [DecidableEq α] [AddZeroClass M] [AddCommMonoid N] {f g : α →₀ M}

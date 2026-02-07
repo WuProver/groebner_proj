@@ -5,6 +5,7 @@ namespace WithBot
 
 variable {α β} {f : α → β} (a b : WithBot α)
 
+@[to_dual]
 public theorem map_add' [Add α] [Add β] (hf : ∀ x y, f (x + y) = f x + f y) :
     (a + b).map f = a.map f + b.map f := by
   induction a

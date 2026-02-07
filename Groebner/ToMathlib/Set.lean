@@ -2,6 +2,7 @@ module
 
 public import Mathlib
 
+@[simp]
 public lemma Set.leftInverse_rangeFactorization {α : Type*} {β : Type*} (f : α → β) :
     Function.LeftInverse (Set.rangeSplitting f) (Set.rangeFactorization f) ↔ f.Injective := by
   constructor

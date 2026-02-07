@@ -152,6 +152,11 @@ lemma degree_le_degree (p q : MvPolynomial σ' R) :
   simp [e.degree_rename]
 
 @[simp]
+lemma degree_le_degree' (p q : MvPolynomial σ' R) :
+    m.degree (p.rename e) ≤ m.degree (q.rename e) ↔ m'.degree p ≤ m'.degree q := by
+  simp [e.degree_rename, Finsupp.mapDomain_le_mapDomain_iff_le e.coe_injective]
+
+@[simp]
 lemma degree_lt_degree (p q : MvPolynomial σ' R) :
     m.degree (p.rename e) ≺[m] m.degree (q.rename e) ↔ m'.degree p ≺[m'] m'.degree q := by
   simp [e.degree_rename]

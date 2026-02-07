@@ -821,4 +821,42 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvP
     ∃! (B : Set (MvPolynomial σ k)), ∃ (h : m.IsGroebnerBasis B I), h.IsReduced :=
   IsReduced.uniqueExists_of_isGroebnerBasis₀ (isGroebnerBasis_self (m := m) I) (by simp [em'])
 
+-- lemma _root_.MonomialOrder.Embedding.isReduced_iff_isReduced_rename {σ' σ}
+--     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
+--     (e : Embedding m' m) (p : MvPolynomial σ' R) {G : Set (MvPolynomial σ' R)}
+--     (I : MvPolynomial σ' R) (hG : IsGroebnerBasis) :
+--     m'.IsRemainder p B r ↔
+--       m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
+--   ⟨e.isRemainder_rename_of_isRemainder,
+
+#check IsGroebnerBasis.span_leadingTerm_image
+
+theorem IsReduced.def_minimal : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
+    (∀ g, g ∈ G ↔
+       MaximalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
+       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) :=
+  sorry
+
+theorem IsReduced.def_minimal' : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
+    ((∀ g ∈ G, m.Monic g) ∧
+      m.degree '' G =
+        { x | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ R)) \ {0})) x}) := sorry
+
+-- theorem IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+--     {f : Filter α} {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
+--     {e : (a : α) → (m' a).Embedding m} {G' : (a : α) → Set (MvPolynomial (σ' a) k)} :
+--     (∀ a, ∃ h : (m' a).IsGroebnerBasis (G' a) (I.comap <| rename (e a)), h.IsReduced) ↔
+--       ∃ h : m.IsGroebnerBasis (f.liminf fun a ↦ rename (e a) '' G' a) I, h.IsReduced := by
+--   constructor
+--   · sorry
+--   · rintro h a
+--     rw [IsReduced.def_minimal] at *
+--     constructor
+--     · simp
+--       refine subset_trans ?_ (Set.preimage_mono h.1)
+
+--     · sorry
+
+--     sorry
+
 end MonomialOrder.IsGroebnerBasis

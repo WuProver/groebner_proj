@@ -209,6 +209,16 @@ theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le
   specialize h_degree p
   simp_all [MonomialOrder.leadingCoeff_eq_zero_iff]
 
+theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀
+    {G : Set (MvPolynomial σ R)} (I : Ideal (MvPolynomial σ R))
+    (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
+    m.IsGroebnerBasis G I ↔
+      G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, g ≠ 0 ∧ m.degree g ≤ m.degree p := by
+  rw [← isGroebnerBasis_sdiff_singleton_zero,
+    isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le]
+  · simp [and_assoc]
+  simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
 theorem span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
     (h : m.IsGroebnerBasis G I) (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
@@ -524,10 +534,12 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G : Set (MvPolynomial 
     ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G 0 := by
   /- The informal proof is attached in comment blocks (`/- -/`), where math expressions are written
   in `$ $` or `$$ $$` like in LaTeX or Markdown, while we tend to use unicode symbols like Lean code
-  instead of LaTeX commands are used for readability. And every block roughly corresponds with codes
-  below it and above the next comment block (if it exists). And inline comments are technical
-  details in formalization. -/
-  -- TODO: simplify this proof with `withBotDegree`.
+  instead of LaTeX commands are used for readability. And every block roughly corresponds with a
+  block of code below it and above the next comment block (if it exists). And inline comments (`--`)
+  are about technical details in formalization. -/
+  -- TODO: (maybe) simplify this proof with `withBotDegree`? (The current proof was made before
+  -- `withBotDegree` was defined and used to refactore `IsRemainder`, so it deals with some edge
+  -- cases about degree of zero polynomial.)
   classical
   constructor
   · /- (←) Easy to prove. -/
@@ -832,6 +844,12 @@ theorem isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span' (G : Set (Mv
     m.IsGroebnerBasis G I ↔ (I = Ideal.span G ∧ m.IsGroebnerBasis G (Ideal.span G)) :=
   isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span₀ G I (by simp [em'])
 
+theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'
+    (G : Set (MvPolynomial σ k)) (I : Ideal (MvPolynomial σ k)) :
+    m.IsGroebnerBasis G I ↔
+      G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, g ≠ 0 ∧ m.degree g ≤ m.degree p :=
+  isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀ I (by simp [em'])
+
 -- todo: generalize to ring.
 lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename {σ'}
     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
@@ -873,12 +891,20 @@ lemma exists_isGroebnerBasis_finite_of_exists_span_finite {B : Set (MvPolynomial
   rw [Embedding.coe_ofInjective, Subtype.range_coe, SetLike.coe_subset_coe]
   apply Finset.subset_biUnion_of_mem vars (hB.mem_toFinset.mpr hpB)
 
-lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ k)}
+lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis' {G : Set (MvPolynomial σ k)}
     {I : Ideal (MvPolynomial σ k)}
-    (h : ∀ s ⊆ G, s.Finite →
+    (h : ∀ s : Finset σ,
       ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
-        s ⊆ Set.range (rename e) ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
-    m.IsGroebnerBasis G I := sorry
+        ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
+    m.IsGroebnerBasis G I :=
+  isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (hG := by simp_intro .. [em']) h
+
+-- theorem IsReduced.isReduced_limsup {α} {f : Filter α} {g : α → Set (MvPolynomial σ k)}
+--     {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
+--     {e' : (a : α) → (m' a).Embedding m}
+--     {I : α → Ideal (MvPolynomial σ k)} (hg : ∀ a, m.IsGroebnerBasis (g a) (I a)) :
+--     m.IsGroebnerBasis (f.limsup g) (⨆ a, I a) := by
+--   sorry
 
 end Field
 

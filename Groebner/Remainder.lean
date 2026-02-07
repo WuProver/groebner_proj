@@ -632,7 +632,7 @@ lemma _root_.MonomialOrder.Embedding.isRemainder_killCompl_of_isRemainder_rename
   rw [support_killCompl] at hc
   specialize hdeg' (c.mapDomain e) (by simpa using hc) (g'.rename e) (Set.mem_image_of_mem _ hg')
     (by simpa)
-  rwa [e.degree_rename, Finsupp.mapDomain_le_iff_le_of_injective e.coe_injective] at hdeg'
+  rwa [e.degree_rename, Finsupp.mapDomain_le_mapDomain_iff_le e.coe_injective] at hdeg'
 
 lemma _root_.MonomialOrder.Embedding.isRemainder_rename_of_isRemainder {σ' σ}
     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
@@ -655,7 +655,7 @@ lemma _root_.MonomialOrder.Embedding.isRemainder_rename_of_isRemainder {σ' σ}
       simp_rw [← map_mul, map_finsuppSum]
     · simpa [← map_mul, Finsupp.mapDomain_apply (rename_injective _ e.coe_injective)] using hdeg
   · simpa [e.coe_injective, MvPolynomial.support_rename_of_injective, Embedding.degree_rename,
-      Finsupp.mapDomain_le_iff_le_of_injective] using hdeg'
+      Finsupp.mapDomain_le_mapDomain_iff_le] using hdeg'
 
 lemma _root_.MonomialOrder.Embedding.isRemainder_iff_isRemainder_rename {σ' σ}
     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
