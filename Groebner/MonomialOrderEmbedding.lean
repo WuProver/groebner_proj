@@ -147,6 +147,13 @@ lemma degree_rename : m.degree (p.rename e) = (m'.degree p).mapDomain e := by
   · simp [← Finset.comp_sup_eq_sup_comp_of_is_total _ e.monotone (by simp)]
 
 @[simp]
+lemma degree_eq_degree (p q : MvPolynomial σ' R) :
+    m.degree (p.rename e) = m.degree (q.rename e) ↔ m'.degree p = m'.degree q := by
+  classical
+  simp [e.degree_rename,
+    Finsupp.mapDomain_injective e.coe_injective |>.eq_iff]
+
+@[simp]
 lemma degree_le_degree (p q : MvPolynomial σ' R) :
     m.degree (p.rename e) ≼[m] m.degree (q.rename e) ↔ m'.degree p ≼[m'] m'.degree q := by
   simp [e.degree_rename]
@@ -216,6 +223,10 @@ lemma withBotDegree_lt_withBotDegree_iff (p q : MvPolynomial σ' R) :
 @[simp]
 lemma leadingCoeff_rename : m.leadingCoeff (p.rename e) = m'.leadingCoeff p := by
   simp [leadingCoeff, degree_rename]
+
+@[simp]
+lemma monic_rename : m.Monic (p.rename e) = m'.Monic p := by
+  simp [Monic]
 
 lemma leadingTerm_rename : m.leadingTerm (p.rename e) = (m'.leadingTerm p).rename e := by
   simp [leadingTerm, degree_rename, rename_monomial]

@@ -289,6 +289,128 @@ theorem leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
   obtain ⟨hf, hg⟩ := h
   rw [leadingCoeff, degree_mul hf hg, ← coeff_mul_of_degree_add]
 
+lemma sPolynomial_decomposition_of_degree_sum_smul_le₀ {R} [CommRing R] {d : m.syn} {ι : Type*}
+    {B : Finset ι} {c : ι → R} {g : ι → MvPolynomial σ R}
+    (hd : ∀ b ∈ B,
+      (m.toSyn <| m.degree <| g b) = d ∧ IsUnit (m.leadingCoeff <| g b) ∨ g b = 0)
+    (hfd : (m.toSyn <| m.degree <| ∑ b ∈ B, c b • g b) < d) :
+    ∃ (c' : ι → ι → R),
+      ∑ b ∈ B, c b • g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c' b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
+  classical
+  classical
+  induction B using Finset.induction_on with
+  | empty => simp
+  | insert b B hb h =>
+    by_cases hb0 : g b = 0
+    · simp_all
+    simp? [Finset.sum_insert hb, hb0] at hfd hd says
+      simp only [Finset.sum_insert hb, Finset.mem_insert, forall_eq_or_imp, hb0, or_false] at hfd hd
+    obtain ⟨⟨rfl, isunit_gb⟩, hd⟩ := hd
+    use fun b₁ b₂ ↦ if b₂ = b then c b₁ * ↑isunit_gb.unit⁻¹ else 0
+    simp? [Finset.sum_insert hb, hb] says
+      simp only [Finset.sum_insert hb, ite_smul, zero_smul, ↓reduceIte, Finset.sum_ite_eq', hb,
+        add_zero, sPolynomial_self, smul_zero, zero_add]
+    simp only [m.toSyn.injective.eq_iff] at *
+    trans ∑ b' ∈ B, (c b' • g b' - (c b' * m.leadingCoeff (g b') * ↑isunit_gb.unit⁻¹) • g b)
+    · suffices (-(∑ i ∈ B, c i * m.leadingCoeff (g i))) = c b * m.leadingCoeff (g b) by
+        rw [add_comm, Finset.sum_sub_distrib, sub_eq_add_neg, ← Finset.sum_smul, ← Finset.sum_mul,
+          ← neg_smul, ← neg_mul, this, mul_assoc, isunit_gb.mul_val_inv, mul_one]
+      rw [← add_eq_zero_iff_neg_eq']
+      trans c b * (g b).coeff (m.degree <| g b) + ∑ i ∈ B, c i * (g i).coeff (m.degree <| g b)
+      · unfold leadingCoeff
+        congr 1
+        apply Finset.sum_congr rfl
+        intro b' hb'
+        rcases hd b' hb' with h | h <;> simp [h]
+      · simp_rw [← MvPolynomial.coeff_C_mul, ← smul_eq_C_mul]
+        rw [← coeff_sum, ← coeff_add, ← notMem_support_iff]
+        exact m.notMem_support_of_degree_lt hfd
+    · apply Finset.sum_congr rfl
+      intro b' hb'
+      rw [sPolynomial]
+      obtain (⟨h, -⟩ | h) := hd b' hb'
+      · simp [h, ← smul_eq_C_mul, smul_sub, ← mul_smul,
+          (mul_assoc ..).trans (congrArg (c b' * ·) isunit_gb.val_inv_mul),
+          mul_right_comm (b := m.leadingCoeff (g b'))]
+      · simp [h]
+
+lemma sPolynomial_decomposition_of_degree_sum_smul_le {R} [CommRing R] {d : m.syn} {ι : Type*}
+    {B : Finset ι} {c : ι → R} {g : ι → MvPolynomial σ R}
+    (hB : ∀ b ∈ B, IsUnit (m.leadingCoeff <| g b))
+    (hd : ∀ b ∈ B, (m.toSyn <| m.degree <| g b) = d)
+    (hfd : (m.toSyn <| m.degree <| ∑ b ∈ B, c b • g b) < d) :
+    ∃ (c' : ι → ι → R),
+      ∑ b ∈ B, c b • g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c' b₁ b₂) • m.sPolynomial (g b₁) (g b₂) :=
+  sPolynomial_decomposition_of_degree_sum_smul_le₀ (fun _ h ↦ Or.intro_left _ ⟨hd _ h, hB _ h⟩) hfd
+
+lemma sPolynomial_decomposition_of_degree_sum_le {R} [CommRing R] {d : m.syn} {ι : Type*}
+    {B : Finset ι} {g : ι → MvPolynomial σ R}
+    (hd : ∀ b ∈ B,
+      (m.toSyn <| m.degree <| g b) = d ∧ IsUnit (m.leadingCoeff <| g b) ∨ g b = 0)
+    (hfd : (m.toSyn <| m.degree <| ∑ b ∈ B, g b) < d) :
+    ∃ (c : ι → ι → R),
+      ∑ b ∈ B, g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
+  simpa using
+    sPolynomial_decomposition_of_degree_sum_smul_le₀ (c := fun _ ↦ 1) hd (by simpa using hfd)
+
+lemma sPolynomial_monomial_mul_of_mem_nonZeroDivisors {R} [CommRing R]
+    {p₁ p₂ : MvPolynomial σ R}
+    (hp₁ : m.leadingCoeff p₁ ∈ nonZeroDivisors _)
+    (hp₂ : m.leadingCoeff p₂ ∈ nonZeroDivisors _)
+    (d₁ d₂ : σ →₀ ℕ)
+    (c₁ c₂ : R) :
+    m.sPolynomial ((monomial d₁ c₁) * p₁) ((monomial d₂ c₂) * p₂) =
+      monomial ((d₁ + m.degree p₁) ⊔ (d₂ + m.degree p₂) - m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
+      m.sPolynomial p₁ p₂ := by
+  classical
+  simp only [sPolynomial_def]
+  wlog! +distrib H : c₁ ≠ 0 ∧ c₂ ≠ 0
+  · (obtain rfl | rfl := H) <;> simp
+  rcases H with ⟨hc1, hc2⟩
+  have hm1 := (monomial_eq_zero (s := d₁)).not.mpr hc1
+  have hm2 := (monomial_eq_zero (s := d₂)).not.mpr hc2
+  simp_rw [m.degree_mul_of_right_mem_nonZeroDivisors hm1 hp₁,
+    m.degree_mul_of_right_mem_nonZeroDivisors hm2 hp₂,
+    mul_sub, ← mul_assoc _ _ p₁, ← mul_assoc _ _ p₂, monomial_mul,
+    m.leadingCoeff_mul_of_right_mem_nonZeroDivisors hm1 hp₁,
+    m.leadingCoeff_mul_of_right_mem_nonZeroDivisors hm2 hp₂,
+    m.leadingCoeff_monomial, degree_monomial, hc1, hc2, reduceIte, mul_right_comm, mul_comm c₂ c₁]
+  rw [tsub_add_tsub_cancel (sup_le_sup (self_le_add_left _ _) (self_le_add_left _ _)) (by simp),
+    tsub_add_tsub_cancel (sup_le_sup (self_le_add_left _ _) (self_le_add_left _ _)) (by simp),
+    tsub_add_eq_add_tsub le_sup_left, tsub_add_eq_add_tsub le_sup_right,
+    add_comm d₁, add_comm d₂, add_tsub_add_eq_tsub_right, add_tsub_add_eq_tsub_right]
+
+lemma sPolynomial_monomial_mul_of_mem_nonZeroDivisors' {R} [CommRing R]
+    {p₁ p₂ : MvPolynomial σ R}
+    (hp₁ : m.leadingCoeff p₁ ∈ nonZeroDivisors _)
+    (hp₂ : m.leadingCoeff p₂ ∈ nonZeroDivisors _)
+    (d₁ d₂ : σ →₀ ℕ)
+    (c₁ c₂ : R) :
+    m.sPolynomial (monomial d₁ c₁ * p₁) (monomial d₂ c₂ * p₂) =
+      monomial (m.degree (monomial d₁ c₁ * p₁) ⊔ m.degree (monomial d₂ c₂ * p₂) -
+          m.degree p₁ ⊔ m.degree p₂) (c₁ * c₂) *
+      m.sPolynomial p₁ p₂ := by
+  classical
+  wlog! +distrib H : c₁ ≠ 0 ∧ c₂ ≠ 0
+  · (obtain rfl | rfl := H) <;> simp
+  simp [H, hp₁, hp₂, degree_mul_of_right_mem_nonZeroDivisors,
+    sPolynomial_monomial_mul_of_mem_nonZeroDivisors, degree_monomial]
+
+
+theorem leadingCoeff_mul_of_left_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
+    (hf : m.leadingCoeff f ∈ nonZeroDivisors _) :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  by_cases hg : g = 0
+  · simp [hg]
+  simp only [leadingCoeff, degree_mul_of_left_mem_nonZeroDivisors hf hg, coeff_mul_of_degree_add]
+
+theorem leadingCoeff_mul_of_right_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
+    (hg : m.leadingCoeff g ∈ nonZeroDivisors _) :
+    m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
+  by_cases hf : f = 0
+  · simp [hf]
+  simp only [leadingCoeff, degree_mul_of_right_mem_nonZeroDivisors hf hg, coeff_mul_of_degree_add]
+
 end misc
 
 section killCompl

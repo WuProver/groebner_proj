@@ -449,9 +449,8 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   simp [leadingTerm, monomial_eq_monomial_iff, (hG₂'.1 p₂ hp₂).ne_zero] at hp₁₂
   suffices rem_self : m.IsRemainder (p₁ - p₂) G₁ (p₁ - p₂) by
     have := I.sub_mem (Set.mem_of_subset_of_mem hG₁.1 hp₁) (Set.mem_of_subset_of_mem hG₂.1 hp₂)
-    rw [← remainder_eq_zero_iff_mem_ideal _ hG₁ rem_self, sub_eq_zero] at this
-    · exact hp₂' <| this ▸ hp₂
-    exact fun p hp ↦ by simp [hG₁'.1 p hp |>.leadingCoeff_eq_one]
+    rw [← remainder_eq_zero_iff_mem_ideal hG₁ rem_self, sub_eq_zero] at this
+    exact hp₂' <| this ▸ hp₂
   rw [IsRemainder.self_iff]
   rintro a ha q hq -
   replace ha' := Finset.mem_union.mp <| Finset.mem_of_subset (support_sub ..) ha
@@ -829,12 +828,12 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvP
 --       m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
 --   ⟨e.isRemainder_rename_of_isRemainder,
 
-#check IsGroebnerBasis.span_leadingTerm_image
-
 theorem IsReduced.def_minimal : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
     (∀ g, g ∈ G ↔
-       MaximalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
-       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) :=
+      m.Monic g ∧
+      MaximalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
+      ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) :=
+
   sorry
 
 theorem IsReduced.def_minimal' : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
