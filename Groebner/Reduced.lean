@@ -1111,7 +1111,7 @@ theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {�
   simpa [-MvPolynomial.mem_support_iff, support_rename_of_injective (e a).coe_injective,
     Finsupp.mapDomain_le_mapDomain_iff_le (e a).coe_injective] using this
 
-def IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+def IsReduced.isReduced_liminf {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
     {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
     {f : Filter α} [f.NeBot]
     {e : (a : α) → (m' a).Embedding m}
