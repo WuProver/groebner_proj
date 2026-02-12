@@ -997,6 +997,43 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis' {G : Set (MvPolynomial �
     m.IsGroebnerBasis G I :=
   isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (hG := by simp_intro .. [em']) h
 
+-- todo: generalize to ring?
+lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
+    {G : Set (MvPolynomial σ k)} :
+    m.IsGroebnerBasis G I ↔ G ⊆ I ∧
+      {a | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ k)) \ {0})) a} ⊆
+        m.degree '' (G \ {0}) := by
+  classical
+  constructor
+  · intro h
+    rw [IsGroebnerBasis.isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'] at h
+    exists h.1
+    intro a ha
+    -- by_contra! h'
+    simp at ha ⊢
+    obtain ⟨p, hp, rfl⟩ := ha.prop
+    obtain ⟨g, hg⟩ := h.2 p hp.1 hp.2
+    refine ⟨g, ⟨hg.1, hg.2.1⟩, ?_⟩
+    exact ha.eq_of_le ⟨g, ⟨h.1 hg.1, hg.2.1⟩, rfl⟩ hg.2.2
+  · intro h
+    rw [isGroebnerBasis_iff]
+    exists h.1
+    rw [--← span_leadingTerm_sdiff_singleton_zero, ← span_leadingTerm_sdiff_singleton_zero (B := G),
+      ← Ideal.span_le,
+      span_leadingTerm_eq_span_monomial', span_leadingTerm_eq_span_monomial',
+      -- span_leadingTerm_eq_span_monomial (G := G \ {0}),
+      ← Set.image_image (g := (monomial · (1 : k))) (f := m.degree),
+      ← Set.image_image (g := (monomial · (1 : k))) (f := m.degree),
+      ideal_span_monomial_image_eq_ideal_span_monomial_image_minimal,
+      --ideal_span_monomial_image_eq_ideal_span_monomial_image_minimal (s := m.degree '' (G \ {0})),
+      Ideal.span_le]
+    intro p
+    rw [SetLike.mem_coe, mem_ideal_span_monomial_image, Set.mem_image]
+    rintro ⟨a, ⟨ha, rfl⟩⟩
+    obtain ⟨p, ⟨hp, rfl⟩⟩ := h.2 ha
+    simp [support_monomial]
+    exact ⟨p, And.intro hp (le_refl (m.degree p))⟩
+
 end Field
 
 end IsGroebnerBasis

@@ -411,6 +411,52 @@ theorem leadingCoeff_mul_of_right_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
   · simp [hf]
   simp only [leadingCoeff, degree_mul_of_right_mem_nonZeroDivisors hf hg, coeff_mul_of_degree_add]
 
+lemma support_add_of_leadingTerm_add_leadingTerm_eq_zero
+    {p q : MvPolynomial σ R}
+    (h : m.leadingTerm p + m.leadingTerm q = 0) :
+    ∀ a ∈ (p + q).support,
+      (a ∈ p.support ∧ a ≺[m] m.degree p) ∨
+      (a ∈ q.support ∧ a ≺[m] m.degree q) := by
+  classical
+  intro a ha
+  wlog! +distrib hpq : p ≠ 0 ∧ q ≠ 0
+  · rcases hpq with h' | h'
+    · simp [h'] at h
+      simp [h, h'] at ha
+    · simp [h'] at h
+      simp [h, h'] at ha
+  unfold leadingTerm at h
+  by_cases! hpq' : m.degree p ≠ m.degree q
+  · apply congrArg (coeff (m.degree q)) at h
+    simp [hpq', hpq] at h
+  rw [hpq', ← map_add, monomial_eq_zero] at h
+  unfold leadingCoeff at h
+  rcases Finset.mem_union.mp <| support_add (p := p) (q := q) ha with h' | h'
+  on_goal 1 => left
+  on_goal 2 => right
+  all_goals
+    exists h'
+    apply lt_of_le_of_ne (m.le_degree_of_mem_support h')
+    by_contra!
+    rw [m.toSyn.apply_eq_iff_eq] at this
+    subst this
+    simp [hpq' ▸ h, hpq'] at ha
+
+@[simp]
+lemma leadingTerm_neg {R} [CommRing R] (p : MvPolynomial σ R) :
+    m.leadingTerm (-p) = - m.leadingTerm p := by simp [leadingTerm]
+
+lemma support_sub_of_leadingTerm_eq_leadingTerm {R} [CommRing R]
+    {p q : MvPolynomial σ R}
+    (h : m.leadingTerm p = m.leadingTerm q) :
+    ∀ a ∈ (p - q).support,
+      (a ∈ p.support ∧ a ≺[m] m.degree p) ∨
+      (a ∈ q.support ∧ a ≺[m] m.degree q) := by
+  classical
+  convert m.support_add_of_leadingTerm_add_leadingTerm_eq_zero (p := p) (q := -q) ?_
+  · simp [-MvPolynomial.mem_support_iff, ← sub_eq_add_neg, degree_neg, support_neg]
+  simp [h]
+
 end misc
 
 section killCompl
@@ -593,6 +639,17 @@ lemma withBotDegree_le_withBotDegree_iff :
     · simp_rw [m.toWithBotSyn_apply]
       aesop
   simp [m.withBotDegree_eq, h, m.toWithBotSyn_apply]
+
+lemma withBotDegree_le_withBotDegree_iff' :
+    m.withBotDegree f ≤ m.withBotDegree g ↔
+      (m.degree f ≤ m.degree g ∧ (g = 0 → f = 0)) := by
+  classical
+  wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
+  · rcases h with h | h
+    · simp [h]
+    · simp_rw [h]
+      aesop
+  simp [m.withBotDegree_eq, h]
 
 -- lemma le_withBotDegree_iff_of_ne_zero (a) (hg : g ≠ 0) :
 --     a ≤ m.toWithBotSyn (m.withBotDegree g) ↔ a.unbotD 0 ≤ m.toSyn (m.degree g) := by

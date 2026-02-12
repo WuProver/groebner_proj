@@ -228,6 +228,12 @@ lemma IsReduced.isReduced_def :
   have (g) (hg : g ∈ G) : g ≠ 0 := (h1 g hg).ne_zero
   aesop
 
+-- lemma IsReduced.isReduced_def' :
+--     hG.IsReduced ↔
+--       (∀ p ∈ G, m.Monic p) ∧
+--       ∀ p ∈ G, ∀ a ∈ p.support, ∀ q ∈ I, q ≠ p → ¬ m.degree q ≤ a := by
+
+
 lemma IsReduced.isMinimal : hG.IsReduced → hG.IsMinimal := by
   rw [IsReduced.isReduced_def, IsMinimal]
   intro h
@@ -351,6 +357,14 @@ lemma IsMinimal.minimal_degree (hG' : hG.IsMinimal) {g} (h : g ∈ G) :
   rw [not_minimal_iff_exists_lt <| Set.mem_image_of_mem _ h] at this
   obtain ⟨_, hqp, ⟨q, hqG, rfl⟩⟩ := this
   exact hG'.2 _ h _ hqG (by aesop) hqp.le
+
+-- lemma IsMinimal.minimal_degree' (hG' : hG.IsMinimal) {g} (h : g ∈ G) :
+--     Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ R)) \ {0})) (m.degree g) := by
+--   by_contra!
+--   rw [not_minimal_iff_exists_lt] at this
+
+--   obtain ⟨_, hqp, ⟨q, hqG, rfl⟩⟩ := this
+--   exact hG'.2 _ h _ hqG (by aesop) hqp.le
 
 variable (hG) in
 lemma IsMinimal.isMinimal_iff_monic_and_minimal_degree_and_injOn_leadingTerm :
@@ -828,19 +842,145 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvP
 --       m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
 --   ⟨e.isRemainder_rename_of_isRemainder,
 
-theorem IsReduced.def_minimal {k} [Field k] (G : Set (MvPolynomial σ k))
+-- lemma
+  -- rcases Finset.mem_union.mp <| support_add (p := p) (q := q) ha with ha' | ha'
+  -- · left
+  --   exists ha'
+  --   rw [leadingTerm, leadingTerm] at h
+  --   rw [m.le_degree]
+
+
+  -- sorry
+
+
+-- lemma minimalFor_iff_minimal {ι α} (P : ι → Prop) (f : ι → α) (i : ι) [LE α] :
+--     MinimalFor P f i ↔ P i ∧ Minimal P (f i)
+
+-- todo: generalize to ring?
+lemma isGroebnerBasis_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
+    m.IsGroebnerBasis ({g | m.Monic g ∧
+      MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
+      ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a}) I := by
+  rw [IsGroebnerBasis.isGroebnerBasis_iff_minimal]
+  split_ands
+  · intro p hp
+    simp at hp
+    exact hp.2.1.prop.1
+  intro a ha
+  simp [-MvPolynomial.mem_support_iff] at ⊢ ha
+  obtain ⟨p, hp, rfl⟩ := ha.prop
+  obtain ⟨r, hr⟩ := IsRemainder.exists_isRemainder' (m := m)
+    ((I : Set (MvPolynomial σ k)) \ {q | m.degree q = m.degree p}) p
+  use (m.leadingCoeff r)⁻¹  • r
+  have hr0 : r ≠ 0 := by
+    by_contra! rfl
+    rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder] at hr
+    have ⟨q, hq⟩ := IsRemainder.exists_degree_le_degree_of_zero hp.2 hr
+    simp at hq
+    obtain hqp := le_antisymm (ha.le_of_le ⟨q, ⟨hq.1.1.1, hq.1.2⟩, rfl⟩ hq.2) hq.2
+    simp [hqp] at hq
+  have hrp : m.degree r = m.degree p := by
+    by_contra!
+    rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder] at hr
+    have := hr.exists_withBotDegree_le_degree
+      (by simpa [m.withBotDegree_eq_withBotDegree_iff, hr0, hp] using this.symm)
+    simp [m.withBotDegree_le_withBotDegree_iff'] at this
+    obtain ⟨q, hq⟩ := this
+    simp [le_antisymm hq.2.1 <| ha.le_of_le ⟨q, ⟨hq.1.1.1, hq.1.2⟩, rfl⟩ hq.2.1] at hq
+  split_ands
+  · -- todo `m.leadingCoeff_smul`
+    rw [Monic, smul_eq_C_mul, m.leadingCoeff_mul', m.leadingCoeff_C,
+      inv_mul_cancel₀ <| leadingCoeff_eq_zero_iff.not.mpr hr0]
+  · simp [smul_eq_C_mul]
+    exact Ideal.mul_mem_left _ _ (hr.mem_ideal_iff (I := I) Set.diff_subset |>.mpr hp.1)
+  · simp [hr0]
+  · simp
+    intro q hqI hq
+    rw [smul_eq_C_mul, m.degree_mul _ hr0, m.degree_C, zero_add, hrp]
+    · exact ha.le_of_le ⟨q, ⟨hqI, hq⟩, rfl⟩
+    simp [hr0]
+  · intro q hq hq0
+    rw [m.degree_smul_of_mem_nonZeroDivisors (by simp [hr0]),
+      MvPolynomial.support_smul_eq (by simp [hr0]), hrp]
+    intro hqr a ha
+    apply hr.2 a ha _ (by simp [hq, hqr]) hq0
+  · simp [hr0]
+  rw [m.degree_smul_of_mem_nonZeroDivisors (by simp [hr0]), hrp]
+
+lemma IsReduced.isReduced_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
+    (isGroebnerBasis_minimalFor (m := m) I).IsReduced := by
+  classical
+  rw [IsReduced.isReduced_def]
+  split_ands
+  · exact fun _ ↦  And.left
+  intro p hp a hap q hq hqp
+  simp [-mem_support_iff] at hqp hq hp
+  apply hp.2.2 _ hq.2.1.prop.1 hq.2.1.prop.2 _ _ hap
+  by_contra! hqp'
+  have : m.leadingTerm q = m.leadingTerm p := by
+    simp [m.leadingTerm_eq_leadingTerm_iff, hq.1, hp.1, hqp']
+  apply support_sub_of_leadingTerm_eq_leadingTerm at this
+  have qsubp : q - p ≠ 0 := by simp [sub_eq_zero, hqp]
+  rcases this (m.degree (q - p)) <| m.degree_mem_support qsubp with h | h
+  · apply not_not_intro <| le_refl (m.degree (q - p))
+    apply hq.2.2 (q - p) (Ideal.sub_mem I hq.2.1.prop.1 hp.2.1.prop.1) qsubp _ _ h.1
+    rw [← m.toSyn.apply_eq_iff_eq]
+    exact ne_of_lt h.2
+  · apply not_not_intro <| le_refl (m.degree (q - p))
+    apply hp.2.2 (q - p) (Ideal.sub_mem I hq.2.1.prop.1 hp.2.1.prop.1) qsubp _ _ h.1
+    rw [← m.toSyn.apply_eq_iff_eq]
+    exact ne_of_lt h.2
+
+theorem IsReduced.isReduced_iff_minimalFor {k} [Field k] (G : Set (MvPolynomial σ k))
     (I : Ideal (MvPolynomial σ k)) :
     (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
     (∀ g, g ∈ G ↔
       m.Monic g ∧
-      MaximalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
+      MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) := by
-  wlog h : ∃ (h : m.IsGroebnerBasis G I), h.IsReduced generalizing G
-  · obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
-    specialize this G' hG'
-    -- rw [← this]
-    sorry
-  sorry
+  simp (singlePass := true) only [
+    ← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
+      MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
+      ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a),
+    ← Set.ext_iff
+  ]
+  have hrgb' := IsReduced.isReduced_minimalFor (m := m) I
+  constructor
+  · intro ⟨hgb, hrgb⟩
+    exact IsReduced.unique hrgb hrgb'
+  · rintro rfl
+    exact ⟨_, hrgb'⟩
+
+  -- wlog h : ∃ (h : m.IsGroebnerBasis G I), h.IsReduced generalizing G
+  -- · simp only [h]
+  --   obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
+  --   replace := this G' hG' |>.mp hG'
+  --   simp (singlePass := true) only [← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
+  --     MinimalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
+  --     ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a)] at ⊢ this
+  --   simp only [← this, ← Set.ext_iff, false_iff]
+  --   contrapose! h with rfl
+  --   exact hG'
+  -- simp only [h, true_iff]
+  -- intro g
+  -- obtain ⟨hG, hG'⟩ := h
+  -- wlog hg : g ∈ G generalizing G hG hG'
+  -- · obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
+  --   specialize this G' hG'.choose hG'.choose_spec
+  --   simp (singlePass := true) only [← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
+  --     MinimalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
+  --     ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a)] at ⊢ this
+
+  --   rw [← this]
+  --   sorry
+  --   sorry
+  -- constructor
+  -- · intro hg
+  --   exists hG'.1 g hg
+  --   rw [MinimalFor]
+
+  -- sorry
+
   -- sorry
   -- constructor
   -- · intro ⟨hGB, hR⟩ g
@@ -851,10 +991,10 @@ theorem IsReduced.def_minimal {k} [Field k] (G : Set (MvPolynomial σ k))
   --     rw [IsGroebnerBasis.isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'] at hGB
   -- sorry
 
-theorem IsReduced.def_minimal' : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
-    ((∀ g ∈ G, m.Monic g) ∧
-      m.degree '' G =
-        { x | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ R)) \ {0})) x}) := sorry
+-- theorem IsReduced.def_minimal' : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
+--     ((∀ g ∈ G, m.Monic g) ∧
+--       m.degree '' G =
+--         { x | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ R)) \ {0})) x}) := sorry
 
 lemma _root_.Filter.union_mem_of_mem {α} {a b : Set α} {f : Filter α} (ha : a ∈ f) (hb : b ∈ f) :
     a ∪ b ∈ f := by
@@ -899,7 +1039,7 @@ lemma _root_.Filter.sUnion_mem_of_mem {α} {f : Filter α}
     simp at h
     simp [Filter.union_mem_of_mem h.1 (h' h.2 hs')]
 
--- bug?
+-- todo: the wraning is a bug?
 lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι]
     [nomempty : Nonempty ι] {s : ι → Set α} (h : ∀ i : ι, s i ∈ f) : Set.iUnion s ∈ f := by
   classical
@@ -938,12 +1078,12 @@ theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {�
   classical
   have hG''' a : ∃ h : IsGroebnerBasis (G' a) (Ideal.comap (rename ⇑(e a)) I), h.IsReduced :=
     ⟨_, hG'' a⟩
-  simp_rw [def_minimal] at ⊢ hG'''
+  simp_rw [isReduced_iff_minimalFor] at ⊢ hG'''
   intro g
   simp [Filter.liminf_eq_iSup_iInf, eq_comm (a := Set.univ), Set.iUnion_eq_univ_iff,
     -MvPolynomial.mem_support_iff] at ⊢ hI
   intro h
-  rw [IsReduced.def_minimal .. |>.mp ⟨_, hG⟩] at h
+  rw [IsReduced.isReduced_iff_minimalFor .. |>.mp ⟨_, hG⟩] at h
   refine ⟨Set.sInter (g.vars.image (hI · |>.choose)), ?_, ?_⟩
   · simp
     intro a ha
@@ -961,9 +1101,10 @@ theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {�
   simp [-MvPolynomial.mem_support_iff] at h ⊢
   split_ands
   · simpa using h.1
-  · simpa using h.2.1.1
+  · simpa using h.2.1.1.1
+  · simpa using h.2.1.1.2
   · intro p hp
-    simpa using h.2.1.2 hp
+    simpa using @h.2.1.2 ((rename ⇑(e a)) p) (by simpa using hp)
   intro p hp
   have := h.2.2 _ hp
   nth_rw 3 [(e a).degree_rename] at this
@@ -1000,8 +1141,6 @@ def IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α
     specialize hG'' a
     simpa [← hg'eq] using hG''.1 g' hg'
   intro b hb p t ht ht' pneg
-  -- obtain ⟨aₜ, haₜ⟩ := Filter.NeBot.nonempty_of_mem _ ht
-  -- obtain ⟨p', hp', hp'eq⟩ := ht' aₜ haₜ
   obtain ⟨u, hu⟩ := Filter.NeBot.nonempty_of_mem ‹_› (Filter.inter_mem hs ht)
   have := Set.mem_of_mem_inter_left hu
   obtain ⟨g', hg', rfl⟩ := hs' u (Set.mem_of_mem_inter_left hu)
@@ -1013,12 +1152,6 @@ def IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α
   simpa [(e u).degree_rename, Finsupp.mapDomain_le_mapDomain_iff_le (e u).coe_injective] using
     hG''.2 g' hg' b' hb' p' hp' <|
       by simpa [rename_injective _ (e u).coe_injective |>.eq_iff] using pneg
-
--- theorem IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
---     {f : Filter α} {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
---     {e : (a : α) → (m' a).Embedding m} {G' : (a : α) → Set (MvPolynomial (σ' a) k)} :
---     (∀ a, ∃ h : (m' a).IsGroebnerBasis (G' a) (I.comap <| rename (e a)), h.IsReduced) ↔
---       ∃ h : m.IsGroebnerBasis (f.liminf fun a ↦ rename (e a) '' G' a) I, h.IsReduced := by
 
 
 end MonomialOrder.IsGroebnerBasis
