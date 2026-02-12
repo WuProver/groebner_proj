@@ -828,34 +828,197 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvP
 --       m.IsRemainder (p.rename e) (rename e '' B) (r.rename e) :=
 --   ⟨e.isRemainder_rename_of_isRemainder,
 
-theorem IsReduced.def_minimal : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
+theorem IsReduced.def_minimal {k} [Field k] (G : Set (MvPolynomial σ k))
+    (I : Ideal (MvPolynomial σ k)) :
+    (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
     (∀ g, g ∈ G ↔
       m.Monic g ∧
       MaximalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
-      ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) :=
-
+      ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) := by
+  wlog h : ∃ (h : m.IsGroebnerBasis G I), h.IsReduced generalizing G
+  · obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
+    specialize this G' hG'
+    -- rw [← this]
+    sorry
   sorry
+  -- sorry
+  -- constructor
+  -- · intro ⟨hGB, hR⟩ g
+  --   constructor
+  --   · intro h
+  --     refine ⟨hR.1 _ h, ?_, ?_⟩
+  --     sorry
+  --     rw [IsGroebnerBasis.isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'] at hGB
+  -- sorry
 
 theorem IsReduced.def_minimal' : (∃ h : m.IsGroebnerBasis G I, h.IsReduced) ↔
     ((∀ g ∈ G, m.Monic g) ∧
       m.degree '' G =
         { x | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ R)) \ {0})) x}) := sorry
 
+lemma _root_.Filter.union_mem_of_mem {α} {a b : Set α} {f : Filter α} (ha : a ∈ f) (hb : b ∈ f) :
+    a ∪ b ∈ f := by
+  convert Filter.union_mem_sup ha hb
+  simp
+
+-- lemma _root_.Filter.inter_mem_of_mem {α} {a b : Set α} {f : Filter α} (ha : a ∈ f) (hb : b ∈ f) :
+--     a ∩ b ∈ f := by
+--   convert Filter.inter_mem ha hb
+--   simp
+
+lemma _root_.Filter.biUnion_mem_of_mem {α ι} {f : Filter α}
+    {s : Set ι} {t : ι → Set α} (hs : s.Nonempty) (hs' : s.Finite)
+    (h : ∀ i ∈ s, t i ∈ f) :
+    ⋃ i ∈ s, t i ∈ f := by
+  classical
+  rw [← hs'.coe_toFinset] at ⊢ h hs
+  generalize hs'.toFinset = s at ⊢ h hs
+  rw [Finset.coe_nonempty] at hs
+  induction s using Finset.induction_on with
+  | empty => simp at hs
+  | insert a' s' _ h' =>
+    by_cases! hs' : s' = ∅
+    · subst hs'
+      simpa using h
+    simp at h
+    simpa using Filter.union_mem_of_mem h.1 (h' h.2 hs')
+
+lemma _root_.Filter.sUnion_mem_of_mem {α} {f : Filter α}
+    {s : Set (Set α)} (hs : s.Nonempty)
+    (hs' : s.Finite) (h : ∀ a ∈ s, a ∈ f) : Set.sUnion s ∈ f := by
+  classical
+  rw [← hs'.coe_toFinset] at ⊢ h hs
+  generalize hs'.toFinset = s at ⊢ h hs
+  rw [Finset.coe_nonempty] at hs
+  induction s using Finset.induction_on with
+  | empty => simp at hs
+  | insert a' s' _ h' =>
+    by_cases! hs' : s' = ∅
+    · subst hs'
+      simpa using h
+    simp at h
+    simp [Filter.union_mem_of_mem h.1 (h' h.2 hs')]
+
+-- bug?
+lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι]
+    [nomempty : Nonempty ι] {s : ι → Set α} (h : ∀ i : ι, s i ∈ f) : Set.iUnion s ∈ f := by
+  classical
+  have finite := Set.univ_finite_iff_nonempty_fintype (α := ι) |>.mpr <| .intro inferInstance
+  rw [← Set.sUnion_range]
+  apply f.sUnion_mem_of_mem
+  · simp [Set.range_nonempty]
+  · simp [Set.finite_range]
+  simp [h]
+
+-- lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι] [nomempty : Nonempty ι]
+--     {s : ι → Set α} (h : ∀ i : ι, s i ∈ f) : Set.iUnion s ∈ f := by
+--   classical
+--   revert nomempty s h
+--   apply Fintype.induction_subsingleton_or_nontrivial ι
+--     (P := fun ι ↦ ∀ [inst : Nonempty ι] {s : ι → Set α}, (∀ (i : ι), s i ∈ f) → Set.iUnion s ∈ f)
+--   · intro ι _ _ nonempty s h
+--     -- todo: some related lemmas
+--     rw [show s = fun _ ↦ s (Classical.choice nonempty) by ext; congr!, Set.iUnion_const]
+--     exact h _
+--   · intro ι' _ nontrivial ι nonempty f h
+--     have := Classical.choice nonempty
+--     specialize l
+--     simp
+--   sorry
+
+theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+    {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
+    {f : Filter α} {e : (a : α) → (m' a).Embedding m}
+    (hI : Set.univ = f.liminf (fun x ↦ Set.range (e x)))
+    {G' : (a : α) → Set (MvPolynomial (σ' a) k)}
+    (hG' : ∀ a, (m' a).IsGroebnerBasis (G' a) (I.comap <| rename (e a)))
+    (hG'' : ∀ a, (hG' a).IsReduced)
+    {G : Set (MvPolynomial σ k)} {hG₀ : m.IsGroebnerBasis G I} (hG : hG₀.IsReduced) :
+    G ⊆ f.liminf fun a ↦ rename (e a) '' G' a := by
+  classical
+  have hG''' a : ∃ h : IsGroebnerBasis (G' a) (Ideal.comap (rename ⇑(e a)) I), h.IsReduced :=
+    ⟨_, hG'' a⟩
+  simp_rw [def_minimal] at ⊢ hG'''
+  intro g
+  simp [Filter.liminf_eq_iSup_iInf, eq_comm (a := Set.univ), Set.iUnion_eq_univ_iff,
+    -MvPolynomial.mem_support_iff] at ⊢ hI
+  intro h
+  rw [IsReduced.def_minimal .. |>.mp ⟨_, hG⟩] at h
+  refine ⟨Set.sInter (g.vars.image (hI · |>.choose)), ?_, ?_⟩
+  · simp
+    intro a ha
+    obtain ⟨h, -⟩ := (hI _).choose_spec
+    exact h
+  intro a ha
+  obtain ⟨g' , rfl⟩ :=
+    MvPolynomial.exists_rename_eq_of_vars_subset_range g _ (e a).coe_injective <| by
+      intro i hi
+      simp at ha
+      specialize ha i hi
+      simpa using (hI i).choose_spec.2 _ ha
+  refine ⟨g', ?_, rfl⟩
+  rw [hG''' a g']
+  simp [-MvPolynomial.mem_support_iff] at h ⊢
+  split_ands
+  · simpa using h.1
+  · simpa using h.2.1.1
+  · intro p hp
+    simpa using h.2.1.2 hp
+  intro p hp
+  have := h.2.2 _ hp
+  nth_rw 3 [(e a).degree_rename] at this
+  simpa [-MvPolynomial.mem_support_iff, support_rename_of_injective (e a).coe_injective,
+    Finsupp.mapDomain_le_mapDomain_iff_le (e a).coe_injective] using this
+
+def IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+    {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
+    {f : Filter α} [f.NeBot]
+    {e : (a : α) → (m' a).Embedding m}
+    (hI : Set.univ = f.liminf (fun x ↦ Set.range (e x)))
+    {G' : (a : α) → Set (MvPolynomial (σ' a) k)}
+    (hG' : ∀ a, (m' a).IsGroebnerBasis (G' a) (I.comap <| rename (e a)))
+    (hG'' : ∀ a, (hG' a).IsReduced) :
+    ∃ h : m.IsGroebnerBasis (f.liminf fun a ↦ rename (e a) '' G' a) I, h.IsReduced := by
+  classical
+  refine ⟨IsGroebnerBasis.of_subset
+    (IsReduced.uniqueExists_of_isGroebnerBasis' I).choose_spec.1.choose ?_ ?_, ?_⟩
+  · apply IsReduced.subset_limsup hI hG' hG''
+    exact (IsReduced.uniqueExists_of_isGroebnerBasis' I).choose_spec.1.choose_spec
+  · intro g
+    simp [Filter.liminf_eq_iSup_iInf]
+    intro s hs hs'
+    obtain ⟨a, ha⟩ := Filter.NeBot.nonempty_of_mem ‹_› hs
+    obtain ⟨g', hg', rfl⟩ := hs' a ha
+    simpa using (hG' a).subset hg'
+  simp_rw [isReduced_def, ← forall_and]
+  simp [Filter.liminf_eq_iSup_iInf, eq_comm (a := Set.univ), Set.iUnion_eq_univ_iff,
+    -MvPolynomial.mem_support_iff] at ⊢ hI
+  intro g s hs hs'
+  constructor
+  · obtain ⟨a, ha⟩ := Filter.NeBot.nonempty_of_mem ‹_› hs
+    obtain ⟨g', hg', hg'eq⟩ := hs' a ha
+    specialize hG'' a
+    simpa [← hg'eq] using hG''.1 g' hg'
+  intro b hb p t ht ht' pneg
+  -- obtain ⟨aₜ, haₜ⟩ := Filter.NeBot.nonempty_of_mem _ ht
+  -- obtain ⟨p', hp', hp'eq⟩ := ht' aₜ haₜ
+  obtain ⟨u, hu⟩ := Filter.NeBot.nonempty_of_mem ‹_› (Filter.inter_mem hs ht)
+  have := Set.mem_of_mem_inter_left hu
+  obtain ⟨g', hg', rfl⟩ := hs' u (Set.mem_of_mem_inter_left hu)
+  obtain ⟨p', hp', rfl⟩ := ht' u (Set.mem_of_mem_inter_right hu)
+  specialize hG'' u
+  rw [isReduced_def] at hG''
+  rw [support_rename_of_injective (e u).coe_injective, Finset.mem_image] at hb
+  obtain ⟨b', hb', rfl⟩ := hb
+  simpa [(e u).degree_rename, Finsupp.mapDomain_le_mapDomain_iff_le (e u).coe_injective] using
+    hG''.2 g' hg' b' hb' p' hp' <|
+      by simpa [rename_injective _ (e u).coe_injective |>.eq_iff] using pneg
+
 -- theorem IsReduced.isReduced_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
 --     {f : Filter α} {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
 --     {e : (a : α) → (m' a).Embedding m} {G' : (a : α) → Set (MvPolynomial (σ' a) k)} :
 --     (∀ a, ∃ h : (m' a).IsGroebnerBasis (G' a) (I.comap <| rename (e a)), h.IsReduced) ↔
 --       ∃ h : m.IsGroebnerBasis (f.liminf fun a ↦ rename (e a) '' G' a) I, h.IsReduced := by
---   constructor
---   · sorry
---   · rintro h a
---     rw [IsReduced.def_minimal] at *
---     constructor
---     · simp
---       refine subset_trans ?_ (Set.preimage_mono h.1)
 
---     · sorry
-
---     sorry
 
 end MonomialOrder.IsGroebnerBasis

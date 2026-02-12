@@ -106,6 +106,11 @@ lemma isGroebnerBasis_iff (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial
   apply Ideal.span_mono
   exact Set.image_mono h₁
 
+lemma of_subset {G G' : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I)
+    (hG : G ⊆ G') (hI : G' ⊆ I) : m.IsGroebnerBasis G' I := by
+  rw [isGroebnerBasis_iff] at *
+  exact ⟨hI, subset_trans h.2 (Ideal.span_mono <| Set.image_mono hG)⟩
+
 @[simp]
 lemma isGroebnerBasis_self (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis I I := by
