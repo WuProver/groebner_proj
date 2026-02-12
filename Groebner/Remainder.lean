@@ -486,12 +486,11 @@ lemma term_notMem_span_span_monomial {p r : MvPolynomial σ R}
   rw [← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
   simp? [MvPolynomial.mem_support_iff.mp hs] says
     simp only [mem_support_iff, coeff_monomial, ne_eq, ite_eq_right_iff,
-      MvPolynomial.mem_support_iff.mp hs, imp_false, Decidable.not_not, Set.mem_image,
-      exists_exists_and_eq_and, forall_eq', not_exists, not_and]
+      MvPolynomial.mem_support_iff.mp hs, imp_false, Decidable.not_not, Set.mem_image, Set.mem_diff,
+      Set.mem_singleton_iff, exists_exists_and_eq_and, forall_eq', not_exists, not_and, and_imp]
   intro b hb
   unfold MonomialOrder.IsRemainder at h
-  simp at hb
-  exact h.2 _ hs b hb.1 hb.2
+  exact h.2 _ hs b hb
 
 lemma term_notMem_span_leadingTerm {p r : MvPolynomial σ R}
     {B : Set (MvPolynomial σ R)} (h : m.IsRemainder p B r) :

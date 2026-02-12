@@ -288,7 +288,7 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial
   -- again: why is `hp` defeq with the hypothesis
   replace ⟨g', h⟩ := h'.2 p' hp hp0
   -- todo: why is here a extra space?
-  simp? at h says simp only [Set.mem_preimage] at h
+  simp? at h says simp only [Set.mem_preimage, ne_eq] at h
   refine ⟨g'.rename e, h.1, by simpa using h.2⟩
 
 lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ R)}
