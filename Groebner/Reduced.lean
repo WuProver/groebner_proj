@@ -830,7 +830,7 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis₀ {R} [Nontrivial R] [CommRin
   apply IsReduced.uniqueExists_of_isGroebnerBasis ((isGroebnerBasis_sdiff_singleton_zero ..).mpr hG)
   simp_intro .. [or_iff_not_imp_right.mp (hG' _ _)]
 
-theorem IsReduced.uniqueExists_of_isGroebnerBasis' {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
+theorem IsReduced.uniqueExists {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
     ∃! (B : Set (MvPolynomial σ k)), ∃ (h : m.IsGroebnerBasis B I), h.IsReduced :=
   IsReduced.uniqueExists_of_isGroebnerBasis₀ (isGroebnerBasis_self (m := m) I) (by simp [em'])
 
@@ -953,7 +953,7 @@ theorem IsReduced.isReduced_iff_minimalFor {k} [Field k] (G : Set (MvPolynomial 
 
   -- wlog h : ∃ (h : m.IsGroebnerBasis G I), h.IsReduced generalizing G
   -- · simp only [h]
-  --   obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
+  --   obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists (m := m) I
   --   replace := this G' hG' |>.mp hG'
   --   simp (singlePass := true) only [← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
   --     MinimalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
@@ -965,7 +965,7 @@ theorem IsReduced.isReduced_iff_minimalFor {k} [Field k] (G : Set (MvPolynomial 
   -- intro g
   -- obtain ⟨hG, hG'⟩ := h
   -- wlog hg : g ∈ G generalizing G hG hG'
-  -- · obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists_of_isGroebnerBasis' (m := m) I
+  -- · obtain ⟨G', hG', hG''⟩ := IsReduced.uniqueExists (m := m) I
   --   specialize this G' hG'.choose hG'.choose_spec
   --   simp (singlePass := true) only [← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
   --     MinimalFor (fun p ↦ p ∈ I) (m.degree ·) g ∧
@@ -1122,9 +1122,9 @@ def IsReduced.isReduced_liminf {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α
     ∃ h : m.IsGroebnerBasis (f.liminf fun a ↦ rename (e a) '' G' a) I, h.IsReduced := by
   classical
   refine ⟨IsGroebnerBasis.of_subset
-    (IsReduced.uniqueExists_of_isGroebnerBasis' I).choose_spec.1.choose ?_ ?_, ?_⟩
+    (IsReduced.uniqueExists I).choose_spec.1.choose ?_ ?_, ?_⟩
   · apply IsReduced.subset_limsup hI hG' hG''
-    exact (IsReduced.uniqueExists_of_isGroebnerBasis' I).choose_spec.1.choose_spec
+    exact (IsReduced.uniqueExists I).choose_spec.1.choose_spec
   · intro g
     simp [Filter.liminf_eq_iSup_iInf]
     intro s hs hs'
