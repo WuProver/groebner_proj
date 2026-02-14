@@ -36,6 +36,12 @@ noncomputable instance ofInjective.acm' : AddCommMonoid (Syn m f) :=
 def ofInjective.toSyn' (m : MonomialOrder σ) {σ' : Type*} (f : σ' → σ) : (σ' →₀ ℕ) ≃+ (Syn m f) :=
   AddEquiv.refl (σ' →₀ ℕ)
 
+-- submitted: https://github.com/leanprover-community/mathlib4/pull/32829
+@[to_additive toIsOrderedCancelAddMonoid'_]
+lemma toIsOrderedCancelMonoid'_ {α}
+    [CancelCommMonoid α] [LinearOrder α] [IsOrderedMonoid α] : IsOrderedCancelMonoid α where
+  le_of_mul_le_mul_left _ _ _ h := le_of_mul_le_mul_left' h
+
 open ofInjective in
 noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) :
     MonomialOrder σ' :=
@@ -43,8 +49,6 @@ noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) 
   letI map := m.toSyn ∘ Finsupp.mapDomain f
   haveI map_injective : Function.Injective map := by
     simp [m.toSyn.injective, Finsupp.mapDomain_injective hf, map]
-  letI toSyn := AddEquiv.ofLeftInverse'' hom (Set.rangeSplitting hom) <| by
-    rwa [AddMonoidHom.mrangeRestrict_eq_rangeFactorization, Set.leftInverse_rangeFactorization]
   letI lo : LinearOrder (Syn m f) := LinearOrder.lift' map map_injective
   { syn := Syn m f
     toSyn : (σ' →₀ ℕ) ≃+ (Syn m f) := toSyn' m f
@@ -52,12 +56,19 @@ noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) 
       intro a b h
       apply m.toSyn_monotone
       exact Finsupp.mapDomain_mono h
-    ioam := {
-      add_le_add_left a b hab c := by
-        convert_to map _ ≤ map _ at hab
-        convert_to map (HAdd.hAdd (α := σ' →₀ ℕ) _ _) ≤ map (HAdd.hAdd (α := σ' →₀ ℕ) _ _)
-        simpa [map, Finsupp.mapDomain_add, AddEquiv.map_add] using hab
-    }
+    iocam :=  by
+      letI : IsOrderedAddMonoid (Syn m f) := {
+        add_le_add_left a b hab c := by
+          convert_to map _ ≤ map _ at hab
+          convert_to map (HAdd.hAdd (α := σ' →₀ ℕ) _ _) ≤ map (HAdd.hAdd (α := σ' →₀ ℕ) _ _)
+          simpa [map, Finsupp.mapDomain_add, AddEquiv.map_add] using hab
+      }
+      letI : AddCancelCommMonoid (Syn m f) := {
+        add_left_cancel :=
+          (toSyn' m f).symm.injective.isLeftCancelAdd _ (map_add _) |>.add_left_cancel
+      }
+      letI := acm' m f
+      exact toIsOrderedCancelAddMonoid'_ (α := Syn m f)
     wf := -- show WellFoundedLT (Syn m f) from -- why it doesn't work without `show` or `by exact`?
       by exact inferInstanceAs <| IsWellFounded (Syn m f) fun x1 x2 ↦ map x1 < map x2
   }
