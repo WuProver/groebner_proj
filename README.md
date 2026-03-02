@@ -10,6 +10,15 @@ This project is still work in process. There are some errors and out-of-date inf
 
 ## Introduction
 
+### Files
+
+- [`Groebner/MonomialOrderEmbedding.lean`](/Groebner/MonomialOrderEmbedding.lean): embedding between monomial orders;
+- [`Groebner/MonomialOrder.lean`](./Groebner/MonomialOrder.lean): lemmas about monomial order and `withBotDegree`;
+- [`Groebner/Remainder.lean`](./Groebner/Remainder.lean): remainder;
+- [`Groebner/Groebner.lean`](./Groebner/Groebner.lean): Groebner basis;
+- [`Groebner/Reduced.lean`](./Groebner/Reduced.lean): reduced Gröbner basis;
+- [`archive`](./archive/): archived version of the source code before updating to a new version of mathlib with some of our formalization merged.
+
 ### Definitions
 
 - [`MonomialOrder.leadingTerm`](https://wuprover.github.io/groebner_proj/docs/find/#doc/MonomialOrder.leadingTerm): leading term
@@ -37,7 +46,7 @@ We maintain a set of web-based resources to track and explore the formalization 
 
 - 📘 **[Project Homepage](https://wuprover.github.io/groebner_proj/)**
 
-- 📐 **[Formalization Blueprint](https://wuprover.github.io/groebner_proj/blueprint/)**
+- 📐 **[Formalization Dependency Graph](https://wuprover.github.io/groebner_proj/blueprint/dep_graph_document.html)**
   A detailed list of definitions, lemmas, and theorems, including their proof status and logical dependencies.
 
 - 🔗 **[Dependency Graph](https://wuprover.github.io/groebner_proj/blueprint/dep_graph_document.html)**
@@ -58,7 +67,7 @@ lake exe cache get
 lake build
 ```
 
-The blueprint can be generated as following:
+The dependency graph can be generated as following:
 ```bash
 pip install https://github.com/WuProver/plastexdepgraph/archive/refs/heads/settitle.zip leanblueprint
 ./generate-content.sh
@@ -67,5 +76,7 @@ leanblueprint web
 ```
 
 ## Reference
-This project draws heavily from the following reference:
-[Ideals, Varieties, and Algorithms](https://link.springer.com/book/10.1007/978-3-319-16721-3)
+
+This project draws heavily from [_Ideals, Varieties, and Algorithms_](https://link.springer.com/book/10.1007/978-3-319-16721-3) by David A. Cox, John Little, Donal O’Shea.
+
+And some theorems are from [_Gröbner Bases for the Polynomial Ring with Infinite Variables and Their Applications_](https://doi.org/10.1080/00927870802502878) by Kei-ichiro Iima and Yuji Yoshino.

@@ -82,7 +82,7 @@ The leading term in a non-zero multivariate polynomial is the term of the polyno
 the polynomial. The leading term in the zero polynomial is defined as the zero polynomial.
 -/
 -- merged: https://github.com/leanprover-community/mathlib4/pull/26039
-noncomputable def leadingTerm._mathlib_ (f : MvPolynomial σ R) : MvPolynomial σ R :=
+noncomputable def leadingTerm (f : MvPolynomial σ R) : MvPolynomial σ R :=
   monomial (m.degree f) (m.leadingCoeff f)
 
 /--
