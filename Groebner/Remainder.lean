@@ -545,7 +545,7 @@ lemma withBotDegree_remainder_le (h : m.IsRemainder f B r) :
   simpa [add_comm] using lt_of_le_of_lt (h b) hsum
 
 variable {p B r} in
-lemma exists_withBotDegree_le_degree
+lemma exists_withBotDegree_le_withBotDegree
     (h : m.IsRemainder p B r) (hfr : m.withBotDegree p ≠ m.withBotDegree r) :
     ∃ b ∈ B, m.withBotDegree b ≤ m.withBotDegree p := by
   classical
@@ -581,10 +581,57 @@ lemma exists_withBotDegree_le_degree
   rw [← hb₂]
   exact WithBot.le_self_add (m.withBotDegree_eq_bot_iff _ |>.not.mpr hgbne0) _
 
+variable {p B r} in
+lemma exists_withBotDegree_le_withBotDegree₀
+    (h : m.IsRemainder p B r) (hfr : m.withBotDegree p ≠ m.withBotDegree r) :
+    ∃ b ∈ B, b ≠ 0 ∧ m.withBotDegree b ≤ m.withBotDegree p := by
+  rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
+  simpa only [← and_assoc] using h.exists_withBotDegree_le_withBotDegree hfr
+
+variable {p B r} in
+lemma withBotDegree_eq_withBotDegree_iff_leadingTerm_eq_leadingTerm (h : m.IsRemainder p B r) :
+    m.withBotDegree r = m.withBotDegree p ↔ m.leadingTerm r = m.leadingTerm p := by
+  wlog! hB0 : 0 ∉ B
+  · apply this (h := isRemainder_sdiff_singleton_zero_iff_isRemainder .. |>.mpr h)
+    simp
+  wlog! hp : p ≠ 0
+  · simp [hp]
+  constructor
+  on_goal 2 =>
+    intro h
+    rw [← m.withBotDegree_leadingTerm r, ← m.withBotDegree_leadingTerm p, h]
+  intro deg_eq
+  have deg_eq' := m.withBotDegree_eq_withBotDegree_iff .. |>.mp deg_eq |>.1
+  simp_rw [m.leadingTerm_eq_leadingTerm_iff, leadingCoeff, deg_eq', and_true]
+  obtain ⟨⟨g, hg, hg'⟩, h⟩ := h
+  nth_rw 3 [hg]
+  rw [coeff_add]
+  convert eq_comm.mp <| zero_add (coeff (m.degree p) r)
+  rw [Finsupp.linearCombination_apply, Finsupp.sum, coeff_sum]
+  apply Finset.sum_eq_zero
+  rintro g' -
+  wlog! hgg' : g g' * g'.val ≠ 0
+  · simp [hgg']
+  apply m.coeff_eq_zero_of_lt
+  rw [smul_eq_mul, ← m.withBotDegree_lt_withBotDegree_iff_of_ne_zero _ _ hgg']
+  apply lt_of_le_of_lt (m.withBotDegree_mul_le' ..)
+  rw [add_comm]
+  apply lt_of_le_of_ne (hg' g')
+  specialize h (m.degree r)
+    (by simpa [← m.withBotDegree_eq_bot_iff .. |>.not, ← deg_eq, withBotDegree_eq_bot_iff] using hp)
+    g' g'.2 (by contrapose! hgg'; simp [hgg'])
+  contrapose! h
+  rw [← m.toWithBotSyn.map_add, m.toWithBotSyn.apply_eq_iff_eq,
+    m.withBotDegree_eq_coe_degree_iff .. |>.mpr hp,
+    m.withBotDegree_eq_coe_degree_iff g'.val |>.mpr (by contrapose! hgg'; simp [hgg']),
+    m.withBotDegree_eq_coe_degree_iff (g g') |>.mpr (by contrapose! hgg'; simp [hgg']),
+    ← WithBot.coe_add, WithBot.coe_eq_coe] at h
+  simp [deg_eq', ← h]
+
 variable {p B} in
 lemma exists_degree_le_degree_of_zero (hp : p ≠ 0) (h : m.IsRemainder p B 0) :
     ∃ b ∈ B, m.degree b ≤ m.degree p := by
-  obtain ⟨b, hbB, hb⟩ := exists_withBotDegree_le_degree (r := 0) h (by simpa)
+  obtain ⟨b, hbB, hb⟩ := exists_withBotDegree_le_withBotDegree (r := 0) h (by simpa)
   use b, hbB
   wlog! hb0 : b ≠ 0
   · simp [hb0]

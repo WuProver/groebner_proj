@@ -498,6 +498,39 @@ lemma MonomialOrder.degree_le_mul_left {σ R : Type*} [CommRing R] [IsDomain R]
   · rw [m.degree_mul hp hq]
     exact le_self_add
 
+lemma IsMinimal.withBotDegree_eq_of_isRemainder
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {g}
+    (hg : g ∈ G)
+    {r : MvPolynomial σ R}
+    (hr : m.IsRemainder g (G \ {g}) r) :
+    m.withBotDegree r = m.withBotDegree g := by
+  rw [eq_comm]
+  by_contra! h
+  obtain ⟨b, ⟨hbG, hbg⟩, hb⟩ := hr.exists_withBotDegree_le_withBotDegree h
+  rw [IsMinimal.isMinimal_def] at hG'
+  rw [m.withBotDegree_le_withBotDegree_iff'] at hb
+  exact hG'.2 hbG hg hbg hb.1
+
+lemma IsMinimal.degree_eq_of_isRemainder
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {g}
+    (hg : g ∈ G)
+    {r : MvPolynomial σ R}
+    (hr : m.IsRemainder g (G \ {g}) r) :
+    m.degree r = m.degree g :=
+  m.withBotDegree_eq_withBotDegree_iff .. |>.mp (hG'.withBotDegree_eq_of_isRemainder hg hr) |>.1
+
+lemma IsMinimal.leadingTerm_eq_of_isRemainder {R} [CommRing R]
+    {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
+    {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {g}
+    (hg : g ∈ G)
+    (r : MvPolynomial σ R)
+    (hr : m.IsRemainder g (G \ {g}) r) :
+    m.leadingTerm r = m.leadingTerm g :=
+  hr.withBotDegree_eq_withBotDegree_iff_leadingTerm_eq_leadingTerm.mp <|
+    hG'.withBotDegree_eq_of_isRemainder hg hr
+
 lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     {hG : m.IsGroebnerBasis G I}
@@ -882,7 +915,7 @@ lemma isGroebnerBasis_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
   have hrp : m.degree r = m.degree p := by
     by_contra!
     rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder] at hr
-    have := hr.exists_withBotDegree_le_degree
+    have := hr.exists_withBotDegree_le_withBotDegree
       (by simpa [m.withBotDegree_eq_withBotDegree_iff, hr0, hp] using this.symm)
     simp [m.withBotDegree_le_withBotDegree_iff'] at this
     obtain ⟨q, hq⟩ := this
@@ -1065,6 +1098,7 @@ lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι]
 --     specialize l
 --     simp
 --   sorry
+-- lemma IsReduced.
 
 theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
     {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
@@ -1111,7 +1145,7 @@ theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {�
   simpa [-MvPolynomial.mem_support_iff, support_rename_of_injective (e a).coe_injective,
     Finsupp.mapDomain_le_mapDomain_iff_le (e a).coe_injective] using this
 
-def IsReduced.isReduced_liminf {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+theorem IsReduced.isReduced_liminf {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
     {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
     {f : Filter α} [f.NeBot]
     {e : (a : α) → (m' a).Embedding m}
@@ -1153,5 +1187,24 @@ def IsReduced.isReduced_liminf {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α
     hG''.2 g' hg' b' hb' p' hp' <|
       by simpa [rename_injective _ (e u).coe_injective |>.eq_iff] using pneg
 
+theorem IsReduced.isReduced_liminf_nat {k} [Field k] {I : Ideal (MvPolynomial σ k)}
+    {init : Nat} {e : ℕ ≃ σ}
+    {G' : (n : ℕ) → Set (MvPolynomial (Fin (n + init)) k)}
+    (hG' : ∀ n,
+      (m.ofInjective <| e.injective.comp Fin.val_injective).IsGroebnerBasis
+        (G' n) (I.comap <| rename (e ∘ @Fin.val (n + init))))
+    (hG'' : ∀ n, (hG' n).IsReduced) :
+    ∃ h : m.IsGroebnerBasis
+        (Filter.cofinite.liminf fun i ↦ rename (e ∘ @Fin.val (i + init)) '' G' i) I,
+      h.IsReduced := by
+  convert IsReduced.isReduced_liminf (f := Filter.cofinite) ?_ hG' hG''
+    (e := (Embedding.ofInjective m <| e.injective.comp <| @Fin.val_injective <| · + init))
+  simp [Embedding.coe_ofInjective, Set.eq_univ_iff_forall, eq_comm (a := Set.univ),
+    Nat.cofinite_eq_atTop, Filter.liminf_eq_iSup_iInf_of_nat]
+  intro j
+  use e.symm j + 1
+  intro i h
+  use ⟨e.symm j, by linarith⟩
+  simp
 
 end MonomialOrder.IsGroebnerBasis

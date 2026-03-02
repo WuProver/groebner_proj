@@ -291,6 +291,31 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial
   simp? at h says simp only [Set.mem_preimage, ne_eq] at h
   refine ⟨g'.rename e, h.1, by simpa using h.2⟩
 
+theorem isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀
+    {I : Ideal (MvPolynomial σ R)} {σ' : Finset σ → Type*}
+    {m' : (s : Finset σ) → MonomialOrder (σ' s)}
+    {e : (s : Finset σ) → (m' s).Embedding m}
+    {G' : (s : Finset σ) → Set (MvPolynomial (σ' s) R)}
+    (hG' : ∀ s, ∀ g ∈ G' s, IsUnit ((m' s).leadingCoeff g) ∨ g = 0)
+    (h : ∀ s, ↑s ⊆ Set.range (e s))
+    (h' : ∀ s, (m' s).IsGroebnerBasis (G' s) (I.comap <| rename (e s))) :
+    m.IsGroebnerBasis (⋃ s : Finset σ, rename (e s) '' G' s) I := by
+  apply isGroebnerBasis_of_forall_finite_isGroebnerBasis₀
+  · simp
+    intro g s g' hg' rfl
+    simpa using hG' s g' hg'
+  intro s
+  use σ' s, m' s, e s
+  exists h s
+  simp only [Set.preimage_iUnion]
+  apply of_subset (h' s)
+  · apply Set.subset_iUnion_of_subset s
+    simp [Set.preimage_image_eq _ (rename_injective _ (e s).coe_injective)]
+  simp
+  intro s'
+  apply Set.preimage_mono
+  simpa using (h' s').subset
+
 lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g))
     {I : Ideal (MvPolynomial σ R)}
@@ -299,6 +324,17 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ
         ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
     m.IsGroebnerBasis G I :=
   isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (fun g hg ↦ Or.inl (hG g hg)) h
+
+theorem isGroebnerBasis_union_of_forall_finite_isGroebnerBasis
+    {I : Ideal (MvPolynomial σ R)} {σ' : Finset σ → Type*}
+    {m' : (s : Finset σ) → MonomialOrder (σ' s)}
+    {e : (s : Finset σ) → (m' s).Embedding m}
+    {G' : (s : Finset σ) → Set (MvPolynomial (σ' s) R)}
+    (hG' : ∀ s, ∀ g ∈ G' s, IsUnit ((m' s).leadingCoeff g))
+    (h : ∀ s, ↑s ⊆ Set.range (e s))
+    (h' : ∀ s, (m' s).IsGroebnerBasis (G' s) (I.comap <| rename (e s))) :
+    m.IsGroebnerBasis (⋃ s : Finset σ, rename (e s) '' G' s) I :=
+  isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀ (fun s g hg ↦ Or.inl (hG' s g hg)) h h'
 
 end CommSemiring
 
@@ -996,6 +1032,16 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis' {G : Set (MvPolynomial �
         ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
     m.IsGroebnerBasis G I :=
   isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (hG := by simp_intro .. [em']) h
+
+theorem isGroebnerBasis_union_of_forall_finite_isGroebnerBasis'
+    {I : Ideal (MvPolynomial σ k)} {σ' : Finset σ → Type*}
+    {m' : (s : Finset σ) → MonomialOrder (σ' s)}
+    {e : (s : Finset σ) → (m' s).Embedding m}
+    {G' : (s : Finset σ) → Set (MvPolynomial (σ' s) k)}
+    (h : ∀ s, ↑s ⊆ Set.range (e s))
+    (h' : ∀ s, (m' s).IsGroebnerBasis (G' s) (I.comap <| rename (e s))) :
+    m.IsGroebnerBasis (⋃ s : Finset σ, rename (e s) '' G' s) I :=
+  isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀ (by simp_intro .. [em']) h h'
 
 -- todo: generalize to ring?
 lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
