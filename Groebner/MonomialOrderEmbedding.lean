@@ -4,7 +4,6 @@ public import Mathlib
 public import Groebner.ToMathlib.MulEquiv
 public import Groebner.ToMathlib.Finsupp
 public import Groebner.ToMathlib.WithBot
-public import Groebner.ToMathlib.Set
 public import Groebner.MonomialOrder
 
 @[expose] public section
@@ -33,7 +32,8 @@ def ofInjective.Syn (m : MonomialOrder σ) {σ' : Type*} (f : σ' → σ) := σ'
 noncomputable instance ofInjective.acm' : AddCommMonoid (Syn m f) :=
   inferInstanceAs <| AddCommMonoid <| σ' →₀ ℕ
 
-def ofInjective.toSyn' (m : MonomialOrder σ) {σ' : Type*} (f : σ' → σ) : (σ' →₀ ℕ) ≃+ (Syn m f) :=
+noncomputable def ofInjective.toSyn' (m : MonomialOrder σ) {σ' : Type*} (f : σ' → σ) :
+    (σ' →₀ ℕ) ≃+ (Syn m f) :=
   AddEquiv.refl (σ' →₀ ℕ)
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/32829
@@ -186,7 +186,7 @@ lemma withBotDegree_rename :
   · simp [hp]
   rw [m.withBotDegree_eq_coe_degree_iff .. |>.mpr, m'.withBotDegree_eq_coe_degree_iff .. |>.mpr hp]
   · simp [e.degree_rename]
-  · simp [rename_eq_zero_of_injective _ (R := R) e.coe_injective, hp]
+  · simp [rename_eq_zero_iff_of_injective _ (R := R) e.coe_injective, hp]
 
 lemma toWithBotSyn_withBotDegree_rename :
     m.toWithBotSyn (m.withBotDegree (p.rename e)) =
@@ -196,7 +196,7 @@ lemma toWithBotSyn_withBotDegree_rename :
   · simp [hp]
   rw [m.withBotDegree_eq_coe_degree_iff .. |>.mpr, m'.withBotDegree_eq_coe_degree_iff .. |>.mpr hp]
   · simp [e.degree_rename]
-  · simp [rename_eq_zero_of_injective _ (R := R) e.coe_injective, hp]
+  · simp [rename_eq_zero_iff_of_injective _ (R := R) e.coe_injective, hp]
 
 @[simp]
 lemma withBotDegree_le_withBotDegree_iff (p q : MvPolynomial σ' R) :
@@ -245,7 +245,7 @@ lemma leadingTerm_rename : m.leadingTerm (p.rename e) = (m'.leadingTerm p).renam
 lemma sPolynomial_rename {R} [CommRing R] (p q : MvPolynomial σ' R) :
     m.sPolynomial (p.rename e) (q.rename e) = (m'.sPolynomial p q).rename e := by
   simp [sPolynomial, degree_rename, leadingCoeff_rename, rename_monomial,
-    Finsupp.mapDomain_tsub_mapDomain e.coe_injective]
+    Finsupp.mapDomain_tsub e.coe_injective]
 
 end Embedding
 

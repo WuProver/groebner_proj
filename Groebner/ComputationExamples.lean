@@ -7,11 +7,9 @@ namespace MonomialOrder
 
 set_option linter.unusedSimpArgs false in
 example : True := by
-
   have : ({1, 2, 3} : Set Nat) = Set.range (?_ : List Nat).get := by
     simp only [← Set.range_get_nil, ← Set.range_get_singleton, ← Set.range_get_cons_list]
     exact rfl
-
   have : ({1, 2, 3} : Finset Nat) = Set.range (?_ : List Nat).get := by
     simp only [← List.toFinset_nil, ← List.toFinset_cons, ← List.toFinset_singleton]
     have := Set.range_list_get_eq_toFinset_toSet (α := Nat) [1,2,3]
@@ -19,11 +17,13 @@ example : True := by
     -- fail if Set.range_list_get_eq_toFinset_toSet is classical. WHY?????????????????
     -- rw [← Set.range_list_get_eq_toFinset_toSet]
     convert (Set.range_list_get_eq_toFinset_toSet _).symm
-
   trivial
 
 open MvPolynomial MonomialOrder
 
+-- for sorry-free examples, refer to
+-- https://github.com/WuProver/MonomialOrderedPolynomial/blob/master/MonomialOrderedPolynomial/MvPolynomialExamples.lean
+/-
 set_option linter.unusedSimpArgs false in
 example :
     lex.IsRemainder (X 0 ^ 2 + X 1 ^ 3 + X 2 ^ 4 + X 3 ^ 5: MvPolynomial (Fin 4) ℚ)
@@ -64,3 +64,5 @@ example :
       try sorry -- compare degree
     }
   · sorry -- we will rely on reflection
+-/
+end MonomialOrder

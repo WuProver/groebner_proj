@@ -383,7 +383,7 @@ theorem isRemainder_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
   unfold IsRemainder
   convert and_congr_left' ?_
   · aesop
-  rw [(Finsupp.comapDomain_surjective' (f := (⟨·.val, by simp⟩ : B → ↑(insert 0 B))) ?_).exists]
+  rw [(Finsupp.comapDomain_surjective (f := (⟨·.val, by simp⟩ : B → ↑(insert 0 B))) ?_).exists]
   on_goal 2 => simp [Function.Injective]
   congr! with g
   on_goal 2 => aesop

@@ -2,7 +2,7 @@ module
 
 public import Mathlib
 
-variable {α} (l : List α) (a : α)
+variable {α} (l l₁ l₂ : List α) (a : α)
 
 public section
 

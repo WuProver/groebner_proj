@@ -284,7 +284,7 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial
     intro g
     simpa using hG (g.rename e)
   simp? at hp0 says
-    simp only [ne_eq, Embedding.coe_injective, rename_eq_zero_of_injective] at hp0
+    simp only [ne_eq, Embedding.coe_injective, rename_eq_zero_iff_of_injective] at hp0
   -- again: why is `hp` defeq with the hypothesis
   replace ⟨g', h⟩ := h'.2 p' hp hp0
   -- todo: why is here a extra space?
@@ -364,7 +364,7 @@ theorem remainder_eq_zero_iff_mem_ideal
   -- todo: Ideal.mem_span_of_mem
   apply Submodule.mem_span_of_mem (R := MvPolynomial σ R) at h_p_mem
   contrapose! h_p_mem with h_r_ne_zero
-  simpa [h_span] using term_notMem_span_leadingTerm hr _ (by simp [h_r_ne_zero])
+  simpa [← h_span] using term_notMem_span_leadingTerm hr (m.degree r) (by simp [h_r_ne_zero])
 
 /-- Given a Gröbner basis `G` of an ideal `I`, 0 is a remainder on division by `G` if and
 only if `p` is in the ideal `I`.
@@ -728,9 +728,10 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   simp_rw [(hq _ _).1] at h_sum_sPoly
   replace hq (g₁ g₂ : G'.filter degFgEqA) := (hq g₁ g₂).2
   clear hsPoly -- clear the infoview (optional)
-  simp_rw [Finset.mul_sum, ← mul_assoc, Finset.smul_sum,
+  set_option backward.isDefEq.respectTransparency false in
+  simp_rw [mul_one, G''.mul_sum, ← mul_assoc, Finset.smul_sum,
     ← smul_mul_assoc, smul_monomial, Finset.sum_comm (t:=G''), ← Finset.sum_mul,
-    smul_eq_mul (α := R), mul_one] at h_sum_sPoly
+    smul_eq_mul (α := R)] at h_sum_sPoly
   /- With the assumption that $f(g)$ vanishes when $g ∉ G'$ and $G'' ⊆ G'$, we have
   $$p = ∑ g ∈ G' with (degree(f(g) * g) = a), leadingTerm(f(g)) * g + ∑ g ∈ G', (f(g) - lt'(g)) * g
     = ∑ g ∈ G' with (degree(f(g) * g) = a), leadingTerm(f(g)) * g + ∑ g ∈ G'', (f(g) - lt'(g)) * g

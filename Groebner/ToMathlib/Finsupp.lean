@@ -6,20 +6,33 @@ public section
 
 namespace Finsupp
 
+variable {ι : Type*} {κ : Type*} {α : Type*} [Zero α] [PartialOrder α] (f : ι ↪ κ) (a b : ι →₀ α)
+
+@[gcongr]
+lemma embDomain_mono : Monotone (embDomain f : (ι →₀ α) → (κ →₀ α)) := by
+  intro a b h
+  simp [Finsupp.le_def, embDomain_apply, apply_dite₂, Finsupp.le_def.mp h]
+
+lemma embDomain_le_embDomain_iff_le : a.embDomain f ≤ b.embDomain f ↔ a ≤ b := by
+  refine ⟨?_, (Finsupp.embDomain_mono (f := f) (α := α) ·)⟩
+  rw [Finsupp.le_def]
+  intro h' x
+  simpa [Finsupp.embDomain_apply] using h' (f x)
+
+@[gcongr]
+lemma embDomain_lt_embDomain_iff_lt : a.embDomain f < b.embDomain f ↔ a < b := by
+  simp [lt_iff_le_and_ne, embDomain_le_embDomain_iff_le, (embDomain_injective f).eq_iff]
+
 lemma mapDomain_le_mapDomain_iff_le {ι : Type*} {κ : Type*} {α : Type*}
     [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
     (a b : ι →₀ α) : a.mapDomain f ≤ b.mapDomain f ↔ a ≤ b := by
-  classical
-  refine ⟨?_, (Finsupp.mapDomain_mono (f := f) (α := α) ·)⟩
-  intro h'
-  rw [Finsupp.le_def] at h' ⊢
-  intro i
-  simpa [Finsupp.mapDomain_apply h] using h' (f i)
+  simpa [Finsupp.embDomain_eq_mapDomain] using Finsupp.embDomain_le_embDomain_iff_le ⟨f, h⟩ a b
 
+@[gcongr]
 lemma mapDomain_lt_mapDomain_iff_lt {ι : Type*} {κ : Type*} {α : Type*}
     [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
     (a b : ι →₀ α) : a.mapDomain f < b.mapDomain f ↔ a < b := by
-  simp [lt_iff_le_and_ne, mapDomain_le_mapDomain_iff_le h, (mapDomain_injective h).eq_iff]
+  simpa [Finsupp.embDomain_eq_mapDomain] using Finsupp.embDomain_lt_embDomain_iff_lt ⟨f, h⟩ a b
 
 -- #check Finsupp.mapDomain_appl
 -- theorem sum_tsub_index {M N α} [DecidableEq α] [AddZeroClass M] [AddCommMonoid N] {f g : α →₀ M}
@@ -79,7 +92,9 @@ open Finset
 --     (f + g).prod h = f.prod h * g.prod h :=
 --   prod_zipWith_index' (zero_add (M := M) 0) h_zero h_add
 
-lemma mapDomain_tsub_mapDomain {σ α κ} [AddCommMonoid α] [PartialOrder α] [CanonicallyOrderedAdd α]
+-- merged: https://github.com/leanprover-community/mathlib4/pull/36369
+lemma mapDomain_tsub_mapDomain._mathlib_ {σ α κ}
+    [AddCommMonoid α] [PartialOrder α] [CanonicallyOrderedAdd α]
     [Sub α] [OrderedSub α] {f : σ → κ} (h : f.Injective) (a b : σ →₀ α) :
     a.mapDomain f - b.mapDomain f = (a - b).mapDomain f := by
   ext y
@@ -89,14 +104,15 @@ lemma mapDomain_tsub_mapDomain {σ α κ} [AddCommMonoid α] [PartialOrder α] [
   obtain ⟨x, rfl⟩ := h
   simp [mapDomain_apply h _ x]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/34872
-@[simp]
-theorem comapDomain_embDomain {α β M} [Zero M] (f : α ↪ β) (l : α →₀ M) :
+-- merged: https://github.com/leanprover-community/mathlib4/pull/34872
+-- @[simp]
+theorem comapDomain_embDomain._mathlib_ {α β M} [Zero M] (f : α ↪ β) (l : α →₀ M) :
     comapDomain f (embDomain f l) f.injective.injOn = l := by
   ext; rw [comapDomain_apply, embDomain_apply_self]
 
--- submitted: https://github.com/leanprover-community/mathlib4/pull/34872
-lemma comapDomain_surjective' {α} {β} {M} [Zero M] {f : α → β} (hf : Function.Injective f) :
+-- merged: https://github.com/leanprover-community/mathlib4/pull/34872
+lemma comapDomain_surjective'._mathlib_ {α} {β} {M} [Zero M] {f : α → β}
+    (hf : Function.Injective f) :
     Function.Surjective fun l : β →₀ M ↦ Finsupp.comapDomain f l hf.injOn := by
   intro l'
   use l'.embDomain ⟨f, hf⟩

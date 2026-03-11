@@ -546,7 +546,8 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
       obtain ⟨coef, h_eq, -⟩ := this
       have : f g = ↑g - (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) coef := by
         simp_rw [h_eq]
-        ring
+        -- todo: why `rw [add_sub_cancel_left]` doesn't work?
+        exact (add_sub_cancel_left ..).symm
       simp [this]
       apply Ideal.sub_mem
       ·
