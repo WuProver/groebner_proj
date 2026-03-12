@@ -23,7 +23,6 @@ open MvPolynomial MonomialOrder
 
 -- for sorry-free examples, refer to
 -- https://github.com/WuProver/MonomialOrderedPolynomial/blob/master/MonomialOrderedPolynomial/MvPolynomialExamples.lean
-/-
 set_option linter.unusedSimpArgs false in
 example :
     lex.IsRemainder (X 0 ^ 2 + X 1 ^ 3 + X 2 ^ 4 + X 3 ^ 5: MvPolynomial (Fin 4) ℚ)
@@ -35,7 +34,8 @@ example :
   use [X 0, X 1 ^ 2, X 2 ^ 3, X 3 ^ 4].get
   split_ands
   · split_ands
-    · simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
+    · set_option backward.isDefEq.respectTransparency false in
+      simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
       try grind-- PIT, we will rely on reflection
   · intro i
     fin_cases i
@@ -55,7 +55,8 @@ example :
   rw [IsRemainder.isRemainder_range_fintype, ← exists_and_right]
   use [X 3 ^ 4, 0].get
   split_ands
-  · simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
+  · set_option backward.isDefEq.respectTransparency false in
+    simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
     try grind-- PIT, we will rely on reflection later
   · intro i
     fin_cases i
@@ -64,5 +65,5 @@ example :
       try sorry -- compare degree
     }
   · sorry -- we will rely on reflection
--/
+
 end MonomialOrder
