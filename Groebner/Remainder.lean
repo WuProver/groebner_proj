@@ -37,7 +37,7 @@ And there're also some equivalent variants.
   `g : MvPolynomial σ R →₀ MvPolynomial σ R` is replaced with a
   function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its support.
 
-* `MonomialOrder.IsRemainder.isRemainder_def_degree`: A variant where the degree condition is
+* `MonomialOrder.IsRemainder.isRemainder_iff_degree`: A variant where the degree condition is
   formalized with `m.degree`, which matches the statement of `MonomialOrder.div_set`.
 
 * `MonomialOrder.IsRemainder.isRemainder_range`: A variant of `MonomialOrder.IsRemainder` where
