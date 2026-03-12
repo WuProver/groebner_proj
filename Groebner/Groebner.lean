@@ -769,8 +769,8 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   -/
   clear hp h_sum_sPoly -- remove them since they're long and will not be used anymore
   simp? [ha, Finset.sup_lt_iff h_a_gt_zero, add_mul, -Subtype.forall] says
-    simp only [Finset.univ_eq_attach, add_mul, sup_lt_iff, ha, Finset.sup_lt_iff h_a_gt_zero,
-      true_and]
+    simp only [Finset.univ_eq_attach, mul_one, add_mul, sup_lt_iff, ha,
+      Finset.sup_lt_iff h_a_gt_zero, true_and]
   intro g hg'
   apply lt_of_le_of_lt degree_add_le
   apply max_lt
