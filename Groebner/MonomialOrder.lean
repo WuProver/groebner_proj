@@ -131,7 +131,7 @@ lemma sPolynomial''_monomial_mul [NoZeroDivisors R] (p₁ p₂ : MvPolynomial σ
   have hm2 := (monomial_eq_zero (s := d₂)).not.mpr hc2
   simp_rw [m.degree_mul hm1 hp1, m.degree_mul hm2 hp2,
     mul_sub, ← mul_assoc _ _ p₁, ← mul_assoc _ _ p₂, monomial_mul,
-    m.leadingCoeff_mul hm1 hp1, m.leadingCoeff_mul hm2 hp2, m.leadingCoeff_monomial,
+    m.leadingCoeff_mul, m.leadingCoeff_monomial,
     degree_monomial, hc1, hc2, reduceIte, mul_right_comm, mul_comm c₂ c₁]
   rw [tsub_add_tsub_cancel (sup_le_sup (self_le_add_left _ _) (self_le_add_left _ _)) (by simp),
     tsub_add_tsub_cancel (sup_le_sup (self_le_add_left _ _) (self_le_add_left _ _)) (by simp),
