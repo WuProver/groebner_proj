@@ -466,6 +466,36 @@ theorem isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDi
   rw [← hg] at hr
   simp at hr
 
+theorem isRemainder_iff_degree₀
+    (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivisors _ ∨ b = 0) :
+    m.IsRemainder f B r ↔
+    (∃ (g : B →₀ MvPolynomial σ R),
+      f = Finsupp.linearCombination _ (fun (b : B) ↦ b.val) g + r ∧
+      ∀ (b : B), m.degree (b.val * (g b)) ≼[m] m.degree f) ∧
+    ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c) := by
+  rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder,
+    isRemainder_iff_degree (hB := by simp_intro _ _ [or_iff_not_imp_right.mp (hB _ _)]),
+    Function.Surjective.exists <|
+      Finsupp.comapDomain_surjective (f := (⟨·.val, by aesop⟩ : ↑(B \ {0}) → ↑B)) ?_]
+  on_goal 2 => simp [Function.Injective]
+  congr! with x
+  · rw [Finsupp.linearCombination_comapDomain, Finsupp.linearCombination_apply, Finsupp.sum]
+    convert (x.support.sum_preimage ..)
+    · simp
+    intro x hx hx'
+    simp? at hx' says
+      simp only [Set.diff_singleton_subset_iff, Set.subset_insert, Set.range_inclusion,
+        Set.mem_diff, Subtype.coe_prop, Set.mem_singleton_iff, ne_eq, true_and, Set.mem_setOf_eq,
+        not_not] at hx'
+    simp [hx']
+  · constructor
+    · intro h b
+      by_cases hb : b.val = 0
+      · simp [hb]
+      simpa using h ⟨b.val, by simpa⟩
+    · simp_intro ..
+  simp
+
 lemma mem_ideal_of_mem_ideal {B : Set (MvPolynomial σ R)} {r : MvPolynomial σ R}
     {I : Ideal (MvPolynomial σ R)} {p : MvPolynomial σ R}
     (hBI : B ⊆ I) (hpBr : m.IsRemainder p B r) (hr : r ∈ I) :
@@ -801,6 +831,14 @@ theorem exists_isRemainder' (B : Set (MvPolynomial σ k))
     ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
   apply exists_isRemainder₀
   simp [em']
+
+theorem isRemainder_iff_degree' (f : MvPolynomial σ k) (B) (r) :
+    m.IsRemainder f B r ↔
+    (∃ (g : B →₀ MvPolynomial σ k),
+      f = Finsupp.linearCombination _ (fun (b : B) ↦ b.val) g + r ∧
+      ∀ (b : B), m.degree (b.val * (g b)) ≼[m] m.degree f) ∧
+    ∀ c ∈ r.support, ∀ b ∈ B, b ≠ 0 → ¬ (m.degree b ≤ c) :=
+  isRemainder_iff_degree₀ f B r (by simp [em'])
 
 end Field
 
