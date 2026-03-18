@@ -484,7 +484,7 @@ theorem isRemainder_iff_degree₀
     · simp
     intro x hx hx'
     simp? at hx' says
-      simp only [Set.diff_singleton_subset_iff, Set.subset_insert, Set.range_inclusion,
+      simp only [Set.diff_subset_iff, Set.singleton_union, Set.subset_insert, Set.range_inclusion,
         Set.mem_diff, Subtype.coe_prop, Set.mem_singleton_iff, ne_eq, true_and, Set.mem_setOf_eq,
         not_not] at hx'
     simp [hx']
