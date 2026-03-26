@@ -246,9 +246,6 @@ lemma support_add_of_leadingTerm_add_leadingTerm_eq_zero
 @[simp]
 lemma leadingTerm_neg {R} [CommRing R] (p : MvPolynomial σ R) :
     m.leadingTerm (-p) = - m.leadingTerm p := by
-  -- todo: why
-  -- https://leanprover.zulipchat.com/#narrow/channel/113488-general/topic/backward.2EisDefEq.2ErespectTransparency/with/576908571
-  set_option backward.isDefEq.respectTransparency false in
   simp [leadingTerm]
 
 lemma support_sub_of_leadingTerm_eq_leadingTerm {R} [CommRing R]

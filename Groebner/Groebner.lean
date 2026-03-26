@@ -728,7 +728,6 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   simp_rw [(hq _ _).1] at h_sum_sPoly
   replace hq (g₁ g₂ : G'.filter degFgEqA) := (hq g₁ g₂).2
   clear hsPoly -- clear the infoview (optional)
-  set_option backward.isDefEq.respectTransparency false in
   simp_rw [mul_one, G''.mul_sum, ← mul_assoc, Finset.smul_sum,
     ← smul_mul_assoc, smul_monomial, Finset.sum_comm (t:=G''), ← Finset.sum_mul,
     smul_eq_mul (α := R)] at h_sum_sPoly

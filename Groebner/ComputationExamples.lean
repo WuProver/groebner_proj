@@ -33,10 +33,9 @@ example :
   rw [IsRemainder.isRemainder_range_fintype, ← exists_and_right]
   use [X 0, X 1 ^ 2, X 2 ^ 3, X 3 ^ 4].get
   split_ands
-  · split_ands
-    · set_option backward.isDefEq.respectTransparency false in
-      simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
-      try grind-- PIT, we will rely on reflection
+  · set_option backward.isDefEq.respectTransparency false in
+    simp [Fin.univ_succ, -List.get_eq_getElem, List.get] -- convert sum to add
+    try grind-- PIT, we will rely on reflection
   · intro i
     fin_cases i
     all_goals {

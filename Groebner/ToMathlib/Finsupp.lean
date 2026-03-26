@@ -8,28 +8,28 @@ namespace Finsupp
 
 variable {ι : Type*} {κ : Type*} {α : Type*} [Zero α] [PartialOrder α] (f : ι ↪ κ) (a b : ι →₀ α)
 
-@[gcongr]
-lemma embDomain_mono : Monotone (embDomain f : (ι →₀ α) → (κ →₀ α)) := by
+-- @[gcongr]
+lemma embDomain_mono._mathlib_ : Monotone (embDomain f : (ι →₀ α) → (κ →₀ α)) := by
   intro a b h
   simp [Finsupp.le_def, embDomain_apply, apply_dite₂, Finsupp.le_def.mp h]
 
-lemma embDomain_le_embDomain_iff_le : a.embDomain f ≤ b.embDomain f ↔ a ≤ b := by
+lemma embDomain_le_embDomain_iff_le._mathlib_ : a.embDomain f ≤ b.embDomain f ↔ a ≤ b := by
   refine ⟨?_, (Finsupp.embDomain_mono (f := f) (α := α) ·)⟩
   rw [Finsupp.le_def]
   intro h' x
   simpa [Finsupp.embDomain_apply] using h' (f x)
 
-@[gcongr]
-lemma embDomain_lt_embDomain_iff_lt : a.embDomain f < b.embDomain f ↔ a < b := by
+-- @[gcongr]
+lemma embDomain_lt_embDomain_iff_lt._mathlib_ : a.embDomain f < b.embDomain f ↔ a < b := by
   simp [lt_iff_le_and_ne, embDomain_le_embDomain_iff_le, (embDomain_injective f).eq_iff]
 
-lemma mapDomain_le_mapDomain_iff_le {ι : Type*} {κ : Type*} {α : Type*}
+lemma mapDomain_le_mapDomain_iff_le._mathlib_ {ι : Type*} {κ : Type*} {α : Type*}
     [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
     (a b : ι →₀ α) : a.mapDomain f ≤ b.mapDomain f ↔ a ≤ b := by
   simpa [Finsupp.embDomain_eq_mapDomain] using Finsupp.embDomain_le_embDomain_iff_le ⟨f, h⟩ a b
 
-@[gcongr]
-lemma mapDomain_lt_mapDomain_iff_lt {ι : Type*} {κ : Type*} {α : Type*}
+-- @[gcongr]
+lemma mapDomain_lt_mapDomain_iff_lt._mathlib_ {ι : Type*} {κ : Type*} {α : Type*}
     [AddCommMonoid α] [PartialOrder α] [IsOrderedAddMonoid α] {f : ι → κ} (h : f.Injective)
     (a b : ι →₀ α) : a.mapDomain f < b.mapDomain f ↔ a < b := by
   simpa [Finsupp.embDomain_eq_mapDomain] using Finsupp.embDomain_lt_embDomain_iff_lt ⟨f, h⟩ a b
