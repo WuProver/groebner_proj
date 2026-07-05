@@ -16,15 +16,15 @@ set_option linter.unusedVariables false in
 def IsGroebnerBasis.IsMinimal (hG : m.IsGroebnerBasis G I) :=
   (∀ p ∈ G, m.Monic p) ∧ (∀ p ∈ G, ∀ q ∈ G, q ≠ p → ¬ m.degree q ≤ m.degree p)
 
-def IsGroebnerBasis.IsMinimal.isMinimal_def (hG : m.IsGroebnerBasis G I) :
+lemma IsGroebnerBasis.IsMinimal.isMinimal_def (hG : m.IsGroebnerBasis G I) :
     hG.IsMinimal ↔ (∀ p ∈ G, m.Monic p) ∧ G.Pairwise (¬ m.degree · ≤ m.degree ·) := by
   rw [IsMinimal, Set.Pairwise]
   tauto
 
-def IsGroebnerBasis.IsMinimal.monic {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {p}
+lemma IsGroebnerBasis.IsMinimal.monic {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) {p}
     (h : p ∈ G) : m.Monic p := hG'.1 _ h
 
-def IsGroebnerBasis.IsMinimal.pairwise {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) :
+lemma IsGroebnerBasis.IsMinimal.pairwise {hG : m.IsGroebnerBasis G I} (hG' : hG.IsMinimal) :
     G.Pairwise (¬ m.degree · ≤ m.degree ·) := (isMinimal_def .. |>.mp hG').2
 
 set_option linter.unusedVariables false in
@@ -857,7 +857,7 @@ theorem IsReduced.uniqueExists_of_isGroebnerBasis {R} [Nontrivial R] [CommRing R
   intro hs hs'
   exact hs'.unique h'
 
-theorem IsReduced.uniqueExists_of_isGroebnerBasis₀ {R} [Nontrivial R] [CommRing R]
+lemma IsReduced.uniqueExists_of_isGroebnerBasis₀ {R} [Nontrivial R] [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
     (hG : m.IsGroebnerBasis G I) (hG' : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
     ∃! (B : Set (MvPolynomial σ R)), ∃ (h : m.IsGroebnerBasis B I), h.IsReduced := by
@@ -1101,7 +1101,7 @@ lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι]
 --   sorry
 -- lemma IsReduced.
 
-theorem IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
+lemma IsReduced.subset_limsup {k} [Field k] {I : Ideal (MvPolynomial σ k)} {α}
     {σ' : α → Type*} {m' : (a : α) → MonomialOrder (σ' a)}
     {f : Filter α} {e : (a : α) → (m' a).Embedding m}
     (hI : Set.univ = f.liminf (fun x ↦ Set.range (e x)))

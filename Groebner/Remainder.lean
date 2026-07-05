@@ -131,7 +131,7 @@ variable {σ : Type*} {m : MonomialOrder σ}
 variable {R : Type*} [CommSemiring R]
 variable (f p : MvPolynomial σ R) (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R)
 
-theorem isRemainder_def (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
+lemma isRemainder_def (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
     (r : MvPolynomial σ R) : m.IsRemainder p B r ↔
       (∃ (g : B → MvPolynomial σ R) (B' : Finset B),
         p = B'.sum (fun x => g x * x) + r  ∧
@@ -169,7 +169,7 @@ theorem isRemainder_def (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
 /--
 A variant of `MonomialOrder.IsRemainder` without coercion of a `Set (MvPolynomial σ R)`.
 -/
-theorem isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
+lemma isRemainder_def' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
     (r : MvPolynomial σ R) : m.IsRemainder p B r ↔
       (∃ (g : MvPolynomial σ R →₀ MvPolynomial σ R),
         ↑g.support ⊆ B ∧
@@ -193,7 +193,7 @@ A variant of `MonomialOrder.IsRemainder` where `g : MvPolynomial σ R →₀ MvP
 replaced with a function `g : MvPolynomial σ R → MvPolynomial σ R` without limitation on its
 support.
 -/
-theorem isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
+lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
     (r : MvPolynomial σ R) :
     m.IsRemainder p B r ↔
       (∃ (g : MvPolynomial σ R → MvPolynomial σ R) (B' : Finset (MvPolynomial σ R)),
@@ -237,7 +237,7 @@ theorem isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
 /--
 A variant of `MonomialOrder.IsRemainder_def'` where `B` is `Finset (MvPolynomial σ R)`.
 -/
-theorem isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
+lemma isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ R))
     (r : MvPolynomial σ R) : m.IsRemainder p B' r ↔
       (∃ (g : MvPolynomial σ R → MvPolynomial σ R),
         p = B'.sum (fun x => g x * x) + r ∧
@@ -269,7 +269,7 @@ theorem isRemainder_finset (p : MvPolynomial σ R) (B' : Finset (MvPolynomial σ
     · simp [hsum]
     · simp_intro .. [hg]
 
-theorem isRemainder_iff_exists_isRemainder_finset (p : MvPolynomial σ R)
+lemma isRemainder_iff_exists_isRemainder_finset (p : MvPolynomial σ R)
     (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
     m.IsRemainder p B r ↔
       (∃ (B' : Finset (MvPolynomial σ R)), ↑B' ⊆ B ∧ m.IsRemainder p B' r) ∧
@@ -287,7 +287,7 @@ defined in `MonomialOrder.div` with this family of polynomials given as a map fr
 
 It is a variant of `MonomialOrder.IsRemainder` where divisors are given as a map from indexes to
 polynomials. -/
-theorem isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
+lemma isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
     (b : ι → MvPolynomial σ R) (r : MvPolynomial σ R) :
     m.IsRemainder f (Set.range b) r ↔
       (∃ g : ι →₀ MvPolynomial σ R,
@@ -360,7 +360,7 @@ theorem isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
         simp
     · aesop
 
-theorem isRemainder_range_fintype {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
+lemma isRemainder_range_fintype {ι : Type*} [Fintype ι] (b : ι → MvPolynomial σ R)
     (r : MvPolynomial σ R) :
       m.IsRemainder p (Set.range b) r ↔
       (∃ g : ι → MvPolynomial σ R,
@@ -377,7 +377,7 @@ theorem isRemainder_range_fintype {ι : Type*} [Fintype ι] (b : ι → MvPolyno
 Remainders are preserved on insertion of the zero polynomial into the set of divisors.
 -/
 @[simp]
-theorem isRemainder_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
+lemma isRemainder_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
     (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
     m.IsRemainder p (insert 0 B) r ↔ m.IsRemainder p B r := by
   unfold IsRemainder
@@ -396,7 +396,7 @@ theorem isRemainder_insert_zero_iff_isRemainder (p : MvPolynomial σ R)
 Remainders are preserved with the zero polynomial removed from the set of divisors.
 -/
 @[simp]
-theorem isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
+lemma isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   (B : Set (MvPolynomial σ R)) (r : MvPolynomial σ R) :
   m.IsRemainder p (B \ {0}) r ↔ m.IsRemainder p B r := by
   by_cases h : 0 ∈ B
@@ -404,7 +404,7 @@ theorem isRemainder_sdiff_singleton_zero_iff_isRemainder (p : MvPolynomial σ R)
   · simp [h]
 
 variable {B} in
-theorem isRemainder_zero {r : MvPolynomial σ R}
+lemma isRemainder_zero {r : MvPolynomial σ R}
     (h : m.IsRemainder 0 B r) : r = 0 := by
   classical
   unfold IsRemainder at h
@@ -420,12 +420,12 @@ theorem isRemainder_zero {r : MvPolynomial σ R}
   rcases hg with hg | hg <;> simp [hg]
 
 @[simp]
-theorem isRemainder_zero_iff :
+lemma isRemainder_zero_iff :
     m.IsRemainder 0 B r ↔ r = 0 := by
   refine ⟨isRemainder_zero, fun h ↦ ?_⟩
   exact ⟨⟨0, by simp [h]⟩, by simp [h]⟩
 
-theorem isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivisors _) :
+lemma isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivisors _) :
     m.IsRemainder f B r ↔
     (∃ (g : B →₀ MvPolynomial σ R),
       f = Finsupp.linearCombination _ (fun (b : B) ↦ b.val) g + r ∧
@@ -466,7 +466,7 @@ theorem isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDi
   rw [← hg] at hr
   simp at hr
 
-theorem isRemainder_iff_degree₀
+lemma isRemainder_iff_degree₀
     (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivisors _ ∨ b = 0) :
     m.IsRemainder f B r ↔
     (∃ (g : B →₀ MvPolynomial σ R),
@@ -766,7 +766,7 @@ theorem exists_isRemainder {B : Set (MvPolynomial σ R)}
     exact h.2.2 c hc b hb
 
 /-- A variant of `div_set'` including `0` -/
-theorem exists_isRemainder₀ {B : Set (MvPolynomial σ R)}
+lemma exists_isRemainder₀ {B : Set (MvPolynomial σ R)}
     (hB : ∀ b ∈ B, (IsUnit (m.leadingCoeff b) ∨ b = 0)) (p : MvPolynomial σ R) :
     ∃ (r : MvPolynomial σ R), m.IsRemainder p B r := by
   have hB₁ : ∀ b ∈ B \ {0}, IsUnit (m.leadingCoeff b) := by
@@ -826,13 +826,13 @@ section Field
 variable {k : Type*} [Field k] {σ : Type*} {m : MonomialOrder σ}
 
 /-- A variant of `div_set'` in field -/
-theorem exists_isRemainder' (B : Set (MvPolynomial σ k))
+lemma exists_isRemainder' (B : Set (MvPolynomial σ k))
     (p : MvPolynomial σ k) :
     ∃ (r : MvPolynomial σ k), m.IsRemainder p B r := by
   apply exists_isRemainder₀
   simp [em']
 
-theorem isRemainder_iff_degree' (f : MvPolynomial σ k) (B) (r) :
+lemma isRemainder_iff_degree' (f : MvPolynomial σ k) (B) (r) :
     m.IsRemainder f B r ↔
     (∃ (g : B →₀ MvPolynomial σ k),
       f = Finsupp.linearCombination _ (fun (b : B) ↦ b.val) g + r ∧

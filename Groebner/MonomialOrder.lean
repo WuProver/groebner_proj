@@ -65,7 +65,7 @@ lemma degree_le_degree_of_support_subset {p q : MvPolynomial σ R} (h : p.suppor
   exact Finset.sup_mono h
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/34758
-theorem degree_mul_le' {f g : MvPolynomial σ R} :
+lemma degree_mul_le' {f g : MvPolynomial σ R} :
     m.toSyn (m.degree (f * g)) ≤ m.toSyn (m.degree f) + m.toSyn (m.degree g) :=
   map_add m.toSyn _ _ ▸ degree_mul_le
 
@@ -82,7 +82,7 @@ lemma mem_nonZeroDivisors_of_leadingCoeff_mem_nonZeroDivisors
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/34765
 @[simp]
-theorem leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
+lemma leadingCoeff_mul' [NoZeroDivisors R] {f g : MvPolynomial σ R} :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
   -- improved version of `MonomialOrder.leadingCoeff_mul`
   wlog! +distrib h : f ≠ 0 ∧ g ≠ 0
@@ -198,14 +198,14 @@ lemma sPolynomial_monomial_mul_of_mem_nonZeroDivisors' {R} [CommRing R]
     sPolynomial_monomial_mul_of_mem_nonZeroDivisors, degree_monomial]
 
 
-theorem leadingCoeff_mul_of_left_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
+lemma leadingCoeff_mul_of_left_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
     (hf : m.leadingCoeff f ∈ nonZeroDivisors _) :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
   by_cases hg : g = 0
   · simp [hg]
   simp only [leadingCoeff, degree_mul_of_left_mem_nonZeroDivisors hf hg, coeff_mul_of_degree_add]
 
-theorem leadingCoeff_mul_of_right_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
+lemma leadingCoeff_mul_of_right_mem_nonZeroDivisors' {f g : MvPolynomial σ R}
     (hg : m.leadingCoeff g ∈ nonZeroDivisors _) :
     m.leadingCoeff (f * g) = m.leadingCoeff f * m.leadingCoeff g := by
   by_cases hf : f = 0
