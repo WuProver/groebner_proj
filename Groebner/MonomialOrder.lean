@@ -108,7 +108,7 @@ lemma sPolynomial_monomial_mul_of_mem_nonZeroDivisors {R} [CommRing R]
   have hm2 := (monomial_eq_zero (s := d₂)).not.mpr hc2
   simp_rw [m.degree_mul_of_right_mem_nonZeroDivisors hm1 hp₁,
     m.degree_mul_of_right_mem_nonZeroDivisors hm2 hp₂,
-    mul_sub, ← mul_assoc _ _ p₁, ← mul_assoc _ _ p₂, monomial_mul,
+    mul_sub, ← mul_assoc _ _ p₁, ← mul_assoc _ _ p₂, monomial_mul_monomial,
     m.leadingCoeff_mul_of_right_mem_nonZeroDivisors hp₁,
     m.leadingCoeff_mul_of_right_mem_nonZeroDivisors hp₂,
     m.leadingCoeff_monomial, degree_monomial, hc1, hc2, reduceIte, mul_right_comm, mul_comm c₂ c₁]
