@@ -660,7 +660,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
       simp only [leadingTerm_mul_eq] at hp
       simp only [← sub_eq_iff_eq_add.mpr hp]
       apply lt_of_le_of_lt m.degree_sub_le
-      simp? [ha] says simp only [sup_lt_iff, ha, true_and]
+      simp? [ha] says simp only [max_lt_iff, ha, true_and]
       apply lt_of_le_of_lt m.degree_sum_le
       simp only [Finset.sup_lt_iff h_a_gt_zero, lt']
       intro g hg
@@ -770,7 +770,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   -/
   clear hp h_sum_sPoly -- remove them since they're long and will not be used anymore
   simp? [ha, Finset.sup_lt_iff h_a_gt_zero, add_mul, -Subtype.forall] says
-    simp only [Finset.univ_eq_attach, mul_one, add_mul, sup_lt_iff, ha,
+    simp only [Finset.univ_eq_attach, mul_one, add_mul, max_lt_iff, ha,
       Finset.sup_lt_iff h_a_gt_zero, true_and]
   intro g hg'
   apply lt_of_le_of_lt degree_add_le

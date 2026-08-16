@@ -155,7 +155,7 @@ lemma isRemainder_def (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
       congr 1
       simp? [Finset.filter_and, Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
           Finset.filter_inter] says
-        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and, Std.le_refl,
+        simp only [ne_eq, ite_eq_right_iff, not_imp, Finset.filter_and, Std.le_refl,
           Finset.filter_mem_eq_of_subset, Finset.inter_filter, Finset.inter_self,
           Finsupp.onFinset_apply, smul_eq_mul, ite_mul, zero_mul, Finset.sum_ite_mem,
           Finset.filter_inter]
@@ -223,7 +223,7 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
       congr 1
       simp? [Finset.filter_and, Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
           Finset.filter_inter] says
-        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and, Std.le_refl,
+        simp only [ne_eq, ite_eq_right_iff, not_imp, Finset.filter_and, Std.le_refl,
           Finset.filter_mem_eq_of_subset, Finset.inter_filter, Finset.inter_self,
           Finsupp.onFinset_apply, id_eq, smul_eq_mul, ite_mul, zero_mul, Finset.sum_ite_mem,
           Finset.filter_inter]
