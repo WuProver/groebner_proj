@@ -23,7 +23,7 @@ lemma range_subtype' (s : Submonoid M) :
 lemma _root_.MonoidHom.mrangeRestrict_eq_rangeFactorization {N} [MulOneClass N] (f : M →* N) :
     ⇑f.mrangeRestrict = Set.rangeFactorization f := rfl
 
-#check AddMonoidHom.mrangeRestrict
+-- #check AddMonoidHom.mrangeRestrict
 
 /-- A monoid homomorphism `f : M →* N` with a left-inverse `g : N → M` defines a multiplicative
 equivalence between `M` and `f.mrange`.

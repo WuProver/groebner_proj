@@ -155,8 +155,8 @@ lemma isRemainder_def (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
       congr 1
       simp? [Finset.filter_and, Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
           Finset.filter_inter] says
-        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and,
-          Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
+        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and, Std.le_refl,
+          Finset.filter_mem_eq_of_subset, Finset.inter_filter, Finset.inter_self,
           Finsupp.onFinset_apply, smul_eq_mul, ite_mul, zero_mul, Finset.sum_ite_mem,
           Finset.filter_inter]
       rw [Finset.sum_filter]
@@ -223,8 +223,8 @@ lemma isRemainder_def'' (p : MvPolynomial σ R) (B : Set (MvPolynomial σ R))
       congr 1
       simp? [Finset.filter_and, Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
           Finset.filter_inter] says
-        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and,
-          Finset.filter_mem_eq_inter, Finset.inter_self, Finset.inter_filter,
+        simp only [ne_eq, ite_eq_right_iff, Classical.not_imp, Finset.filter_and, Std.le_refl,
+          Finset.filter_mem_eq_of_subset, Finset.inter_filter, Finset.inter_self,
           Finsupp.onFinset_apply, id_eq, smul_eq_mul, ite_mul, zero_mul, Finset.sum_ite_mem,
           Finset.filter_inter]
       rw [Finset.sum_filter]
@@ -315,7 +315,7 @@ lemma isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
         convert h₂
         generalize_proofs hbi
         rw [Finsupp.embDomain_apply, Ne.dite_ne_right_iff fun h ↦ by simpa [h] using h'] at h'
-        rw [Finsupp.embDomain_apply, dite_cond_eq_true (by simp [h'])]
+        rw [Finsupp.embDomain_apply, dite_eq_left_of_eq_true (by simp [h'])]
         generalize_proofs h'
         rw! (occs := [2, 3]) [← h'.choose_spec]
         simp [idx, Set.apply_rangeSplitting]
@@ -323,8 +323,8 @@ lemma isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
       aesop
   · rintro ⟨⟨g, h₁, h₂⟩, h₃⟩
     constructor
-    · letI b'_range : Finset (Set.range b) := g.support.image (Set.rangeFactorization b)
-      letI g' (x : Set.range b) : MvPolynomial σ R := (g.support.filter (b · = x)).sum g
+    · let b'_range : Finset (Set.range b) := g.support.image (Set.rangeFactorization b)
+      let g' (x : Set.range b) : MvPolynomial σ R := (g.support.filter (b · = x)).sum g
       have mem_support (x) (hx : g' x ≠ 0) : x ∈ b'_range := by
         contrapose! hx
         simp? [b'_range, Set.rangeFactorization_eq_iff]  at hx says
@@ -347,12 +347,14 @@ lemma isRemainder_range {ι : Type*} (f : MvPolynomial σ R)
             Set.rangeFactorization_eq_rangeFactorization_iff]
         intro _ _
         apply Finset.sum_congr rfl
+        set_option backward.isDefEq.respectTransparency false in
         simp_intro ..
       · intro b1
         rw [Finsupp.onFinset]
         apply le_trans (add_le_add_right m.withBotDegree_sum_le _)
         have := (m.toWithBotSyn (m.withBotDegree b1.val) + ·)
-        rw [Finset.comp_sup_eq_sup_comp_of_is_total (m.toWithBotSyn (m.withBotDegree b1.val) + ·)]
+        rw [Finset.apply_sup_eq_sup_comp_of_linearOrder
+          (m.toWithBotSyn (m.withBotDegree b1.val) + ·)]
         · simp_rw [Finset.sup_le_iff, Finset.mem_filter]
           rintro _ ⟨-, h⟩
           simp [← h, h₂]
@@ -459,7 +461,8 @@ lemma isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivi
   intro b
   by_contra! hgb
   obtain ⟨h_gb_ne_0, h_b_ne_0⟩ := ne_zero_and_ne_zero_of_mul hgb
-  rw [m.degree_eq_zero_iff.mp h_deg_r_eq_0, support_C, ite_cond_eq_false _ _ (by simp [hr0])] at hr
+  rw [m.degree_eq_zero_iff.mp h_deg_r_eq_0, support_C,
+    ite_eq_right_of_eq_false _ _ (by simp [hr0])] at hr
   specialize hr 0 (by simp) b b.2 h_b_ne_0
   specialize hg b
   rw [m.degree_mul_of_right_mem_nonZeroDivisors h_gb_ne_0 (hB b b.2)] at hg
@@ -484,8 +487,8 @@ lemma isRemainder_iff_degree₀
     · simp
     intro x hx hx'
     simp? at hx' says
-      simp only [Set.diff_subset_iff, Set.singleton_union, Set.subset_insert, Set.range_inclusion,
-        Set.mem_diff, Subtype.coe_prop, Set.mem_singleton_iff, ne_eq, true_and, Set.mem_setOf_eq,
+      simp only [Set.sdiff_subset_iff, Set.singleton_union, Set.subset_insert, Set.range_inclusion,
+        Set.mem_sdiff, Subtype.coe_prop, Set.mem_singleton_iff, ne_eq, true_and, Set.mem_ofPred_eq,
         not_not] at hx'
     simp [hx']
   · constructor
@@ -516,8 +519,9 @@ lemma term_notMem_span_span_monomial {p r : MvPolynomial σ R}
   rw [← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
   simp? [MvPolynomial.mem_support_iff.mp hs] says
     simp only [mem_support_iff, coeff_monomial, ne_eq, ite_eq_right_iff,
-      MvPolynomial.mem_support_iff.mp hs, imp_false, Decidable.not_not, Set.mem_image, Set.mem_diff,
-      Set.mem_singleton_iff, exists_exists_and_eq_and, forall_eq', not_exists, not_and, and_imp]
+      MvPolynomial.mem_support_iff.mp hs, imp_false, Decidable.not_not, Set.mem_image,
+      Set.mem_sdiff, Set.mem_singleton_iff, exists_exists_and_eq_and, forall_eq', not_exists,
+      not_and, and_imp]
   intro b hb
   unfold MonomialOrder.IsRemainder at h
   exact h.2 _ hs b hb
@@ -548,7 +552,7 @@ lemma _root_.MvPolynomial.monomial_notMem_span_leadingTerm {r : MvPolynomial σ 
   classical
   intro s hs
   apply not_imp_not.mpr ((m.span_leadingTerm_le_span_monomial (B := B)) ·)
-  apply not_imp_not.mpr (Ideal.span_mono (Set.image_mono <| Set.diff_subset (t := {0})) ·)
+  apply not_imp_not.mpr (Ideal.span_mono (Set.image_mono <| Set.sdiff_subset (t := {0})) ·)
   exact monomial_notMem_span_monomial h s hs
 
 variable {f r B} in
@@ -604,7 +608,7 @@ lemma exists_withBotDegree_le_withBotDegree
     simp [hb₂]
   apply le_withBotDegree (m:=m) at hb₂
   rw [← withBotDegree_eq_coe_degree_iff _ |>.mpr hp] at hb₂
-  apply le_trans' (m.withBotDegree_mul_le' ..) at hb₂
+  apply le_trans' (m.toWithBotSyn_withBotDegree_mul_le ..) at hb₂
   rw [add_comm] at hb₂
   apply le_antisymm (add_comm (m.toWithBotSyn <| m.withBotDegree b) _ ▸ h₃ b hb₁) at hb₂
   simp only [← map_add, EmbeddingLike.apply_eq_iff_eq] at hb₂
@@ -616,7 +620,7 @@ lemma exists_withBotDegree_le_withBotDegree₀
     (h : m.IsRemainder p B r) (hfr : m.withBotDegree p ≠ m.withBotDegree r) :
     ∃ b ∈ B, b ≠ 0 ∧ m.withBotDegree b ≤ m.withBotDegree p := by
   rw [← isRemainder_sdiff_singleton_zero_iff_isRemainder] at h
-  simpa only [← and_assoc] using h.exists_withBotDegree_le_withBotDegree hfr
+  simpa [← and_assoc] using h.exists_withBotDegree_le_withBotDegree hfr
 
 variable {p B r} in
 lemma withBotDegree_eq_withBotDegree_iff_leadingTerm_eq_leadingTerm (h : m.IsRemainder p B r) :
@@ -643,8 +647,8 @@ lemma withBotDegree_eq_withBotDegree_iff_leadingTerm_eq_leadingTerm (h : m.IsRem
   wlog! hgg' : g g' * g'.val ≠ 0
   · simp [hgg']
   apply m.coeff_eq_zero_of_lt
-  rw [smul_eq_mul, ← m.withBotDegree_lt_withBotDegree_iff_of_ne_zero _ _ hgg']
-  apply lt_of_le_of_lt (m.withBotDegree_mul_le' ..)
+  rw [smul_eq_mul, ← m.withBotDegree_lt_withBotDegree_iff_of_ne_zero _ hgg']
+  apply lt_of_le_of_lt (m.toWithBotSyn_withBotDegree_mul_le ..)
   rw [add_comm]
   apply lt_of_le_of_ne (hg' g')
   specialize h (m.degree r)
@@ -730,10 +734,12 @@ lemma _root_.MonomialOrder.Embedding.isRemainder_rename_of_isRemainder {σ' σ}
       rw [Finset.coe_image]
       exact Set.image_mono hg
     · simp [hsum, Finsupp.linearCombination]
+      set_option backward.isDefEq.respectTransparency false in
       rw [Finsupp.sum_mapRange_index (by simp),
         Finsupp.sum_mapDomain_index_inj <| rename_injective _ e.coe_injective]
       simp_rw [← map_mul, map_finsuppSum]
-    · simpa [← map_mul, Finsupp.mapDomain_apply (rename_injective _ e.coe_injective)] using hdeg
+    · set_option backward.isDefEq.respectTransparency false in
+      simpa [← map_mul, Finsupp.mapDomain_apply (rename_injective _ e.coe_injective)] using hdeg
   · simpa [e.coe_injective, MvPolynomial.support_rename_of_injective, Embedding.degree_rename,
       Finsupp.mapDomain_le_mapDomain_iff_le] using hdeg'
 

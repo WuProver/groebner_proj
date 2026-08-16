@@ -57,7 +57,7 @@ theorem AddMonoidAlgebra.ideal_span_of'_image_eq_ideal_span_of'_image_minimal :
   rw [show of' k A (b + c) = of' k A b * of' k A c by simp] at *
   apply Ideal.mul_mem_right _ _
   apply Set.mem_of_subset_of_mem Ideal.subset_span
-  exact (Set.mem_image_of_mem (of' k A) (Set.mem_setOf.mpr hb'))
+  exact (Set.mem_image_of_mem (of' k A) (Set.mem_ofPred.mpr hb'))
 
 theorem AddMonoidAlgebra.ideal_span_single_image_eq_ideal_span_single_image_minimal :
     Ideal.span ((AddMonoidAlgebra.single · (1 : k)) '' s) =
@@ -65,11 +65,11 @@ theorem AddMonoidAlgebra.ideal_span_single_image_eq_ideal_span_single_image_mini
   AddMonoidAlgebra.ideal_span_of'_image_eq_ideal_span_of'_image_minimal
 
 theorem AddMonoidAlgebra.minimal_span_of'_image_iff_minimal [Nontrivial k] {x} :
-    Minimal (∃ p ∈ Ideal.span (AddMonoidAlgebra.of' k A '' s), · ∈ p.support) x ∧ x ∈ s ↔
+    Minimal (∃ p ∈ Ideal.span (AddMonoidAlgebra.of' k A '' s), · ∈ p.coeff.support) x ∧ x ∈ s ↔
       Minimal (· ∈ s) x := by
   classical
   simp_rw [AddMonoidAlgebra.ideal_span_of'_image_eq_ideal_span_of'_image_minimal (s := s),
-    AddMonoidAlgebra.mem_ideal_span_of'_image, Set.mem_setOf]
+    AddMonoidAlgebra.mem_ideal_span_of'_image, Set.mem_ofPred]
   convert (Minimal.minimal_iff_minimal_exists_minimal_and_le (α := A)).symm with y
   simp_rw [le_iff_exists_add']
   constructor
@@ -78,11 +78,11 @@ theorem AddMonoidAlgebra.minimal_span_of'_image_iff_minimal [Nontrivial k] {x} :
   · rintro h
     use .of' k A y
     -- todo: it should be a lemma
-    simp_rw [show (of' k A y).support = {y} by simp [Finset.ext_iff, single_apply, eq_comm]]
+    simp_rw [show (of' k A y).coeff.support = {y} by simp [AddMonoidAlgebra.coeff_single, eq_comm]]
     simpa using h
 
 theorem AddMonoidAlgebra.minimal_ideal_span_single_image_iff_minimal [Nontrivial k] {x} :
-    Minimal (∃ p ∈ Ideal.span ((single · (1 : k)) '' s), · ∈ p.support) x ∧ x ∈ s ↔
+    Minimal (∃ p ∈ Ideal.span ((single · (1 : k)) '' s), · ∈ p.coeff.support) x ∧ x ∈ s ↔
       Minimal (· ∈ s) x :=
   AddMonoidAlgebra.minimal_span_of'_image_iff_minimal
 
@@ -95,12 +95,12 @@ variable [AddCommMonoid A] [PartialOrder A] [WellFoundedLT A] [CanonicallyOrdere
 variable {x : A} {s t : Set A}
 
 theorem AddMonoidAlgebra.minimal_ideal_span_of'_image_iff_minimal' :
-    Minimal (∃ p ∈ Ideal.span (AddMonoidAlgebra.of' k A '' s), · ∈ p.support) x ↔
+    Minimal (∃ p ∈ Ideal.span (AddMonoidAlgebra.of' k A '' s), · ∈ p.coeff.support) x ↔
       Minimal (· ∈ s) x := by
   -- the proof is similar with `AddMonoidAlgebra.minimal_span_of'_image_iff_minimal`
   classical
   simp_rw [AddMonoidAlgebra.ideal_span_of'_image_eq_ideal_span_of'_image_minimal (s := s),
-    AddMonoidAlgebra.mem_ideal_span_of'_image, Set.mem_setOf]
+    AddMonoidAlgebra.mem_ideal_span_of'_image, Set.mem_ofPred]
   convert (Minimal.minimal_iff_minimal_exists_minimal_and_le' (α := A)).symm with y
   simp_rw [le_iff_exists_add']
   constructor
@@ -109,11 +109,11 @@ theorem AddMonoidAlgebra.minimal_ideal_span_of'_image_iff_minimal' :
   · rintro h
     use .of' k A y
     -- todo: it should be a lemma
-    simp_rw [show (of' k A y).support = {y} by simp [Finset.ext_iff, single_apply, eq_comm]]
+    simp_rw [show (of' k A y).coeff.support = {y} by simp [AddMonoidAlgebra.coeff_single, eq_comm]]
     simpa using h
 
 theorem AddMonoidAlgebra.minimal_ideal_span_single_image_iff_minimal' :
-    Minimal (∃ p ∈ Ideal.span ((single · (1 : k)) '' s), · ∈ p.support) x ↔
+    Minimal (∃ p ∈ Ideal.span ((single · (1 : k)) '' s), · ∈ p.coeff.support) x ↔
       Minimal (· ∈ s) x :=
   AddMonoidAlgebra.minimal_ideal_span_of'_image_iff_minimal'
 
@@ -122,7 +122,7 @@ theorem AddMonoidAlgebra.ideal_span_of'_image_eq_ideal_span_of'_image_iff :
       ∀ x, Minimal (· ∈ s) x ↔ Minimal (· ∈ t) x := by
   classical
   refine ⟨fun h ↦ ?_,
-    fun h ↦ by simp [ideal_span_single_image_eq_ideal_span_single_image_minimal, h]⟩
+    fun h ↦ by unfold of'; simp [ideal_span_single_image_eq_ideal_span_single_image_minimal, h]⟩
   intro x
   simp_rw [← AddMonoidAlgebra.minimal_ideal_span_of'_image_iff_minimal' (k := k), h]
 
@@ -183,7 +183,8 @@ lemma span_leadingTerm_eq_span_monomial._replace_ {B : Set (MvPolynomial σ R)}
   rw [← C_mul_leadingCoeff_monomial_degree, ← mul_assoc, ← map_mul,
     IsUnit.val_inv_mul, MvPolynomial.C_1, one_mul]
 
--- lemma span_leadingTerm_image_eq_span_monomial_image {B : Set (MvPolynomial σ R)} {s : Set (σ →₀ ℕ)}
+-- lemma span_leadingTerm_image_eq_span_monomial_image {B : Set (MvPolynomial σ R)}
+--     {s : Set (σ →₀ ℕ)}
 --     (h : span (m.leadingTerm '' B) = span ((monomial · (1 : R)) '' s)) :
 --     span (m.leadingTerm '' B) = span ((fun p ↦ monomial (m.degree p) (1 : R)) '' (B \ {0})) := by
 --   apply le_antisymm span_leadingTerm_le_span_monomial

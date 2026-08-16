@@ -100,7 +100,7 @@ lemma mapDomain_tsub_mapDomain._mathlib_ {σ α κ}
   ext y
   rw [tsub_apply]
   wlog h : y ∈ Set.range f
-  · simp [mapDomain_notin_range _ _ h]
+  · simp [mapDomain_of_notMem_range _ _ h]
   obtain ⟨x, rfl⟩ := h
   simp [mapDomain_apply h _ x]
 

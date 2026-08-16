@@ -6,82 +6,8 @@ namespace MvPolynomial
 
 variable {τ σ R : Type*} [CommSemiring R] {f : σ → τ} (hf : f.Injective) {p q : MvPolynomial τ R}
 
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-variable (f) in
--- @[simp]
-lemma rename_zero._mathlib_ :
-    (0 : MvPolynomial σ R).rename f = 0 := rfl
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
--- @[simp]
-lemma rename_eq_zero_of_injective._mathlib_ (p : MvPolynomial σ R)
-    (hf : f.Injective) : p.rename f = 0 ↔ p = 0 := by
-  rw [← rename_zero f, (MvPolynomial.rename_injective _ hf).eq_iff]
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
--- @[simp]
-lemma killCompl_monomial_mapDomain._mathlib_ {s : σ →₀ ℕ} {c : R} :
-    (monomial (s.mapDomain f) c).killCompl hf = monomial s c := by
-  simp [← rename_monomial]
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma killCompl_monomial_eq_zero._mathlib_ {s : τ →₀ ℕ} {c : R} (hs : ∃ a ∈ s.support, a ∉ Set.range f) :
-    (monomial s c).killCompl hf = 0 := by
-  unfold killCompl
-  rw [aeval_monomial, Finsupp.prod]
-  apply mul_eq_zero_of_right
-  obtain ⟨a, ha⟩ := hs
-  apply Finset.prod_eq_zero ha.1
-  simp [ha.2, zero_pow (Finsupp.mem_support_iff.mp ha.1)]
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma killCompl_monomial_eq_zero'._mathlib_ {s : τ →₀ ℕ} {c : R} (hs : ¬ ↑s.support ⊆ Set.range f) :
-    (monomial s c).killCompl hf = 0 := killCompl_monomial_eq_zero._mathlib_ hf (Set.not_subset.mp hs)
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma killCompl_monomial_eq_monomial_comapDomain._mathlib_ {s : τ →₀ ℕ} {c : R}
-    (hs : ↑s.support ⊆ Set.range f) :
-    (monomial s c).killCompl hf = monomial (s.comapDomain f hf.injOn) c := by
-  nth_rw 1 [← s.mapDomain_comapDomain f hf hs, killCompl_monomial_mapDomain]
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma killCompl_monomial._mathlib_ {s} {c : R} [Decidable (↑s.support ⊆ Set.range f)] :
-    (monomial s c).killCompl hf =
-      if ↑s.support ⊆ Set.range f then monomial (s.comapDomain f hf.injOn) c else 0 := by
-  split_ifs with h
-  · exact killCompl_monomial_eq_monomial_comapDomain._mathlib_ hf h
-  · exact killCompl_monomial_eq_zero'._mathlib_ hf h
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma coeff_killCompl._mathlib_ {s} :
-    (p.killCompl hf).coeff s = p.coeff (s.mapDomain f) := by
-  classical
-  apply p.induction_on' (P := fun p ↦ (p.killCompl hf).coeff s = p.coeff (s.mapDomain f))
-  · intro u r
-    rw [killCompl_monomial]
-    split_ifs with h
-    · simp [← (Finsupp.mapDomain_injective hf).eq_iff, u.mapDomain_comapDomain _ hf h]
-    · simp
-      intro rfl
-      contrapose! h
-      apply subset_trans <| SetLike.coe_subset_coe.mpr <| Finsupp.mapDomain_support
-      simp
-  · simp_intro ..
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma support_killCompl._mathlib_ {p : MvPolynomial τ R} :
-    (p.killCompl hf).support =
-      p.support.preimage (Finsupp.mapDomain f) (Finsupp.mapDomain_injective hf).injOn := by
-  classical
-  ext x
-  simp [coeff_killCompl]
-
--- merged: https://github.com/leanprover-community/mathlib4/pull/34758
-lemma support_rename_killCompl_subset._mathlib_ {p : MvPolynomial τ R} :
-    ((p.killCompl hf).rename f).support ⊆ p.support := by
-  classical
-  rw [MvPolynomial.support_rename_of_injective hf, support_killCompl, Finset.image_preimage]
-  exact Finset.filter_subset ..
+-- lemmas merged: https://github.com/leanprover-community/mathlib4/pull/34757
+-- lemmas merged: https://github.com/leanprover-community/mathlib4/pull/34758
 
 -- not yet submitted
 lemma rename_killCompl_app (hf : Function.Injective f) {p : MvPolynomial τ R}
@@ -92,7 +18,7 @@ lemma rename_killCompl_app (hf : Function.Injective f) {p : MvPolynomial τ R}
     apply (subset_trans · hp)
     rw [p.vars_eq_support_biUnion_support]
     exact Finset.subset_biUnion_of_mem Finsupp.support x.prop
-  simp_rw [killCompl_monomial_eq_monomial_comapDomain._mathlib_ hf (this _),
+  simp_rw [killCompl_monomial_eq_monomial_comapDomain_of_subset hf _ (this _),
     rename_monomial, Finsupp.mapDomain_comapDomain _ hf _ (this _),
     Finset.sum_attach p.support fun x ↦ monomial x (coeff x p)]
 

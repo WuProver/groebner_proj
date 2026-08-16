@@ -163,7 +163,7 @@ lemma empty_bot :
 lemma singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis {(0 : MvPolynomial σ R)} I ↔ I = ⊥ := by
   constructor
-  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
+  · simp [IsGroebnerBasis]
     aesop
   · simp_intro .. [singleton_zero_bot]
 
@@ -171,7 +171,7 @@ lemma singleton_zero_iff (I : Ideal (MvPolynomial σ R)) :
 lemma empty_iff (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis (∅ : Set <| MvPolynomial σ R) I ↔ I = ⊥ := by
   constructor
-  · simp [IsGroebnerBasis, Ideal.span_eq_bot]
+  · simp [IsGroebnerBasis]
     aesop
   · simp_intro .. [empty_bot]
 
@@ -238,14 +238,14 @@ lemma span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
   · rw [Ideal.span_le]
     refine subset_trans ?_ Submodule.subset_span
     apply Set.image_mono
-    apply Set.subset_diff_singleton h.subset
+    apply Set.subset_sdiff_singleton h.subset
     contrapose! hG
     use 0
     simpa
   · rw [Ideal.span_le]
     intro x
     simp? says
-      simp only [Set.mem_image, Set.mem_diff, SetLike.mem_coe, Set.mem_singleton_iff, ne_eq,
+      simp only [Set.mem_image, Set.mem_sdiff, SetLike.mem_coe, Set.mem_singleton_iff, ne_eq,
         forall_exists_index, and_imp]
     intro y hy hy0 hxy
     rw [← hxy, ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
@@ -364,7 +364,9 @@ theorem remainder_eq_zero_iff_mem_ideal
   -- todo: Ideal.mem_span_of_mem
   apply Submodule.mem_span_of_mem (R := MvPolynomial σ R) at h_p_mem
   contrapose! h_p_mem with h_r_ne_zero
-  simpa [← h_span] using term_notMem_span_leadingTerm hr (m.degree r) (by simp [h_r_ne_zero])
+  simpa [← h_span, leadingTerm, leadingCoeff, Ideal.span] using
+    term_notMem_span_leadingTerm hr (m.degree r) (by simp [h_r_ne_zero])
+
 
 /-- Given a Gröbner basis `G` of an ideal `I`, 0 is a remainder on division by `G` if and
 only if `p` is in the ideal `I`.
@@ -844,7 +846,7 @@ lemma isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀
     isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G := G \ {0})
       (by simp_intro _ _ [or_iff_not_imp_right.mp (hG _ _)])]
   simp? [imp_forall_iff, imp.swap (a := ¬(_ : MvPolynomial σ R) = 0) (b := _ ∈ G)] says
-    simp only [isRemainder_sdiff_singleton_zero_iff_isRemainder, Subtype.forall, Set.mem_diff,
+    simp only [isRemainder_sdiff_singleton_zero_iff_isRemainder, Subtype.forall, Set.mem_sdiff,
       Set.mem_singleton_iff, ne_eq, and_imp, imp_forall_iff,
       imp.swap (a := ¬(_ : MvPolynomial σ R) = 0) (b := _ ∈ G)]
   congr! with p q - -
@@ -906,7 +908,7 @@ lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename�
   rw [← isGroebnerBasis_sdiff_singleton_zero,
     e.isGroebnerBasis_iff_isGroebnerBasis_rename
       (hG := by simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]),
-    Set.image_diff (rename_injective _ e.coe_injective)]
+    Set.image_sdiff (rename_injective _ e.coe_injective)]
   simp
 
 -- lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename'' {σ'}

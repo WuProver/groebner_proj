@@ -13,7 +13,7 @@ def RelHom.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → 
   toFun := f
   map_rel' := by simp
 
-@[simp] def RelHom.coe_onFun {α : Type*} {β : Type*} {r : β → β → Prop} (f : α → β) :
+@[simp] lemma RelHom.coe_onFun {α : Type*} {β : Type*} {r : β → β → Prop} (f : α → β) :
     RelHom.onFun r f = f := rfl
 
 instance _root_.IsWellFounded.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → β)
@@ -37,8 +37,8 @@ noncomputable def ofInjective.toSyn' (m : MonomialOrder σ) {σ' : Type*} (f : �
   AddEquiv.refl (σ' →₀ ℕ)
 
 -- submitted: https://github.com/leanprover-community/mathlib4/pull/32829
-@[to_additive toIsOrderedCancelAddMonoid'_]
-lemma toIsOrderedCancelMonoid'_ {α}
+@[to_additive toIsOrderedCancelAddMonoid']
+lemma toIsOrderedCancelMonoid' {α}
     [CancelCommMonoid α] [LinearOrder α] [IsOrderedMonoid α] : IsOrderedCancelMonoid α where
   le_of_mul_le_mul_left _ _ _ h := le_of_mul_le_mul_left' h
 
@@ -56,21 +56,19 @@ noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) 
       intro a b h
       apply m.toSyn_monotone
       exact Finsupp.mapDomain_mono h
-    iocam :=  by
-      letI : IsOrderedAddMonoid (Syn m f) := {
+    isOrderedAddMonoid_syn :=
+      {
         add_le_add_left a b hab c := by
-          convert_to map _ ≤ map _ at hab
-          convert_to map (HAdd.hAdd (α := σ' →₀ ℕ) _ _) ≤ map (HAdd.hAdd (α := σ' →₀ ℕ) _ _)
-          simpa [map, Finsupp.mapDomain_add, AddEquiv.map_add] using hab
+          convert_to! map _ ≤ map _ at hab
+          convert_to! map (HAdd.hAdd (α := σ' →₀ ℕ) _ _) ≤ map (HAdd.hAdd (α := σ' →₀ ℕ) _ _)
+          set_option backward.isDefEq.respectTransparency false in
+          simpa [map, Function.comp_def, Finsupp.mapDomain_add, AddEquiv.map_add] using hab
+
       }
-      letI : AddCancelCommMonoid (Syn m f) := {
-        add_left_cancel :=
-          (toSyn' m f).symm.injective.isLeftCancelAdd _ (map_add _) |>.add_left_cancel
-      }
-      letI := acm' m f
-      exact toIsOrderedCancelAddMonoid'_ (α := Syn m f)
-    wf := -- show WellFoundedLT (Syn m f) from -- why it doesn't work without `show` or `by exact`?
-      by exact inferInstanceAs <| IsWellFounded (Syn m f) fun x1 x2 ↦ map x1 < map x2
+    wellFoundedLT_syn := -- show WellFoundedLT (Syn m f) from
+      by set_option backward.isDefEq.respectTransparency false in
+        -- why it doesn't work without `show` or `by exact`?
+        exact inferInstanceAs <| IsWellFounded (Syn m f) fun x1 x2 ↦ map x1 < map x2
   }
 
 /-- An embedding from a monomial order `m' : MonomialOrder σ'` and `m : MonomialOrder σ` consists:
@@ -87,12 +85,12 @@ variable (p q : MvPolynomial σ' R)
 
 instance instFunLike : FunLike (Embedding m' m) σ' σ where
   coe m := m.toFun
-  coe_injective' a b h := by
+  coe_injective a b h := by
     convert_to (Embedding.mk _ _) = ⟨_, _⟩
     simpa using h
 
 @[ext] lemma ext {e₁ e₂ : Embedding m' m} (h : ⇑e₁ = ⇑e₂) : e₁ = e₂ :=
-  (instFunLike ..).coe_injective' h
+  (instFunLike ..).coe_injective h
 
 @[simp] lemma coe_toEmbedding_eq_coe : ⇑e.toEmbedding = ⇑e := rfl
 
@@ -103,30 +101,30 @@ lemma monotone : Monotone (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) :=
 @[simp]
 lemma coe_injective : Function.Injective e := e.toEmbedding.inj'
 
-def toStrictMono : StrictMono (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) :=
+lemma toStrictMono : StrictMono (m.toSyn ∘ Finsupp.mapDomain e ∘ m'.toSyn.symm) :=
   e.monotone'.strictMono_of_injective <| by
     simpa using Finsupp.mapDomain_injective <| e.coe_injective
 
 noncomputable def toOrderEmbedding : OrderEmbedding m'.syn m.syn := .ofStrictMono _ e.toStrictMono
 
 @[simp]
-def le_iff_le (a b : m'.syn) :
+lemma le_iff_le (a b : m'.syn) :
     Finsupp.mapDomain e (m'.toSyn.symm a) ≼[m] Finsupp.mapDomain e (m'.toSyn.symm b) ↔ a ≤ b :=
   e.toOrderEmbedding.le_iff_le
 
 @[simp]
-def le_iff_le' (a b : σ' →₀ ℕ) :
+lemma le_iff_le' (a b : σ' →₀ ℕ) :
     Finsupp.mapDomain e a ≼[m] Finsupp.mapDomain e b ↔ a ≼[m'] b := by
   nth_rw 1 [← m'.toSyn.symm_apply_apply a, ← m'.toSyn.symm_apply_apply b]
   exact e.le_iff_le ..
 
 @[simp]
-def lt_iff_lt (a b : m'.syn) :
+lemma lt_iff_lt (a b : m'.syn) :
     Finsupp.mapDomain e (m'.toSyn.symm a) ≺[m] Finsupp.mapDomain e (m'.toSyn.symm b) ↔ a < b :=
   e.toOrderEmbedding.lt_iff_lt
 
 @[simp]
-def lt_iff_lt' (a b : σ' →₀ ℕ) :
+lemma lt_iff_lt' (a b : σ' →₀ ℕ) :
     Finsupp.mapDomain e a ≺[m] Finsupp.mapDomain e b ↔ a ≺[m'] b := by
   nth_rw 1 [← m'.toSyn.symm_apply_apply a, ← m'.toSyn.symm_apply_apply b]
   exact e.lt_iff_lt ..
@@ -139,8 +137,8 @@ def ofInjective {f : σ' → σ} (hf : f.Injective) : Embedding (m.ofInjective h
   toEmbedding := ⟨f, hf⟩
   monotone' := by
     intro a b h
-    letI map := m.toSyn ∘ Finsupp.mapDomain f
-    convert_to map _ ≤ map _ at ⊢ h
+    let map := m.toSyn ∘ Finsupp.mapDomain f
+    convert_to! map _ ≤ map _ at ⊢ h
     simpa [MonomialOrder.ofInjective, ofInjective.toSyn', map] using h
 
 variable (m) in
@@ -155,7 +153,7 @@ lemma degree_rename : m.degree (p.rename e) = (m'.degree p).mapDomain e := by
     m.toSyn.symm ((p.support.map m'.toSyn.toEmbedding).sup
       (m.toSyn ∘ Finsupp.mapDomain ⇑e ∘ m'.toSyn.symm)) = _
   · simp [Function.comp_def]
-  · simp [← Finset.comp_sup_eq_sup_comp_of_is_total _ e.monotone (by simp)]
+  · simp [← Finset.apply_sup_eq_sup_comp_of_linearOrder _ e.monotone (by simp)]
 
 @[simp]
 lemma degree_eq_degree (p q : MvPolynomial σ' R) :

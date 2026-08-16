@@ -122,7 +122,7 @@ lemma IsGroebnerBasis.isGroebnerBasis_monomial_minimal {R : Type*} [CommSemiring
   · exact IsGroebnerBasis.of_subsingleton ..
   constructor
   · apply (subset_trans · Ideal.subset_span)
-    exact Set.image_mono <| setOf_minimal_subset s
+    exact Set.image_mono <| setOfPred_minimal_subset s
   simpa [Set.image_image,
       ← MvPolynomial.ideal_span_monomial_image_eq_ideal_span_monomial_image_minimal] using
     isGroebnerBasis_monomial (m := m) (s := s) (R := R) |>.2
@@ -146,7 +146,7 @@ lemma IsGroebnerBasis.smul
   simp_rw [iSup_image, iSup_range]
   congr
   ext i : 1
-  convert Submodule.span_singleton_smul_eq (hunit i) (m.leadingTerm (f' i)) |>.symm using 3
+  convert! Submodule.span_singleton_smul_eq (hunit i) (m.leadingTerm (f' i)) |>.symm using 3
   simp [leadingTerm, C_mul_monomial, leadingCoeff]
   suffices m.degree (C (f i) * (f' i)) = m.degree (f' i) by simp [this]
   wlog! hg : f' i ≠ 0
@@ -220,7 +220,7 @@ lemma IsReduced.isReduced_def :
       (∀ p ∈ G, m.Monic p) ∧
       ∀ p ∈ G, ∀ a ∈ p.support, ∀ q ∈ G, q ≠ p → ¬ m.degree q ≤ a := by
   simp? [IsReduced, IsRemainder.self_iff] says
-    simp only [IsReduced, IsRemainder.self_iff, mem_support_iff, ne_eq, Set.mem_diff,
+    simp only [IsReduced, IsRemainder.self_iff, mem_support_iff, ne_eq, Set.mem_sdiff,
       Set.mem_singleton_iff, and_imp, and_congr_right_iff]
   rintro h1
   wlog! h : Nontrivial R
@@ -263,7 +263,7 @@ lemma IsReduced.isReduced_monomial {s : Set (σ →₀ ℕ)} {I : Ideal (MvPolyn
   rw [IsReduced.isReduced_def]
   constructor
   · simp
-  simp_rw [Set.mem_image, Set.mem_setOf]
+  simp_rw [Set.mem_image, Set.mem_ofPred]
   rintro p ⟨p', ⟨hp', rfl⟩⟩ a ha q ⟨q', ⟨hq', rfl⟩⟩ hqp
   simp [monomial_eq_monomial_iff] at hqp
   have : Nontrivial R := nontrivial_of_ne _ _ hqp.2
@@ -415,7 +415,7 @@ lemma IsMinimal.degree_image_eq_of_isMinimal [Nontrivial R]
     (hG' : hG.IsMinimal) {G₁ : Set (MvPolynomial σ R)} {hG₁ : m.IsGroebnerBasis G₁ I}
     (hG₁' : hG₁.IsMinimal) : m.degree '' G = m.degree '' G₁ := by
   rw [hG'.degree_image_eq_setOf_minimal, hG₁'.degree_image_eq_setOf_minimal, Set.ext_iff]
-  simp_rw [Set.mem_setOf, ← ideal_span_monomial_image_eq_ideal_span_monomial_image_iff (R := R),
+  simp_rw [Set.mem_ofPred, ← ideal_span_monomial_image_eq_ideal_span_monomial_image_iff (R := R),
     Set.image_image]
   rw [
     ← m.span_leadingTerm_eq_span_monomial (fun _ h ↦ by simp [hG'.monic h |>.leadingCoeff_eq_one]),
@@ -470,7 +470,7 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   replace ha' := Finset.mem_union.mp <| Finset.mem_of_subset (support_sub ..) ha
   by_cases hqp : m.degree q = m.degree p₁
   · apply not_imp_not.mpr (m.toSyn_monotone (a := m.degree q) (b := a))
-    push_neg
+    push Not
     apply lt_of_le_of_ne
     · rcases ha' with ha | ha
       · exact hqp ▸ m.le_degree_of_mem_support ha
@@ -489,7 +489,7 @@ lemma IsReduced.unique {R : Type*} [CommRing R] [Nontrivial R]
   contrapose! hqp
   simp [← hq'.2.1, ← hp₁₂.1, hqp]
 
-lemma MonomialOrder.degree_le_mul_left {σ R : Type*} [CommRing R] [IsDomain R]
+lemma _root_.MonomialOrder.degree_le_mul_left {σ R : Type*} [CommRing R] [IsDomain R]
     (m : MonomialOrder σ) (p q : MvPolynomial σ R) (hq : q ≠ 0) :
     m.degree p ≤ m.degree (p * q) := by
   by_cases hp : p = 0
@@ -537,123 +537,40 @@ lemma IsMinimal.isGroebnerBasis_image_isRemainder {R} [CommRing R]
     (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     m.IsGroebnerBasis (Set.range f) I := by
-    rw [IsMinimal] at hG'
-    classical
-    rcases hG with ⟨hG1, hG2⟩
-    refine ⟨?_, ?_⟩
-    · rintro _ ⟨g, rfl⟩
-      have := (hf g).1
-      obtain ⟨coef, h_eq, -⟩ := this
-      have : f g = ↑g - (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) coef := by
-        simp_rw [h_eq]
-        -- todo: why `rw [add_sub_cancel_left]` doesn't work?
-        exact (add_sub_cancel_left ..).symm
-      simp [this]
-      apply Ideal.sub_mem
-      ·
-        apply hG1 g.2
-      · dsimp
-        apply Submodule.sum_mem
-        intro c _
-        apply Ideal.mul_mem_left
-        apply hG1
-        exact c.2.1
-    ·
-      rw [hG2]
-      apply congr_arg Ideal.span
-      ext x
-      have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
-        intro g
-        by_contra h_ne
-        let diff := ↑g - f g
-
-        have fg_eq : f g = ↑g - diff := by
-          exact Eq.symm (sub_sub_self (↑g) (f g))
-
-        have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-            have := isRemainder_iff_degree (m := m) g (G \ {↑g}) (f g) <| by
-              simp
-              rintro b hbG -
-              simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
-            obtain ⟨c, h_eq, b_deg⟩ := (this.mp <| hf g).left
-
-            have h_diff_eq : diff =
-            (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by
-              exact sub_eq_iff_eq_add.mpr h_eq
-
-            have h_all_lt : ∀ b ∈ c.support, m.toSyn (m.degree (b.val * c b)) <
-              m.toSyn (m.degree g.val) := by
-              intro b hb
-              have h_le := b_deg b
-              apply lt_of_le_of_ne h_le
-              intro h_eq_deg
-              have h_div : m.degree b.val ≤ m.degree g.val := by
-                have h_eq_raw : m.degree (b.val * c b) = m.degree g.val := by
-                  exact m.toSyn.injective h_eq_deg
-                rw [← h_eq_raw]
-                have cbn0 : c b ≠ 0 := by
-                  exact Finsupp.mem_support_iff.mp hb
-                have h_b_monic : m.Monic b.val := hG'.1 b.val b.2.1
-                have lc1 : m.leadingCoeff b.val = 1 := by
-                  rw [Monic] at h_b_monic
-                  exact h_b_monic
-                have lc2 : m.leadingCoeff (c b) ≠ 0 := by
-                  rw [leadingCoeff]
-                  simp [cbn0]
-                have lc : m.leadingCoeff b.val * m.leadingCoeff (c b) ≠ 0 := by
-                  simp [lc1, lc2]
-                have : m.degree (b.val * c b) = m.degree b.val + m.degree (c b) := by
-                   exact degree_mul_of_mul_leadingCoeff_ne_zero lc
-                rw [this]
-                simp
-              exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
-            rw [h_diff_eq]
-            apply lt_of_le_of_lt m.degree_sum_le
-            have : c ≠ 0 := by
-              intro h_c_zero
-              rw [h_c_zero, map_zero] at h_diff_eq
-              rw [h_diff_eq, sub_zero] at fg_eq
-              rw [fg_eq] at h_ne
-              exact h_ne rfl
-            simp [mul_comm (c _)]
-            rwa [← Finset.sup'_eq_sup, Finset.sup'_lt_iff]
-            exact Finsupp.support_nonempty_iff.mpr this
-
-        have h_degree : m.degree (f g) = m.degree g.val := by
-
-          rw [fg_eq]
-          rw [sub_eq_neg_add]
-          apply m.degree_add_eq_right_of_lt
-          rw [m.degree_neg]
-          exact h_deg_diff_lt
-        apply h_ne
-        rw [leadingTerm]
-        rw [leadingTerm]
-        rw [h_degree]
-        have : m.leadingCoeff (f g) = m.leadingCoeff g.val := by
-          rw [fg_eq]
-          rw [sub_eq_add_neg]
-          have : m.degree (-diff) = m.degree diff := by rw [m.degree_neg]
-          rw [←this] at h_deg_diff_lt
-          exact leadingCoeff_add_of_lt h_deg_diff_lt
-        rw [this]
+  rcases hG with ⟨hG1, hG2⟩
+  constructor
+  · rintro _ ⟨g, rfl⟩
+    obtain ⟨coef, h_eq, -⟩ := (hf g).1
+    simp [eq_sub_iff_add_eq'.mpr (id (Eq.symm h_eq))]
+    apply Ideal.sub_mem
+    · apply hG1 g.2
+    · apply Ideal.sum_mem
+      intro c _
+      apply Ideal.mul_mem_left
+      apply hG1 c.2.1
+  · rw [hG2]
+    apply congr_arg Ideal.span
+    ext x
+    have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
+      intro g
+      exact hG'.leadingTerm_eq_of_isRemainder g.prop (f g) (hf g)
+    constructor
+    · simp only [Set.mem_image, Set.mem_range]
+      intro h₁
+      rcases h₁  with ⟨x₁, hx₁⟩
+      obtain ⟨g_val, hg_in_G, rfl⟩ := hx₁
+      use f ⟨x₁, g_val⟩
       constructor
-      ·
-        simp only [Set.mem_image, Set.mem_range]
+      · use ⟨x₁, g_val⟩
+      · exact lt_eq ⟨x₁, g_val⟩
+    · rintro ⟨_, ⟨g, rfl⟩, rfl⟩
+      use g.val, g.2
+      rw [lt_eq g]
 
-        intro h₁
-        rcases h₁  with ⟨x₁, hx₁⟩
-        obtain ⟨g_val, hg_in_G, rfl⟩ := hx₁
-        use f ⟨x₁, g_val⟩
-        constructor
-        · use ⟨x₁, g_val⟩
-        ·
-          by_contra h_neq
-          exact h_neq (lt_eq ⟨x₁, g_val⟩)
-      ·
-        rintro ⟨_, ⟨g, rfl⟩, rfl⟩
-        use g.val, g.2
-        rw [lt_eq g]
+@[simp]
+lemma _root_.MonomialOrder.not_monic_zero_of_nontrivial [Nontrivial R] :
+    ¬ m.Monic (0 : MvPolynomial σ R) := by
+  simp [Monic]
 
 lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
     {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ R)}
@@ -661,129 +578,26 @@ lemma IsReduced.isReduced_image_isRemainder_of_IsMinimal {R} [CommRing R]
     (hG' : hG.IsMinimal)
     (f : G → MvPolynomial σ R) (hf : ∀ g, m.IsRemainder g.val (G \ {g.val}) (f g)) :
     hG'.isGroebnerBasis_image_isRemainder f hf |>.IsReduced := by
-    rw [isReduced_def]
-    have lt_eq : ∀ (g : G), m.leadingTerm (f g) = m.leadingTerm g.val := by
-      intro g
-      by_contra h_ne
-      let diff := ↑g - f g
-
-      have fg_eq : f g = ↑g - diff := by
-        exact Eq.symm (sub_sub_self (↑g) (f g))
-
-      have h_deg_diff_lt : m.toSyn (m.degree diff) < m.toSyn (m.degree g.val) := by
-          have := isRemainder_iff_degree (m := m) g (G \ {↑g}) (f g) <| by
-            simp
-            rintro b hbG -
-            simp [(hG'.1 _ hbG).leadingCoeff_eq_one]
-          obtain ⟨c, h_eq, b_deg⟩ := (this.mp <| hf g).left
-
-          have h_diff_eq : diff =
-          (Finsupp.linearCombination (MvPolynomial σ R) fun b ↦ ↑b) c := by
-            exact sub_eq_iff_eq_add.mpr h_eq
-
-          have h_all_lt : ∀ b ∈ c.support, m.toSyn (m.degree (b.val * c b)) <
-            m.toSyn (m.degree g.val) := by
-            intro b hb
-            have h_le := b_deg b
-            apply lt_of_le_of_ne h_le
-            intro h_eq_deg
-            have h_div : m.degree b.val ≤ m.degree g.val := by
-                have h_eq_raw : m.degree (b.val * c b) = m.degree g.val := by
-                  exact m.toSyn.injective h_eq_deg
-                rw [← h_eq_raw]
-                have cbn0 : c b ≠ 0 := by
-                  exact Finsupp.mem_support_iff.mp hb
-                have h_b_monic : m.Monic b.val := hG'.1 b.val b.2.1
-                have lc1 : m.leadingCoeff b.val = 1 := by
-                  rw [Monic] at h_b_monic
-                  exact h_b_monic
-                have lc2 : m.leadingCoeff (c b) ≠ 0 := by
-                  rw [leadingCoeff]
-                  simp [cbn0]
-                have lc : m.leadingCoeff b.val * m.leadingCoeff (c b) ≠ 0 := by
-                  simp [lc1, lc2]
-                have : m.degree (b.val * c b) = m.degree b.val + m.degree (c b) := by
-                   exact degree_mul_of_mul_leadingCoeff_ne_zero lc
-                rw [this]
-                simp
-            exact hG'.2 g.val g.2 b.val b.2.1 b.2.2 h_div
-          rw [h_diff_eq]
-          apply lt_of_le_of_lt m.degree_sum_le
-          have : c ≠ 0 := by
-              intro h_c_zero
-              rw [h_c_zero, map_zero] at h_diff_eq
-              rw [h_diff_eq, sub_zero] at fg_eq
-              rw [fg_eq] at h_ne
-              exact h_ne rfl
-          simp [mul_comm (c _)]
-          rwa [← Finset.sup'_eq_sup, Finset.sup'_lt_iff]
-          exact Finsupp.support_nonempty_iff.mpr this
-      have h_degree : m.degree (f g) = m.degree g.val := by
-
-        rw [fg_eq]
-        rw [sub_eq_neg_add]
-        apply m.degree_add_eq_right_of_lt
-        rw [m.degree_neg]
-        exact h_deg_diff_lt
-      apply h_ne
-      rw [leadingTerm]
-      rw [leadingTerm]
-      rw [h_degree]
-      have : m.leadingCoeff (f g) = m.leadingCoeff g.val := by
-        rw [fg_eq]
-        rw [sub_eq_add_neg]
-        have : m.degree (-diff) = m.degree diff := by rw [m.degree_neg]
-        rw [←this] at h_deg_diff_lt
-        exact leadingCoeff_add_of_lt h_deg_diff_lt
-      rw [this]
-    constructor
-    ·
-      intro p hp
-      obtain ⟨g, rfl⟩ := hp
-      have h : m.leadingTerm (f g) = m.leadingTerm ↑g := by
-        exact lt_eq g
-      unfold Monic
-      rw [← m.leadingCoeff_leadingTerm (f g)]
-      rw [h]
-      have g_monic : m.Monic g.val := by
-        exact hG'.1 g g.2
-      unfold Monic at g_monic
-      rw [m.leadingCoeff_leadingTerm]
-      exact g_monic
-    · intro p hp q hq r hr neq
-      obtain ⟨g, rfl⟩ := hp
-      obtain ⟨g', rfl⟩ := hr
-      ·
-        have h_ne : g' ≠ g := by
-          rintro rfl
-          exact neq rfl
-        have h : m.leadingTerm (f g') = m.leadingTerm ↑g' := by
-          exact lt_eq g'
-        have deg_r_eq_g' : m.degree (f g') = m.degree g'.val := by
-          simp [← degree_leadingTerm, h]
-        rw [deg_r_eq_g']
-        apply (hf g).2 q hq g'
-        ·
-          rw [Set.mem_diff, Set.mem_singleton_iff]
-          constructor
-          · exact g'.2
-          · exact Subtype.coe_ne_coe.mpr h_ne
-        · intro h_val_eq
-          have g'_monic : m.Monic g'.val := hG'.1 g' g'.2
-          rw [h_val_eq] at g'_monic
-          simp_rw [Monic] at g'_monic
-          simp at g'_monic
-          have h_fg_zero : f g = 0 := by
-
-            apply MvPolynomial.ext
-            intro m
-            rw [← mul_one (coeff m (f g))]
-            rw [← g'_monic, mul_zero]
-            rw [coeff_zero]
-
-          rw [h_fg_zero] at hq
-          rw [MvPolynomial.support_zero] at hq
-          exact (List.mem_nil_iff q).mp hq
+  nontriviality R
+  rw [isReduced_def]
+  constructor
+  · intro p hp
+    obtain ⟨g, rfl⟩ := hp
+    rw [Monic, ← m.leadingCoeff_leadingTerm (f g),
+      hG'.leadingTerm_eq_of_isRemainder g.prop (f g) (hf g), m.leadingCoeff_leadingTerm]
+    exact hG'.1 g g.2
+  · intro p hp q hq r hr neq
+    obtain ⟨g, rfl⟩ := hp
+    obtain ⟨g', rfl⟩ := hr
+    have deg_r_eq_g' : m.degree (f g') = m.degree g'.val := by
+      simp [← degree_leadingTerm, hG'.leadingTerm_eq_of_isRemainder g'.prop (f g') (hf g')]
+    rw [deg_r_eq_g']
+    apply (hf g).2 q hq g'
+    · rw [Set.mem_sdiff, Set.mem_singleton_iff]
+      grind
+    · intro h_val_eq
+      absurd hG'.1 g' g'.2
+      simp [h_val_eq]
 
 lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)} (hG : m.IsGroebnerBasis G I)
@@ -803,8 +617,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
     simp? says simp only [Set.mem_range, Subtype.exists, forall_exists_index]
     rintro _ _ hmemG rfl
     simp [Monic, Units.smul_def, smul_eq_C_mul]
-    convert m.leadingCoeff_mul_of_right_mem_nonZeroDivisors _ _
-    · simp [m.leadingCoeff_C]
+    convert m.leadingCoeff_mul_of_right_mem_nonZeroDivisors _
     · simp
     exact (hG' _ hmemG).mem_nonZeroDivisors
   -- minimalized basis
@@ -824,7 +637,7 @@ lemma IsReduced.exists_of_isGroebnerBasis {R} [CommRing R] {G : Set (MvPolynomia
       ⟨(monicized_monic · <| minimal_subset_monic ·), ?min, injOn_degree⟩
   case min =>
     intro g h
-    simpa only [degree_minimal_eq, Set.mem_setOf, minimal_minimal] using
+    simpa only [degree_minimal_eq, Set.mem_ofPred, minimal_minimal] using
       Set.ext_iff.mp degree_minimal_eq (m.degree g) |>.mp (Set.mem_image_of_mem _ h)
   -- reduced basis
   have reduced := IsReduced.isReduced_image_isRemainder_of_IsMinimal minimal_isMinimal
@@ -923,10 +736,10 @@ lemma isGroebnerBasis_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
     simp [le_antisymm hq.2.1 <| ha.le_of_le ⟨q, ⟨hq.1.1.1, hq.1.2⟩, rfl⟩ hq.2.1] at hq
   split_ands
   · -- todo `m.leadingCoeff_smul`
-    rw [Monic, smul_eq_C_mul, m.leadingCoeff_mul', m.leadingCoeff_C,
+    rw [Monic, smul_eq_C_mul, m.leadingCoeff_mul, m.leadingCoeff_C,
       inv_mul_cancel₀ <| leadingCoeff_eq_zero_iff.not.mpr hr0]
   · simp [smul_eq_C_mul]
-    exact Ideal.mul_mem_left _ _ (hr.mem_ideal_iff (I := I) Set.diff_subset |>.mpr hp.1)
+    exact Ideal.mul_mem_left _ _ (hr.mem_ideal_iff (I := I) Set.sdiff_subset |>.mpr hp.1)
   · simp [hr0]
   · simp
     intro q hqI hq
@@ -938,8 +751,7 @@ lemma isGroebnerBasis_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
       MvPolynomial.support_smul_eq (by simp [hr0]), hrp]
     intro hqr a ha
     apply hr.2 a ha _ (by simp [hq, hqr]) hq0
-  · simp [hr0]
-  rw [m.degree_smul_of_mem_nonZeroDivisors (by simp [hr0]), hrp]
+  rw [← hrp, m.degree_smul_of_mem_nonZeroDivisors (f := r) (by simp [hr0])]
 
 lemma IsReduced.isReduced_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
     (isGroebnerBasis_minimalFor (m := m) I).IsReduced := by
@@ -973,7 +785,7 @@ theorem IsReduced.isReduced_iff_minimalFor {k} [Field k] (G : Set (MvPolynomial 
       MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a) := by
   simp (singlePass := true) only [
-    ← Set.mem_setOf (p := fun g ↦ m.Monic g ∧
+    ← Set.mem_ofPred (p := fun g ↦ m.Monic g ∧
       MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a),
     ← Set.ext_iff
@@ -1073,10 +885,10 @@ lemma _root_.Filter.sUnion_mem_of_mem {α} {f : Filter α}
     simp at h
     simp [Filter.union_mem_of_mem h.1 (h' h.2 hs')]
 
--- todo: the wraning is a bug?
-lemma _root_.Filter.iUnion_mem_of_mem {α ι} {f : Filter α} [Fintype ι]
+lemma _root_.Filter.iUnion_mem_of_mem {α} {ι : Type*} {f : Filter α} [Finite ι]
     [nomempty : Nonempty ι] {s : ι → Set α} (h : ∀ i : ι, s i ∈ f) : Set.iUnion s ∈ f := by
   classical
+  have := Fintype.ofFinite (α := ι)
   have finite := Set.univ_finite_iff_nonempty_fintype (α := ι) |>.mpr <| .intro inferInstance
   rw [← Set.sUnion_range]
   apply f.sUnion_mem_of_mem
@@ -1198,7 +1010,7 @@ theorem IsReduced.isReduced_liminf_nat {k} [Field k] {I : Ideal (MvPolynomial σ
     ∃ h : m.IsGroebnerBasis
         (Filter.cofinite.liminf fun i ↦ rename (e ∘ @Fin.val (i + init)) '' G' i) I,
       h.IsReduced := by
-  convert IsReduced.isReduced_liminf (f := Filter.cofinite) ?_ hG' hG''
+  convert! IsReduced.isReduced_liminf (f := Filter.cofinite) ?_ hG' hG''
     (e := (Embedding.ofInjective m <| e.injective.comp <| @Fin.val_injective <| · + init))
   simp [Embedding.coe_ofInjective, Set.eq_univ_iff_forall, eq_comm (a := Set.univ),
     Nat.cofinite_eq_atTop, Filter.liminf_eq_iSup_iInf_of_nat]
