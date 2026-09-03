@@ -80,6 +80,15 @@ open MvPolynomial IsRemainder
 def IsGroebnerBasis {σ : Type*} {m : MonomialOrder σ} {R : Type*}
     [CommSemiring R] (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :=
   G ⊆ I ∧ Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G)
+
+/-- A finite representation of `p` by `G` whose nonzero summands have degree below `d`. -/
+def HasStandardRepresentation {σ : Type*} {R : Type*} [CommSemiring R]
+    (m : MonomialOrder σ) (G : Set (MvPolynomial σ R))
+    (p : MvPolynomial σ R) (d : m.syn) : Prop :=
+  ∃ q : G →₀ MvPolynomial σ R,
+    p = Finsupp.linearCombination _ (fun b : G ↦ b.val) q ∧
+      ∀ b : G, q b ≠ 0 → m.toSyn (m.degree (b.val * q b)) < d
+
 namespace IsGroebnerBasis
 
 open scoped MonomialOrder
@@ -522,14 +531,13 @@ private lemma degree_mul_lt_iff_left_lt_of_ne_zero_of_mem_nonZeroDivisors {R}
     m.degree_mul_of_right_mem_nonZeroDivisors (show p' ≠ 0 by contrapose! h; simp [h]) hq] using h
 
 set_option maxHeartbeats 400000 in
--- It reaches the default max heart beats with option `says.verify` set to `true`, without which the
--- proof can pass with default max heart beats.
-/-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if 0 is a
-remainder of echo sPolynomial between two polynomials on the basis. -/
-theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
-    {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
-    m.IsGroebnerBasis G (Ideal.span G) ↔
-      ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ R) G 0 := by
+/-- The standard-representation form of Buchberger's criterion. -/
+theorem isGroebnerBasis_of_hasStandardRepresentation_sPolynomial
+    {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g))
+    (hsPoly : ∀ (g₁ g₂ : G), m.HasStandardRepresentation G
+      (m.sPolynomial g₁ g₂ : MvPolynomial σ R)
+      (m.toSyn (m.degree g₁.val ⊔ m.degree g₂.val))) :
+    m.IsGroebnerBasis G (Ideal.span G) := by
   /- The informal proof is attached in comment blocks (`/- -/`), where math expressions are written
   in `$ $` or `$$ $$` like in LaTeX or Markdown, while we tend to use unicode symbols like Lean code
   instead of LaTeX commands are used for readability. And every block roughly corresponds with a
@@ -539,13 +547,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   -- `withBotDegree` was defined and used to refactore `IsRemainder`, so it deals with some edge
   -- cases about degree of zero polynomial.)
   classical
-  constructor
-  · /- (→) Easy to prove. -/
-    intro h _ _
-    rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero (hG := hG)] at h
-    apply h.2
-    apply m.sPolynomial_mem_ideal <;> exact Set.mem_of_mem_of_subset (by simp) h.1
-  /- (←)
+  /- 
   We only need to prove for all $p ∈ ⟨G⟩$ (`p ∈ Ideal.span G`),
   (with loss of generality, assuming $p ≠ 0$)
   $0$ is a remainder of $p$ on division by $G$ (`m.IsRemainder p G 0`), i.e.
@@ -556,7 +558,6 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   have hG₁ {g : G} := hG g g.prop
   have hG₀ {g} := (@hG₁ g).mem_nonZeroDivisors
   -- `rfl` doens't rewrite the goal?
-  intro hsPoly
   rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero (hG := hG)]
   exists Ideal.subset_span
   intro p hp
@@ -685,9 +686,6 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
     - $sPoly(g₁, g₂) = ∑ g ∈ G, q_{g₁, g₂}(g) * g$,
     - $∀ g ∈ G, degree(q_{g₁, g₂}(g) * g) ≤ degree(sPoly(g₁, g₂))$, and
     - if $sPoly(g₁, g₂) = 0$ then $q_{g₁, g₂} = 0$. -/
-  simp [IsRemainder, -Subtype.forall, ← map_add,
-    ← m.withBotDegree_mul_of_left_mem_nonZeroDivisors hG₀,
-    m.withBotDegree_le_withBotDegree_iff] at hsPoly
   replace hsPoly (g₁ g₂ : G'.filter degFgEqA) := hsPoly g₁ g₂
   let q (g₁ g₂ : G'.filter degFgEqA) := (hsPoly g₁ g₂).choose
   have hq (g₁ g₂ : G'.filter degFgEqA) := (hsPoly g₁ g₂).choose_spec
@@ -792,22 +790,17 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
       c(g₁, g₂) • (lcm(lm(f(g₁) * g₁), lm(f(g₂) * g₂)) / lcm(lm(g₁), lm(g₂))) * q_{g₁, g₂}(g) * g)
     ≤ degree(lcm(lm(f(g₁) * g₁), lm(f(g₂) * g₂))) - degree(lcm(lm(g₁), lm(g₂))) +
         degree(q_{g₁, g₂}(g) * g)$$ -/
-    obtain ⟨h_deg_gq_le_sPoly, h_q_eq_0_of_sPoly_eq_0⟩ := hq g₁ g₂ g
-    wlog! hsPoly_ne_0 : m.sPolynomial g₁.val.val g₂.val.val ≠ 0 generalizing
-    · suffices (q g₁ g₂) g = 0 by simp [this, h_a_gt_zero]
-      rw [← mul_left_mem_nonZeroDivisors_eq_zero_iff <|
-          m.mem_nonZeroDivisors_of_leadingCoeff_mem_nonZeroDivisors hG₀,
-        h_q_eq_0_of_sPoly_eq_0 hsPoly_ne_0]
+    by_cases hq0 : (q g₁ g₂) g = 0
+    · simp [hq0, h_a_gt_zero]
+    have h_deg_gq_lt_sup := hq g₁ g₂ g hq0
     rw [mul_assoc]
     apply lt_of_le_of_lt degree_mul_le
     rw [AddEquiv.map_add]
     refine add_lt_of_add_lt_right ?_ (degree_monomial_le _)
     /- $$... ≤ degree(lcm(lm(f(g₁) * g₁), lm(f(g₂) * g₂))) - degree(lcm(lm(g₁), lm(g₂))) +
                 degree(sPoly(g₁, g₂))$$ -/
-    apply lt_of_le_of_lt (add_le_add_right (mul_comm g.val (q _ _ g) ▸ h_deg_gq_le_sPoly) _)
-    /- $$... < degree(lcm(lm(f(g₁) * g₁), lm(f(g₂) * g₂))) - degree(lcm(lm(g₁), lm(g₂))) +
-                degree(lcm(lm(g₁), lm(g₂)))$$ -/
-    apply lt_of_lt_of_le (add_lt_add_right (m.degree_sPolynomial_lt_sup_degree hsPoly_ne_0) _)
+    apply lt_of_lt_of_le (add_lt_add_right
+      (mul_comm g.val (q _ _ g) ▸ h_deg_gq_lt_sup) _)
     /- $$... = degree(lcm(lm(f(g₁) * g₁), lm(f(g₂) * g₂)))$$ -/
     rw [← AddEquiv.map_add, tsub_add_cancel_of_le <| sup_le_sup (by simp) (by simp)]
     /- $$... ≤ a.$$ -/
@@ -837,6 +830,36 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
     simp [degree_mul_of_right_mem_nonZeroDivisors hLTgg' hG₀,
       degree_mul_of_right_mem_nonZeroDivisors this hG₀,
       m.degree_sub_leadingTerm_lt_degree (m.degree_ne_zero_of_sub_leadingTerm_ne_zero hLTgg')]
+
+set_option maxHeartbeats 400000 in
+-- It reaches the default max heart beats with option `says.verify` set to `true`, without which the
+-- proof can pass with default max heart beats.
+/-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if 0 is a
+remainder of each S-polynomial between two polynomials in the basis. -/
+theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
+    {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
+    m.IsGroebnerBasis G (Ideal.span G) ↔
+      ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ R) G 0 := by
+  classical
+  constructor
+  · intro h _ _
+    rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero (hG := hG)] at h
+    apply h.2
+    apply m.sPolynomial_mem_ideal <;> exact Set.mem_of_mem_of_subset (by simp) h.1
+  · intro hrem
+    apply isGroebnerBasis_of_hasStandardRepresentation_sPolynomial hG
+    intro g₁ g₂
+    by_cases hs : (m.sPolynomial g₁ g₂ : MvPolynomial σ R) = 0
+    · refine ⟨0, ?_, ?_⟩
+      · simp [hs]
+      · simp
+    · have hr := (IsRemainder.isRemainder_iff_degree
+          (f := (m.sPolynomial g₁ g₂ : MvPolynomial σ R)) (B := G) (r := 0)
+          (fun b hb ↦ (hG b hb).mem_nonZeroDivisors)).mp (hrem g₁ g₂)
+      rcases hr.1 with ⟨q, hq, hdeg⟩
+      refine ⟨q, by simpa using hq, ?_⟩
+      intro b hb
+      exact lt_of_le_of_lt (hdeg b) (m.degree_sPolynomial_lt_sup_degree hs)
 
 lemma isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀
     {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
