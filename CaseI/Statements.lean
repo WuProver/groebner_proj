@@ -62,13 +62,16 @@ def secondMoment (a : ℕ+ →₀ ℕ) : ℕ :=
   a.sum fun i e ↦ (i : ℕ) ^ 2 * e
 
 /-- The monomial order from Section 4, with ordinary lexicographic tie-breaking. -/
-def IsCaseIMonomialOrder (m : MonomialOrder ℕ+) : Prop :=
+def caseIMonomialOrder : MonomialOrder ℕ+ := sorry
+
+/-- The monomial order from Section 4, with ordinary lexicographic tie-breaking. -/
+lemma caseI_def :
   ∀ a b,
-    a ≺[m] b ↔
+    a ≺[caseIMonomialOrder] b ↔
       weightedDegree a < weightedDegree b ∨
         weightedDegree a = weightedDegree b ∧
           (secondMoment b < secondMoment a ∨
-            secondMoment a = secondMoment b ∧ toLex a < toLex b)
+            secondMoment a = secondMoment b ∧ toLex a < toLex b) := sorry
 
 /-- The monomial ideal `J = (xᵢ², xᵢxᵢ₊₁ : i ≥ 1)`. -/
 noncomputable def J : Ideal S :=
@@ -91,13 +94,12 @@ Theorem 1.1.  Here the leading monomial is represented by its exponent vector
 `m.degree`, and the assertion that the allowed residue classes freely generate the quotient is
 represented by bijectivity of the canonical evaluation map `allowedToQuotient`.
 -/
-theorem theorem_1_1 (c : ℂ) (hc : c ^ 2 + c = 1) (m : MonomialOrder ℕ+)
-    (hm : IsCaseIMonomialOrder m) :
-    ∃ hG : m.IsGroebnerBasis (G c) (I c),
+theorem theorem_1_1 (c : ℂ) (hc : c ^ 2 + c = 1) :
+    ∃ hG : caseIMonomialOrder.IsGroebnerBasis (G c) (I c),
       hG.IsReduced ∧
-        Ideal.span (m.leadingTerm '' (I c : Set S)) = J ∧
-        (∀ i : ℕ+, m.degree (g c (2 * (i : ℕ))) = Finsupp.single i 2) ∧
-        (∀ i : ℕ+, m.degree (g c (2 * (i : ℕ) + 1)) =
+        Ideal.span (caseIMonomialOrder.leadingTerm '' (I c : Set S)) = J ∧
+        (∀ i : ℕ+, caseIMonomialOrder.degree (g c (2 * (i : ℕ))) = Finsupp.single i 2) ∧
+        (∀ i : ℕ+, caseIMonomialOrder.degree (g c (2 * (i : ℕ) + 1)) =
           Finsupp.single i 1 + Finsupp.single (next i) 1) ∧
         Function.Bijective (allowedToQuotient c) := by
   sorry
