@@ -4013,12 +4013,18 @@ lemma g_isWeightedHomogeneous (c : ℂ) {n : ℕ} (hn : 2 ≤ n) :
     hlinear | ⟨j, k, hjn, hsum, hpair⟩ |
     ⟨heven, hsquare⟩
   · rw [hlinear]
-    simp [weightedDegree]
+    let np : ℕ+ := ⟨n, Nat.zero_lt_of_lt hn⟩
+    change weightedDegree (Finsupp.single np 1) = n
+    simpa [np] using weightedDegree_single np 1
   · rw [hpair]
-    simp [weightedDegree, hsum]
+    rw [weightedDegree_add, weightedDegree_single, weightedDegree_single]
+    simpa using hsum.symm
   · rw [hsquare]
     rcases heven with ⟨d, rfl⟩
-    simp [weightedDegree]
+    let mid : ℕ+ := ⟨(2 * d) / 2, Nat.div_pos hn (by norm_num)⟩
+    change weightedDegree (Finsupp.single mid 2) = 2 * d
+    rw [weightedDegree_single]
+    simp [mid]
     omega
 
 attribute [local instance] MvPolynomial.weightedGradedAlgebra
@@ -4030,6 +4036,432 @@ lemma I_isWeightedHomogeneous (c : ℂ) (hc : c ^ 2 + c = 1) :
   apply Ideal.homogeneous_span
   rintro p ⟨n, hn, rfl⟩
   exact ⟨n, g_isWeightedHomogeneous c hn.1⟩
+
+lemma normalForm_isWeightedHomogeneous (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hm : IsCaseIMonomialOrder m)
+    (hG : m.IsGroebnerBasis (G c) (I c)) (hred : hG.IsReduced) {p : S} {n : ℕ}
+    (hp : MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ)) p n) :
+    MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ)) (normalForm hG hred p) n := by
+  intro a ha
+  rw [finsupp_weight_eq_weightedDegree]
+  by_contra han
+  let w : ℕ+ → ℕ := fun i ↦ (i : ℕ)
+  let k := weightedDegree a
+  let r := normalForm hG hred p
+  let rk : S := MvPolynomial.weightedHomogeneousComponent w k r
+  have hrkCoeff : coeff a rk = coeff a r := by
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent]
+    simp [w, k, finsupp_weight_eq_weightedDegree]
+  have hrkne : rk ≠ 0 := by
+    intro hzero
+    rw [hzero, coeff_zero] at hrkCoeff
+    exact ha hrkCoeff.symm
+  have hpk : MvPolynomial.weightedHomogeneousComponent w k p = 0 := by
+    ext d
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent, coeff_zero]
+    split_ifs with hdk
+    · apply hp.coeff_eq_zero
+      rw [hdk]
+      simpa [w, k, finsupp_weight_eq_weightedDegree] using han
+    · rfl
+  have hdiff : p - r ∈ I c := by
+    rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, normalForm_quotient_eq hG hred, sub_self]
+  have hcomponent := MvPolynomial.weightedHomogeneousComponent_mem_of_mem ℂ w
+    (I_isWeightedHomogeneous c hc) hdiff k
+  have hrkI : rk ∈ I c := by
+    have hneg : -rk ∈ I c := by
+      simpa [rk, r, map_sub, hpk] using hcomponent
+    exact (I c).neg_mem_iff.mp hneg
+  have hrkStandard : rk ∈ StandardPolynomial m (G c) := by
+    rw [StandardPolynomial, MvPolynomial.restrictSupport, AddMonoidAlgebra.mem_supported]
+    intro d hd
+    apply (isStandardExponent_iff_gap c hc m hm d).mpr
+    apply (isStandardExponent_iff_gap c hc m hm d).mp
+    have hrStandard := normalForm_mem_standardPolynomial hG hred p
+    rw [StandardPolynomial, MvPolynomial.restrictSupport,
+      AddMonoidAlgebra.mem_supported] at hrStandard
+    apply hrStandard
+    have hd' : rk.coeff d ≠ 0 := Finsupp.mem_support_iff.mp hd
+    change coeff d rk ≠ 0 at hd'
+    apply Finsupp.mem_support_iff.mpr
+    change coeff d r ≠ 0
+    dsimp only [rk] at hd'
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent] at hd'
+    split at hd' <;> simp_all
+  let rks : StandardPolynomial m (G c) := ⟨rk, hrkStandard⟩
+  have hrksZero : standardToQuotient hG rks = 0 := by
+    change Ideal.Quotient.mk (I c) rk = 0
+    exact Ideal.Quotient.eq_zero_iff_mem.mpr hrkI
+  have heq : standardToQuotient hG rks = standardToQuotient hG 0 := by simpa using hrksZero
+  have := (standardToQuotient_bijective hG hred).1 heq
+  exact hrkne (congrArg Subtype.val this)
+
+def allowedWeight (i : AllowedIndex) : ℕ := i.val.val
+
+noncomputable def allowedRename : AllowedPolynomial →ₐ[ℂ] S :=
+  MvPolynomial.rename (fun i : AllowedIndex ↦ i.val)
+
+lemma allowedToQuotient_eq_mk_allowedRename (c : ℂ) (p : AllowedPolynomial) :
+    allowedToQuotient c p = Ideal.Quotient.mk (I c) (allowedRename p) := by
+  let f : AllowedPolynomial →ₐ[ℂ] S ⧸ I c :=
+    (Ideal.Quotient.mkₐ ℂ (I c)).comp allowedRename
+  have hf : allowedToQuotient c = f := by
+    apply MvPolynomial.algHom_ext
+    intro i
+    simp [f, allowedRename, allowedToQuotient_X]
+  rw [hf]
+  rfl
+
+lemma weight_mapDomain_allowed (a : AllowedIndex →₀ ℕ) :
+    weightedDegree (a.mapDomain fun i : AllowedIndex ↦ i.val) =
+      Finsupp.weight allowedWeight a := by
+  rw [weightedDegree, Finsupp.weight_apply,
+    Finsupp.sum_mapDomain_index (fun _ ↦ rfl) (fun _ _ _ ↦ by simp [mul_add])]
+  apply Finsupp.sum_congr
+  intro i
+  simp [allowedWeight, mul_comm]
+
+lemma weightedHomogeneousComponent_allowedRename (p : AllowedPolynomial) (n : ℕ) :
+    MvPolynomial.weightedHomogeneousComponent (fun i : ℕ+ ↦ (i : ℕ)) n
+        (allowedRename p) =
+      allowedRename (MvPolynomial.weightedHomogeneousComponent allowedWeight n p) := by
+  classical
+  ext d
+  by_cases hd : ∃ a : AllowedIndex →₀ ℕ,
+      a.mapDomain (fun i : AllowedIndex ↦ i.val) = d
+  · obtain ⟨a, rfl⟩ := hd
+    simp only [allowedRename, MvPolynomial.coeff_weightedHomogeneousComponent,
+      MvPolynomial.coeff_rename_mapDomain _ Subtype.val_injective]
+    rw [finsupp_weight_eq_weightedDegree, weight_mapDomain_allowed]
+  · have hzero : coeff d (allowedRename p) = 0 := by
+      apply MvPolynomial.coeff_rename_eq_zero
+      intro a ha
+      exact (hd ⟨a, ha⟩).elim
+    have hzero' : coeff d
+        (allowedRename (MvPolynomial.weightedHomogeneousComponent allowedWeight n p)) = 0 := by
+      apply MvPolynomial.coeff_rename_eq_zero
+      intro a ha
+      exact (hd ⟨a, ha⟩).elim
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent, hzero, hzero']
+    split <;> rfl
+
+lemma quotientToAllowed_mk_isWeightedHomogeneous (c : ℂ) (hc : c ^ 2 + c = 1)
+    {r : S} {n : ℕ}
+    (hr : MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ)) r n) :
+    MvPolynomial.IsWeightedHomogeneous allowedWeight
+      (quotientToAllowed c hc (Ideal.Quotient.mk (I c) r)) n := by
+  let u := quotientToAllowed c hc (Ideal.Quotient.mk (I c) r)
+  intro a ha
+  by_contra han
+  let k := Finsupp.weight allowedWeight a
+  let uk := MvPolynomial.weightedHomogeneousComponent allowedWeight k u
+  have hukCoeff : coeff a uk = coeff a u := by
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent]
+    simp [k]
+  have hukne : uk ≠ 0 := by
+    intro hzero
+    rw [hzero, coeff_zero] at hukCoeff
+    exact ha hukCoeff.symm
+  have hcompR : MvPolynomial.weightedHomogeneousComponent
+      (fun i : ℕ+ ↦ (i : ℕ)) k r = 0 := by
+    ext d
+    rw [MvPolynomial.coeff_weightedHomogeneousComponent, coeff_zero]
+    split_ifs with hdk
+    · apply hr.coeff_eq_zero
+      rw [hdk]
+      simpa [k] using han
+    · rfl
+  have hquot : allowedToQuotient c u = Ideal.Quotient.mk (I c) r := by
+    have h := AlgHom.congr_fun (allowedToQuotient_comp_quotientToAllowed c hc)
+      (Ideal.Quotient.mk (I c) r)
+    simpa [u] using h
+  have hdiff : allowedRename u - r ∈ I c := by
+    rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub,
+      ← allowedToQuotient_eq_mk_allowedRename]
+    exact sub_eq_zero.mpr hquot
+  have hcomponent := MvPolynomial.weightedHomogeneousComponent_mem_of_mem ℂ
+    (fun i : ℕ+ ↦ (i : ℕ)) (I_isWeightedHomogeneous c hc) hdiff k
+  have hrenameUk : allowedRename uk ∈ I c := by
+    simpa [map_sub, weightedHomogeneousComponent_allowedRename, hcompR, uk] using hcomponent
+  have hukQuot : allowedToQuotient c uk = 0 := by
+    rw [allowedToQuotient_eq_mk_allowedRename, Ideal.Quotient.eq_zero_iff_mem]
+    exact hrenameUk
+  exact hukne ((allowedToQuotient_bijective c hc).1 (by
+    have : allowedToQuotient c uk = allowedToQuotient c 0 := by simpa using hukQuot
+    exact this))
+
+noncomputable def allowedQuotientEquiv (c : ℂ) (hc : c ^ 2 + c = 1) :
+    AllowedPolynomial ≃ₗ[ℂ] S ⧸ I c :=
+  LinearEquiv.ofBijective (allowedToQuotient c).toLinearMap
+    (allowedToQuotient_bijective c hc)
+
+noncomputable def allowedStandardEquiv (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hG : m.IsGroebnerBasis (G c) (I c))
+    (hred : hG.IsReduced) : AllowedPolynomial ≃ₗ[ℂ] StandardPolynomial m (G c) :=
+  (allowedQuotientEquiv c hc).trans (standardQuotientEquiv hG hred).symm
+
+lemma allowedStandardEquiv_coe (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hG : m.IsGroebnerBasis (G c) (I c))
+    (hred : hG.IsReduced) (p : AllowedPolynomial) :
+    (allowedStandardEquiv c hc m hG hred p : S) =
+      normalForm hG hred (allowedRename p) := by
+  let r : StandardPolynomial m (G c) :=
+    ⟨normalForm hG hred (allowedRename p),
+      normalForm_mem_standardPolynomial hG hred (allowedRename p)⟩
+  change ((allowedStandardEquiv c hc m hG hred p).val : S) = r.val
+  apply congrArg Subtype.val
+  apply (standardToQuotient_bijective hG hred).1
+  have hlhs : standardToQuotient hG (allowedStandardEquiv c hc m hG hred p) =
+      allowedToQuotient c p := by
+    change standardQuotientEquiv hG hred
+        ((standardQuotientEquiv hG hred).symm (allowedQuotientEquiv c hc p)) =
+      allowedToQuotient c p
+    rw [LinearEquiv.apply_symm_apply]
+    rfl
+  rw [hlhs]
+  change allowedToQuotient c p =
+    Ideal.Quotient.mk (I c) (normalForm hG hred (allowedRename p))
+  rw [normalForm_quotient_eq hG hred, ← allowedToQuotient_eq_mk_allowedRename]
+
+lemma allowedStandardEquiv_isWeightedHomogeneous (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hm : IsCaseIMonomialOrder m)
+    (hG : m.IsGroebnerBasis (G c) (I c)) (hred : hG.IsReduced)
+    {p : AllowedPolynomial} {n : ℕ}
+    (hp : MvPolynomial.IsWeightedHomogeneous allowedWeight p n) :
+    MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ))
+      (allowedStandardEquiv c hc m hG hred p : S) n := by
+  rw [allowedStandardEquiv_coe]
+  apply normalForm_isWeightedHomogeneous c hc m hm hG hred
+  intro d hd
+  obtain ⟨a, rfl, ha⟩ := MvPolynomial.coeff_rename_ne_zero
+    (fun i : AllowedIndex ↦ i.val) p d hd
+  rw [finsupp_weight_eq_weightedDegree, weight_mapDomain_allowed]
+  exact hp ha
+
+lemma allowedStandardEquiv_symm_isWeightedHomogeneous (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hG : m.IsGroebnerBasis (G c) (I c))
+    (hred : hG.IsReduced) {r : StandardPolynomial m (G c)} {n : ℕ}
+    (hr : MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ)) (r : S) n) :
+    MvPolynomial.IsWeightedHomogeneous allowedWeight
+      ((allowedStandardEquiv c hc m hG hred).symm r) n := by
+  have heq : (allowedStandardEquiv c hc m hG hred).symm r =
+      quotientToAllowed c hc (Ideal.Quotient.mk (I c) (r : S)) := by
+    apply (allowedToQuotient_bijective c hc).1
+    have hleft : allowedToQuotient c ((allowedStandardEquiv c hc m hG hred).symm r) =
+        Ideal.Quotient.mk (I c) (r : S) := by
+      change allowedQuotientEquiv c hc
+          ((allowedQuotientEquiv c hc).symm (standardQuotientEquiv hG hred r)) =
+        Ideal.Quotient.mk (I c) (r : S)
+      rw [LinearEquiv.apply_symm_apply]
+      rfl
+    rw [hleft]
+    symm
+    have h := AlgHom.congr_fun (allowedToQuotient_comp_quotientToAllowed c hc)
+      (Ideal.Quotient.mk (I c) (r : S))
+    simpa using h
+  rw [heq]
+  exact quotientToAllowed_mk_isWeightedHomogeneous c hc hr
+
+noncomputable def AllowedDegreePolynomial (n : ℕ) : Submodule ℂ AllowedPolynomial :=
+  MvPolynomial.restrictSupport ℂ {a | Finsupp.weight allowedWeight a = n}
+
+noncomputable def GapDegreePolynomial (n : ℕ) : Submodule ℂ S :=
+  MvPolynomial.restrictSupport ℂ {a | weightedDegree a = n ∧ IsGapStandard a}
+
+abbrev AllowedExponent (n : ℕ) :=
+  {a : AllowedIndex →₀ ℕ // Finsupp.weight allowedWeight a = n}
+
+abbrev GapExponent (n : ℕ) :=
+  {a : ℕ+ →₀ ℕ // weightedDegree a = n ∧ IsGapStandard a}
+
+noncomputable def pEquivAllowedExponent (n : ℕ) : P n ≃ AllowedExponent n where
+  toFun lam := by
+    let l := Partition.multiplicities lam.val
+    have hsupp : ↑l.support ⊆ Set.range (fun i : AllowedIndex ↦ i.val) := by
+      intro i hi
+      exact ⟨⟨i, lam.prop i hi⟩, rfl⟩
+    let a := Finsupp.comapDomain (fun i : AllowedIndex ↦ i.val) l
+      Subtype.val_injective.injOn
+    refine ⟨a, ?_⟩
+    have hmap := Finsupp.mapDomain_comapDomain (fun i : AllowedIndex ↦ i.val)
+      Subtype.val_injective l hsupp
+    rw [← weight_mapDomain_allowed, hmap]
+    exact lam.val.prop
+  invFun a := by
+    let l := Finsupp.mapDomain (fun i : AllowedIndex ↦ i.val) a.val
+    have hlweight : weightedDegree l = n := by
+      rw [weight_mapDomain_allowed]
+      exact a.prop
+    refine ⟨⟨l, hlweight⟩, ?_⟩
+    intro i hi
+    have himage := Finsupp.mapDomain_support (s := a.val) hi
+    rw [Finset.mem_image] at himage
+    obtain ⟨j, hj, hji⟩ := himage
+    simpa [← hji] using j.prop
+  left_inv lam := by
+    apply Subtype.ext
+    apply Subtype.ext
+    dsimp only
+    apply Finsupp.mapDomain_comapDomain (fun i : AllowedIndex ↦ i.val)
+      Subtype.val_injective
+    intro i hi
+    exact ⟨⟨i, lam.prop i hi⟩, rfl⟩
+  right_inv a := by
+    apply Subtype.ext
+    dsimp only
+    exact Finsupp.comapDomain_mapDomain (fun i : AllowedIndex ↦ i.val)
+      Subtype.val_injective a.val
+
+noncomputable def qEquivGapExponent (n : ℕ) : Q n ≃ GapExponent n where
+  toFun a := ⟨Partition.multiplicities a.val, a.val.prop, a.prop⟩
+  invFun a := ⟨⟨a.val, a.prop.1⟩, a.prop.2⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+lemma allowedDegree_isWeightedHomogeneous {n : ℕ} (p : AllowedDegreePolynomial n) :
+    MvPolynomial.IsWeightedHomogeneous allowedWeight (p : AllowedPolynomial) n := by
+  intro a ha
+  exact (AddMonoidAlgebra.mem_supported.mp p.2) (mem_support_iff.mpr ha)
+
+lemma gapDegree_isWeightedHomogeneous {n : ℕ} (p : GapDegreePolynomial n) :
+    MvPolynomial.IsWeightedHomogeneous (fun i : ℕ+ ↦ (i : ℕ)) (p : S) n := by
+  intro a ha
+  rw [finsupp_weight_eq_weightedDegree]
+  exact ((AddMonoidAlgebra.mem_supported.mp p.2) (mem_support_iff.mpr ha)).1
+
+lemma gapDegree_mem_standard (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hm : IsCaseIMonomialOrder m) {n : ℕ}
+    (p : GapDegreePolynomial n) : (p : S) ∈ StandardPolynomial m (G c) := by
+  rw [StandardPolynomial, MvPolynomial.restrictSupport, AddMonoidAlgebra.mem_supported]
+  intro a ha
+  apply (isStandardExponent_iff_gap c hc m hm a).mpr
+  exact ((AddMonoidAlgebra.mem_supported.mp p.2) ha).2
+
+noncomputable def degreeNormalFormEquiv (c : ℂ) (hc : c ^ 2 + c = 1)
+    (m : MonomialOrder ℕ+) (hm : IsCaseIMonomialOrder m)
+    (hG : m.IsGroebnerBasis (G c) (I c)) (hred : hG.IsReduced) (n : ℕ) :
+    AllowedDegreePolynomial n ≃ₗ[ℂ] GapDegreePolynomial n where
+  toFun p := by
+    let r := allowedStandardEquiv c hc m hG hred (p : AllowedPolynomial)
+    refine ⟨(r : S), ?_⟩
+    rw [GapDegreePolynomial, MvPolynomial.restrictSupport,
+      AddMonoidAlgebra.mem_supported]
+    intro a ha
+    have hhom := allowedStandardEquiv_isWeightedHomogeneous c hc m hm hG hred
+      (allowedDegree_isWeightedHomogeneous p)
+    refine ⟨?_, ?_⟩
+    · rw [← finsupp_weight_eq_weightedDegree]
+      exact hhom (mem_support_iff.mp ha)
+    · apply (isStandardExponent_iff_gap c hc m hm a).mp
+      exact (AddMonoidAlgebra.mem_supported.mp r.2) ha
+  invFun r := by
+    let rs : StandardPolynomial m (G c) := ⟨(r : S), gapDegree_mem_standard c hc m hm r⟩
+    let p := (allowedStandardEquiv c hc m hG hred).symm rs
+    refine ⟨p, ?_⟩
+    rw [AllowedDegreePolynomial, MvPolynomial.restrictSupport,
+      AddMonoidAlgebra.mem_supported]
+    intro a ha
+    exact (allowedStandardEquiv_symm_isWeightedHomogeneous c hc m hG hred
+      (gapDegree_isWeightedHomogeneous r)) (mem_support_iff.mp ha)
+  left_inv p := by
+    apply Subtype.ext
+    dsimp only
+    exact (allowedStandardEquiv c hc m hG hred).symm_apply_apply (p : AllowedPolynomial)
+  right_inv r := by
+    apply Subtype.ext
+    dsimp only
+    exact congrArg Subtype.val
+      ((allowedStandardEquiv c hc m hG hred).apply_symm_apply
+        (⟨(r : S), gapDegree_mem_standard c hc m hm r⟩ : StandardPolynomial m (G c)))
+  map_add' p q := by
+    apply Subtype.ext
+    dsimp only
+    exact congrArg Subtype.val
+      ((allowedStandardEquiv c hc m hG hred).map_add (p : AllowedPolynomial) q)
+  map_smul' z p := by
+    apply Subtype.ext
+    dsimp only
+    exact congrArg Subtype.val
+      ((allowedStandardEquiv c hc m hG hred).map_smul z (p : AllowedPolynomial))
+
+noncomputable def allowedDegreeBasis (n : ℕ) :
+    Module.Basis (P n) ℂ (AllowedDegreePolynomial n) :=
+  (MvPolynomial.basisRestrictSupport ℂ
+    {a : AllowedIndex →₀ ℕ | Finsupp.weight allowedWeight a = n}).reindex
+      (pEquivAllowedExponent n).symm
+
+noncomputable def gapDegreeBasis (n : ℕ) :
+    Module.Basis (Q n) ℂ (GapDegreePolynomial n) :=
+  (MvPolynomial.basisRestrictSupport ℂ
+    {a : ℕ+ →₀ ℕ | weightedDegree a = n ∧ IsGapStandard a}).reindex
+      (qEquivGapExponent n).symm
+
+lemma basisRestrictSupport_apply {σ R : Type*} [CommSemiring R]
+    (s : Set (σ →₀ ℕ)) (a : s) :
+    ((MvPolynomial.basisRestrictSupport R s a : MvPolynomial.restrictSupport R s) :
+      MvPolynomial σ R) = monomial a.val 1 := by
+  classical
+  let b := MvPolynomial.basisRestrictSupport R s
+  let mono : MvPolynomial.restrictSupport R s := ⟨monomial a.val 1, by
+    rw [MvPolynomial.restrictSupport, AddMonoidAlgebra.mem_supported]
+    intro d hd
+    have hd' : (monomial a.val (1 : R)).coeff d ≠ 0 := Finsupp.mem_support_iff.mp hd
+    change coeff d (monomial a.val (1 : R)) ≠ 0 at hd'
+    rw [coeff_monomial] at hd'
+    split_ifs at hd' with h
+    · simpa [h] using a.prop
+    · simp at hd'⟩
+  change (b a).val = mono.val
+  apply congrArg Subtype.val
+  apply b.repr.injective
+  rw [b.repr_self]
+  ext j
+  change (Finsupp.single a 1) j = coeff j.val (monomial a.val 1)
+  by_cases h : j = a
+  · subst j
+    rw [coeff_monomial]
+    simp
+  · have hv : j.val ≠ a.val := fun hval ↦ h (Subtype.ext hval)
+    rw [coeff_monomial]
+    simp [Finsupp.single_apply, h, hv, Ne.symm hv]
+
+lemma basisRestrictSupport_repr {σ R : Type*} [CommSemiring R]
+    (s : Set (σ →₀ ℕ)) (p : MvPolynomial.restrictSupport R s) (a : s) :
+    (MvPolynomial.basisRestrictSupport R s).repr p a = coeff a.val p.val := by
+  rfl
+
+lemma allowedDegreeBasis_rename (n : ℕ) (lam : P n) :
+    allowedRename ((allowedDegreeBasis n lam : AllowedDegreePolynomial n) : AllowedPolynomial) =
+      partitionMonomial lam.val := by
+  classical
+  unfold allowedDegreeBasis AllowedDegreePolynomial
+  rw [Module.Basis.reindex_apply, basisRestrictSupport_apply,
+    allowedRename, MvPolynomial.rename_monomial]
+  have hsupp : ↑(Partition.multiplicities lam.val).support ⊆
+      Set.range (fun i : AllowedIndex ↦ i.val) := by
+    intro i hi
+    exact ⟨⟨i, lam.prop i hi⟩, rfl⟩
+  have hmap := Finsupp.mapDomain_comapDomain (fun i : AllowedIndex ↦ i.val)
+    Subtype.val_injective (Partition.multiplicities lam.val) hsupp
+  change monomial
+      ((pEquivAllowedExponent n lam).val.mapDomain fun i : AllowedIndex ↦ i.val) 1 = _
+  rw [show (pEquivAllowedExponent n lam).val =
+      Finsupp.comapDomain (fun i : AllowedIndex ↦ i.val)
+        (Partition.multiplicities lam.val) Subtype.val_injective.injOn by rfl,
+    hmap]
+  rfl
+
+lemma gapDegreeBasis_repr (n : ℕ) (p : GapDegreePolynomial n) (mu : Q n) :
+    (gapDegreeBasis n).repr p mu = coeff (Partition.multiplicities mu.val) (p : S) := by
+  classical
+  unfold gapDegreeBasis GapDegreePolynomial
+  change (((MvPolynomial.basisRestrictSupport ℂ
+      {a : ℕ+ →₀ ℕ | weightedDegree a = n ∧ IsGapStandard a}).reindex
+        (qEquivGapExponent n).symm).repr
+          (⟨p.val, p.prop⟩ : MvPolynomial.restrictSupport ℂ
+            {a : ℕ+ →₀ ℕ | weightedDegree a = n ∧ IsGapStandard a})) mu = _
+  rw [Module.Basis.repr_reindex_apply, basisRestrictSupport_repr]
+  rfl
 
 lemma exists_basis_matching {ι κ V : Type*} [Fintype ι] [Fintype κ]
     [DecidableEq ι] [DecidableEq κ] [AddCommGroup V] [Module ℂ V]
@@ -4063,6 +4495,27 @@ theorem proposition_6_1 (c : ℂ) (hc : c ^ 2 + c = 1) (m : MonomialOrder ℕ+)
       ∀ lam : P n,
         (normalForm hG hred (partitionMonomial lam.val)).coeff
           (Partition.multiplicities (π lam).val) ≠ 0 := by
-  sorry
+  classical
+  let e := degreeNormalFormEquiv c hc m hm hG hred n
+  let bNF : Module.Basis (P n) ℂ (GapDegreePolynomial n) :=
+    (allowedDegreeBasis n).map e
+  obtain ⟨π, hπ⟩ := exists_basis_matching bNF (gapDegreeBasis n)
+  refine ⟨π, ?_⟩
+  intro lam
+  have h := hπ lam
+  rw [gapDegreeBasis_repr] at h
+  have hb : ((bNF lam : GapDegreePolynomial n) : S) =
+      normalForm hG hred (partitionMonomial lam.val) := by
+    calc
+      ((bNF lam : GapDegreePolynomial n) : S) =
+          (allowedStandardEquiv c hc m hG hred
+            ((allowedDegreeBasis n lam : AllowedDegreePolynomial n) : AllowedPolynomial) : S) := rfl
+      _ = normalForm hG hred
+          (allowedRename
+            ((allowedDegreeBasis n lam : AllowedDegreePolynomial n) : AllowedPolynomial)) :=
+        allowedStandardEquiv_coe c hc m hG hred _
+      _ = normalForm hG hred (partitionMonomial lam.val) := by
+        rw [allowedDegreeBasis_rename]
+  simpa [hb] using h
 
 end CaseI
