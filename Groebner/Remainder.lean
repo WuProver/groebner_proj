@@ -427,6 +427,12 @@ lemma isRemainder_zero_iff :
   refine ⟨isRemainder_zero, fun h ↦ ?_⟩
   exact ⟨⟨0, by simp [h]⟩, by simp [h]⟩
 
+variable {f B r} in
+lemma ne_zero_of_ne_remainder (h : m.IsRemainder f B r) (h : f ≠ r) :
+    f ≠ 0 := by
+  contrapose! h with rfl
+  exact h.isRemainder_zero.symm
+
 lemma isRemainder_iff_degree (hB : ∀ b ∈ B, m.leadingCoeff b ∈ nonZeroDivisors _) :
     m.IsRemainder f B r ↔
     (∃ (g : B →₀ MvPolynomial σ R),
@@ -578,11 +584,64 @@ lemma withBotDegree_remainder_le (h : m.IsRemainder f B r) :
   apply lt_of_le_of_lt <| m.withBotDegree_mul_le (g b) b
   simpa [add_comm] using lt_of_le_of_lt (h b) hsum
 
+variable {f r B} in
+lemma withBotDegree_remainder_lt_iff (h : m.IsRemainder f B r) :
+    m.withBotDegree r ≺'[m] m.withBotDegree f ↔
+      m.withBotDegree f ≠ m.withBotDegree r:= by
+  rw [← m.toWithBotSyn.injective.ne_iff]
+  grind [h.withBotDegree_remainder_le]
+
+lemma _root_.MonomialOrder.coeff_eq_zero_of_lt_withBotDegree
+      {f g : MvPolynomial σ R} (hd : m.withBotDegree f ≺'[m] m.withBotDegree g) :
+    f.coeff (m.degree g) = 0 := by
+  rw [m.withBotDegree_lt_withBotDegree_iff] at hd
+  rcases hd with h | ⟨rfl, -⟩
+  · exact coeff_eq_zero_of_lt h
+  simp
+
+variable {p B r} in
+lemma leadingTerm_mem_span_leadingTerm
+    (h : m.IsRemainder f B r) (hfr : m.withBotDegree f ≠ m.withBotDegree r) :
+    m.leadingTerm f ∈ Ideal.span (m.leadingTerm '' B) := by
+  classical
+  have this := h
+  rw [isRemainder_def''] at this
+  obtain ⟨⟨g, B', hB, hsum, hdeg⟩, -⟩ := this
+  -- todo: is here a common pattern?
+  apply_fun (coeff (m.degree f) ·) at hsum
+  rw [coeff_add, coeff_sum,
+      coeff_eq_zero_of_lt_withBotDegree <| h.withBotDegree_remainder_lt_iff.mpr hfr,
+      add_zero] at hsum
+  rw [leadingTerm, leadingCoeff, hsum, map_sum]
+  apply Ideal.sum_mem
+  intro b hb
+  specialize hdeg b hb
+  rw [le_iff_lt_or_eq'] at hdeg
+  rcases hdeg with hlt | heq
+  · convert Ideal.zero_mem _
+    rw [monomial_eq_zero, mul_comm]
+    apply coeff_eq_zero_of_lt_withBotDegree
+    exact lt_of_le_of_lt (by simpa [map_add] using m.withBotDegree_mul_le b (g b)) (hlt)
+  -- todo: common pattern?
+  have hf0 : f ≠ 0 := h.ne_zero_of_ne_remainder (by grind)
+  obtain ⟨hb0, hgb0⟩ : b ≠ 0 ∧ g b ≠ 0 := by
+    contrapose! +distrib heq
+    rcases heq with heq | heq <;> simp [heq, hf0]
+  rw [m.withBotDegree_eq_coe_degree_iff .. |>.mpr hb0,
+    m.withBotDegree_eq_coe_degree_iff .. |>.mpr hgb0,
+    m.withBotDegree_eq_coe_degree_iff .. |>.mpr hf0, add_comm,
+    ← map_add, ← WithBot.coe_add, m.toWithBotSyn.apply_eq_iff_eq, WithBot.coe_eq_coe] at heq
+  rw [heq, coeff_mul_of_degree_add, ← monomial_mul, ← leadingTerm.eq_1 m b]
+  apply Ideal.mul_mem_left
+  apply Ideal.subset_span
+  exact Set.mem_image_of_mem _ <| hB hb
+
 variable {p B r} in
 lemma exists_withBotDegree_le_withBotDegree
     (h : m.IsRemainder p B r) (hfr : m.withBotDegree p ≠ m.withBotDegree r) :
     ∃ b ∈ B, m.withBotDegree b ≤ m.withBotDegree p := by
   classical
+  -- todo: simplified with `leadingTerm_mem_span_leadingTerm`
   rw [ne_eq, ← m.toWithBotSyn.apply_eq_iff_eq, eq_comm,
     ← ne_eq, ne_iff_lt_iff_le.mpr <| withBotDegree_remainder_le h] at hfr
   wlog! hp : p ≠ 0

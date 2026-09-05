@@ -80,3 +80,5 @@ leanblueprint web
 This project draws heavily from [_Ideals, Varieties, and Algorithms_](https://link.springer.com/book/10.1007/978-3-319-16721-3) by David A. Cox, John Little, Donal O’Shea.
 
 And some theorems are from [_Gröbner Bases for the Polynomial Ring with Infinite Variables and Their Applications_](https://doi.org/10.1080/00927870802502878) by Kei-ichiro Iima and Yuji Yoshino.
+
+The division for weak reduction in `Groebner/WeakRemainder.lean` is from [_On the construction of Gröbner bases using syzygies_](https://www.sciencedirect.com/science/article/pii/S074771718880052X)
