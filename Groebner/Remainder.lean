@@ -608,11 +608,11 @@ lemma leadingTerm_mem_span_leadingTerm
   rw [isRemainder_def''] at this
   obtain ⟨⟨g, B', hB, hsum, hdeg⟩, -⟩ := this
   -- todo: is here a common pattern?
-  apply_fun (coeff (m.degree f) ·) at hsum
-  rw [coeff_add, coeff_sum,
+  apply_fun (·.coeff (m.degree f)) at hsum
+  rw [AddMonoidAlgebra.coeff_add, AddMonoidAlgebra.coeff_sum, Finsupp.add_apply,
       coeff_eq_zero_of_lt_withBotDegree <| h.withBotDegree_remainder_lt_iff.mpr hfr,
       add_zero] at hsum
-  rw [leadingTerm, leadingCoeff, hsum, map_sum]
+  rw [leadingTerm, leadingCoeff, hsum, Finset.sum_apply', map_sum]
   apply Ideal.sum_mem
   intro b hb
   specialize hdeg b hb
@@ -697,9 +697,9 @@ lemma withBotDegree_eq_withBotDegree_iff_leadingTerm_eq_leadingTerm (h : m.IsRem
   have deg_eq' := m.withBotDegree_eq_withBotDegree_iff .. |>.mp deg_eq |>.1
   simp_rw [m.leadingTerm_eq_leadingTerm_iff, leadingCoeff, deg_eq', and_true]
   obtain ⟨⟨g, hg, hg'⟩, h⟩ := h
-  nth_rw 3 [hg]
-  rw [coeff_add]
-  convert eq_comm.mp <| zero_add (coeff (m.degree p) r)
+  nth_rw 2 [hg]
+  rw [AddMonoidAlgebra.coeff_add, Finsupp.add_apply]
+  convert eq_comm.mp <| zero_add (r.coeff (m.degree p))
   rw [Finsupp.linearCombination_apply, Finsupp.sum, coeff_sum]
   apply Finset.sum_eq_zero
   rintro g' -

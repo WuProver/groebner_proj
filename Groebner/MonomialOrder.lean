@@ -34,7 +34,6 @@ lemma sPolynomial_decomposition_of_degree_sum_smul_le₀ {R} [CommRing R] {d : m
     ∃ (c' : ι → ι → R),
       ∑ b ∈ B, c b • g b = ∑ b₁ ∈ B, ∑ b₂ ∈ B, (c' b₁ b₂) • m.sPolynomial (g b₁) (g b₂) := by
   classical
-  classical
   induction B using Finset.induction_on with
   | empty => simp
   | insert b B hb h =>
@@ -60,7 +59,7 @@ lemma sPolynomial_decomposition_of_degree_sum_smul_le₀ {R} [CommRing R] {d : m
         intro b' hb'
         rcases hd b' hb' with h | h <;> simp [h]
       · simp_rw [← MvPolynomial.coeff_C_mul, ← smul_eq_C_mul]
-        rw [← coeff_sum, ← coeff_add, ← notMem_support_iff]
+        rw [← coeff_sum, ← Finsupp.add_apply, ← notMem_support_iff]
         exact m.notMem_support_of_degree_lt hfd
     · apply Finset.sum_congr rfl
       intro b' hb'
@@ -164,7 +163,7 @@ lemma support_add_of_leadingTerm_add_leadingTerm_eq_zero
       simp [h, h'] at ha
   unfold leadingTerm at h
   by_cases! hpq' : m.degree p ≠ m.degree q
-  · apply congrArg (coeff (m.degree q)) at h
+  · apply congrArg (·.coeff (m.degree q)) at h
     simp [hpq', hpq] at h
   rw [hpq', ← map_add, monomial_eq_zero] at h
   unfold leadingCoeff at h

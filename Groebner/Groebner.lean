@@ -387,7 +387,7 @@ theorem remainder_eq_zero_iff_mem_ideal
 
 @[simp]
 lemma _root_.MonomialOrder.coeff_degree_leadingTerm {R} [CommSemiring R] {p : MvPolynomial σ R} :
-    coeff (m.degree p) (m.leadingTerm p) = m.leadingCoeff p := by
+    (m.leadingTerm p).coeff (m.degree p) = m.leadingCoeff p := by
   classical
   simp [leadingTerm]
 
@@ -428,14 +428,14 @@ theorem isRemainder_zero_iff_mem_ideal {p : MvPolynomial σ R}
     rcases this with ⟨g', hg'⟩
     simp at hg'
     use Finsupp.onFinset g'.support
-      (fun b ↦ coeff (m.degree r) (g' b * monomial (m.degree b.val) 1))
+      (fun b ↦ (g' b * monomial (m.degree b.val) 1).coeff (m.degree r))
       (fun _ ↦ not_imp_not.mp <| by simp_intro _)
     constructor
     · simp [coeff_mul_monomial']
       grind
-    apply_fun coeff (m.degree r) at hg'
+    apply_fun (·.coeff (m.degree r)) at hg'
     simp [Finsupp.sum, leadingCoeff] at hg'
-    simp [Finsupp.linearCombination_apply, ← hg', coeff_sum]
+    simp [Finsupp.linearCombination_apply, ← hg']
     apply Finset.sum_congr rfl
     intro b hb
     simp [mul_comm _ (m.leadingCoeff _), ← MvPolynomial.coeff_C_mul]

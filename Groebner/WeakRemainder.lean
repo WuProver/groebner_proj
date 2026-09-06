@@ -152,12 +152,13 @@ decreasing_by
     exact m.degree_mul_le
   simp? [hdeg_sum, Finsupp.linearCombination_apply, Finsupp.sum, MvPolynomial.coeff_sum,
       sub_eq_zero] says
-    simp only [Finsupp.sum, AddEquiv.symm_apply_apply, mem_support_iff, coeff_sub, hdeg_sum,
-      Finsupp.linearCombination_apply, Function.comp_apply, smul_eq_mul, coeff_sum, ne_eq,
+    simp only [Finsupp.sum, AddEquiv.symm_apply_apply, mem_support_iff, AddMonoidAlgebra.coeff_sub,
+      AddMonoidAlgebra.coeff_sum, Finsupp.coe_sub, Finsupp.coe_finsetSum, Pi.sub_apply, hdeg_sum,
+      Finsupp.linearCombination_apply, Function.comp_apply, smul_eq_mul, Finset.sum_apply, ne_eq,
       sub_eq_zero, Decidable.not_not]
   apply Finset.sum_congr rfl
   intro i hi
-  nth_rw 1 [← add_tsub_cancel_of_le (hdeg_mon _ (by simpa using hi))]
+  nth_rw 2 [← add_tsub_cancel_of_le (hdeg_mon _ (by simpa using hi))]
   rw [mul_comm _ (b i), coeff_mul_monomial, leadingCoeff, mul_comm]
 
 theorem weakDiv_set {B : Set (MvPolynomial σ R)} (f : MvPolynomial σ R) :

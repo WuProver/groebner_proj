@@ -20,6 +20,6 @@ lemma rename_killCompl_app (hf : Function.Injective f) {p : MvPolynomial τ R}
     exact Finset.subset_biUnion_of_mem Finsupp.support x.prop
   simp_rw [killCompl_monomial_eq_monomial_comapDomain_of_subset hf _ (this _),
     rename_monomial, Finsupp.mapDomain_comapDomain _ hf _ (this _),
-    Finset.sum_attach p.support fun x ↦ monomial x (coeff x p)]
+    Finset.sum_attach p.support fun x ↦ monomial x (p.coeff x)]
 
 end MvPolynomial
