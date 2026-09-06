@@ -128,7 +128,7 @@ def infosToJson (defInfos : Array DefInfo) : Json :=
 def main (args : List String) : IO Unit := do
   initSearchPath <| ← findSysroot
   let mods := match args with
-    | [] => #[`Groebner.MonomialOrder, `Groebner.Remainder, `Groebner.Groebner, `Groebner.Reduced]
+    | [] => #[`Groebner.MonomialOrder, `Groebner.WeakRemainder, `Groebner.Remainder, `Groebner.Groebner, `Groebner.Reduced]
     | l => l.toArray.map String.toName
   let env ← Lean.importModules (loadExts := false)
     (mods.map fun x ↦ {module:=x, importAll:=false, isExported:=false}) {}
