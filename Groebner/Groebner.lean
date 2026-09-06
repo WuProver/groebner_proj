@@ -137,7 +137,7 @@ lemma isGroebnerBasis_insert_zero (G : Set (MvPolynomial σ R))
       apply h
       simp [hx]
     · simp [Set.insert_subset_iff]
-  · simp [m.span_leadingTerm_insert_zero]
+  · simp
 
 /-- Finite Gröbner basis exists for any ideal of a noetherian multivariate polynomial ring. -/
 theorem exists_isGroebnerBasis_finite [inst : IsNoetherianRing (MvPolynomial σ R)]

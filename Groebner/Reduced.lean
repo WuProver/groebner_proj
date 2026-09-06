@@ -200,7 +200,7 @@ lemma IsRemainder.self_tfae (p : MvPolynomial σ R)
       ∀ q ∈ G, m.IsRemainder p {q} p,
       ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a].TFAE := by
   classical
-  apply List.tfae_of_forall (∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a)
+  apply List.tfae_of_forall (b := ∀ a ∈ p.support, ∀ q ∈ G, q ≠ 0 → ¬ m.degree q ≤ a)
   intro h h
   fin_cases h
   · exact IsRemainder.self_iff ..

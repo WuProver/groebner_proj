@@ -179,10 +179,10 @@ lemma support_add_of_leadingTerm_add_leadingTerm_eq_zero
     subst this
     simp [hpq' ▸ h, hpq'] at ha
 
-@[simp]
-lemma leadingTerm_neg {R} [CommRing R] (p : MvPolynomial σ R) :
-    m.leadingTerm (-p) = - m.leadingTerm p := by
-  simp [leadingTerm]
+-- @[simp]
+-- lemma leadingTerm_neg {R} [CommRing R] (p : MvPolynomial σ R) :
+--     m.leadingTerm (-p) = - m.leadingTerm p := by
+--   simp [leadingTerm]
 
 lemma support_sub_of_leadingTerm_eq_leadingTerm {R} [CommRing R]
     {p q : MvPolynomial σ R}
