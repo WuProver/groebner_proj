@@ -33,12 +33,12 @@ Buchberger criterion is proved with the following sequence of theorems, where ea
 
 * `MonomialOrder.IsGroebnerBasis.ideal_eq_span`: Gröbner basis of any ideal spans the ideal.
 
-* `MonomialOrder.IsGroebnerBasis.isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero`: A set of
-  polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal and 0 is a
-  remainder of each member of this ideal on division by this set.
+* `MonomialOrder.IsGroebnerBasis.iff_subset_ideal_and_isRemainder_zero`:
+  A set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal
+  and 0 is a remainder of each member of this ideal on division by this set.
 
-* `MonomialOrder.IsGroebnerBasis.isGroebnerBasis_iff_isRemainder_sPolynomial_zero`
-  (Buchberger Criterion): a basis of an ideal is a Gröbner basis of it if and only if 0 is a
+* `MonomialOrder.IsGroebnerBasis.iff_isRemainder_sPolynomial_zero` (Buchberger Criterion):
+  a basis of an ideal is a Gröbner basis of it if and only if 0 is a
   remainder of echo sPolynomial between two polynomials on the basis.
 
 Other main theroems:
@@ -93,7 +93,7 @@ lemma subset {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) : G �
 lemma span_leadingTerm_image {G : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I) :
     Ideal.span (m.leadingTerm '' ↑I) = Ideal.span (m.leadingTerm '' G) := h.2
 
-lemma isGroebnerBasis_iff (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
+lemma iff_subset (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis G I ↔
       G ⊆ I ∧ m.leadingTerm '' ↑I ⊆ (Ideal.span (m.leadingTerm '' G) : Set (MvPolynomial σ R)) := by
   constructor
@@ -107,9 +107,12 @@ lemma isGroebnerBasis_iff (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial
   apply Ideal.span_mono
   exact Set.image_mono h₁
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_subset := iff_subset
+
 lemma of_subset {G G' : Set (MvPolynomial σ R)} {I} (h : m.IsGroebnerBasis G I)
     (hG : G ⊆ G') (hI : G' ⊆ I) : m.IsGroebnerBasis G' I := by
-  rw [isGroebnerBasis_iff] at *
+  rw [iff_subset] at *
   exact ⟨hI, subset_trans h.2 (Ideal.span_mono <| Set.image_mono hG)⟩
 
 @[simp]
@@ -185,7 +188,7 @@ lemma of_subsingleton [Subsingleton (MvPolynomial σ R)]
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) I,
     Subsingleton.eq_zero (α := Ideal <| MvPolynomial σ R) (Ideal.span _)]
 
-theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le
+theorem iff_subset_and_degree_le_eq_and_degree_le
     {G : Set (MvPolynomial σ R)} (I : Ideal (MvPolynomial σ R))
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G I ↔
@@ -203,7 +206,7 @@ theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le
       m.support_leadingTerm' hp0] at hp
     simpa using hp
   rintro ⟨hG', h_degree⟩
-  rw [isGroebnerBasis_iff]
+  rw [iff_subset]
   constructor
   · exact hG'
   intro p' hp
@@ -215,15 +218,23 @@ theorem isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le
   specialize h_degree p
   simp_all [MonomialOrder.leadingCoeff_eq_zero_iff]
 
-lemma isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le :=
+  iff_subset_and_degree_le_eq_and_degree_le
+
+lemma iff_subset_and_degree_le_eq_and_degree_le₀
     {G : Set (MvPolynomial σ R)} (I : Ideal (MvPolynomial σ R))
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
     m.IsGroebnerBasis G I ↔
       G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, g ≠ 0 ∧ m.degree g ≤ m.degree p := by
   rw [← isGroebnerBasis_sdiff_singleton_zero,
-    isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le]
+    iff_subset_and_degree_le_eq_and_degree_le]
   · simp [and_assoc]
   simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀ :=
+  iff_subset_and_degree_le_eq_and_degree_le₀
 
 lemma span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
@@ -250,7 +261,7 @@ lemma span_leadingTerm_eq_span_monomial {G : Set (MvPolynomial σ R)}
         forall_exists_index, and_imp]
     intro y hy hy0 hxy
     rw [← hxy, ← Set.image_image (monomial · 1) _ _, mem_ideal_span_monomial_image]
-    simpa using ((isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le _ hG).mp h).2 y hy hy0
+    simpa using ((iff_subset_and_degree_le_eq_and_degree_le _ hG).mp h).2 y hy hy0
 
 lemma span_leadingTerm_eq_span_monomial₀ {G : Set (MvPolynomial σ R)}
     {I : Ideal (MvPolynomial σ R)}
@@ -262,14 +273,14 @@ lemma span_leadingTerm_eq_span_monomial₀ {G : Set (MvPolynomial σ R)}
   · simp [m.image_leadingTerm_sdiff_singleton_zero]
   · simp_intro .. [or_iff_not_imp_right.mp (hG _ _)]
 
-lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial σ R)}
+lemma of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0)
     {I : Ideal (MvPolynomial σ R)}
     (h : ∀ s : Finset σ,
       ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
         ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
     m.IsGroebnerBasis G I := by
-  rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀ (hG := hG)]
+  rw [iff_subset_and_degree_le_eq_and_degree_le₀ (hG := hG)]
   constructor
   · intro p hp
     obtain ⟨σ', m', e, h, h', -⟩ := h p.vars
@@ -280,7 +291,7 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial
   rintro p hp hp0
   obtain ⟨σ', m', e, h, h'⟩ := h p.vars
   obtain ⟨p', rfl⟩ := MvPolynomial.exists_rename_eq_of_vars_subset_range _ _ e.coe_injective h
-  rw [isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀] at h'
+  rw [iff_subset_and_degree_le_eq_and_degree_le₀] at h'
   case hG =>
     intro g
     simpa using hG (g.rename e)
@@ -292,6 +303,9 @@ lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ {G : Set (MvPolynomial
   simp? at h says simp only [Set.mem_preimage, ne_eq] at h
   refine ⟨g'.rename e, h.1, by simpa using h.2⟩
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ := of_forall_finite_isGroebnerBasis₀
+
 lemma isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀
     {I : Ideal (MvPolynomial σ R)} {σ' : Finset σ → Type*}
     {m' : (s : Finset σ) → MonomialOrder (σ' s)}
@@ -301,7 +315,7 @@ lemma isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀
     (h : ∀ s, ↑s ⊆ Set.range (e s))
     (h' : ∀ s, (m' s).IsGroebnerBasis (G' s) (I.comap <| rename (e s))) :
     m.IsGroebnerBasis (⋃ s : Finset σ, rename (e s) '' G' s) I := by
-  apply isGroebnerBasis_of_forall_finite_isGroebnerBasis₀
+  apply of_forall_finite_isGroebnerBasis₀
   · simp
     intro g s g' hg' rfl
     simpa using hG' s g' hg'
@@ -317,14 +331,17 @@ lemma isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀
   apply Set.preimage_mono
   simpa using (h' s').subset
 
-lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ R)}
+lemma of_forall_finite_isGroebnerBasis {G : Set (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g))
     {I : Ideal (MvPolynomial σ R)}
     (h : ∀ s : Finset σ,
       ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
         ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
     m.IsGroebnerBasis G I :=
-  isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (fun g hg ↦ Or.inl (hG g hg)) h
+  of_forall_finite_isGroebnerBasis₀ (fun g hg ↦ Or.inl (hG g hg)) h
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_of_forall_finite_isGroebnerBasis := of_forall_finite_isGroebnerBasis
 
 theorem isGroebnerBasis_union_of_forall_finite_isGroebnerBasis
     {I : Ideal (MvPolynomial σ R)} {σ' : Finset σ → Type*}
@@ -451,7 +468,7 @@ theorem ideal_eq_span {G : Set (MvPolynomial σ R)} {I : Ideal (MvPolynomial σ 
   (since := "2026-09-05")]
 alias ideal_eq_span₀ := ideal_eq_span
 
-theorem isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span (G : Set (MvPolynomial σ R))
+theorem iff_ideal_eq_span_and_isGroebnerBasis_span (G : Set (MvPolynomial σ R))
     (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis G I ↔ (I = Ideal.span G ∧ m.IsGroebnerBasis G (Ideal.span G)) := by
   constructor
@@ -459,16 +476,20 @@ theorem isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span (G : Set (MvP
     simpa [ideal_eq_span this]
   · simp_intro ..
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span :=
+  iff_ideal_eq_span_and_isGroebnerBasis_span
+
 @[deprecated "invertibility of leading coefficients is unnecesssary" +typeChanged
   (since := "2026-09-05")]
 alias isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span₀ :=
-  isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span
+  iff_ideal_eq_span_and_isGroebnerBasis_span
 
 /-- A set of polynomials is a Gröbner basis of an ideal if and only if it is a subset of this ideal
 and 0 is a remainder of each member of this ideal on division by this set.
 
 Any leading coefficient of polynomial in the set is required to be a unit. -/
-theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
+theorem iff_subset_ideal_and_isRemainder_zero
     (G : Set (MvPolynomial σ R)) (I : Ideal (MvPolynomial σ R)) :
     m.IsGroebnerBasis G I ↔ G ⊆ I ∧ ∀ p ∈ I, m.IsRemainder p G 0 := by
   classical
@@ -479,7 +500,7 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
     rwa [isRemainder_zero_iff_mem_ideal h]
   · intro h
     rcases h with ⟨h_G, h_remainder⟩
-    rw [isGroebnerBasis_iff]
+    rw [iff_subset]
     by_contra! h
     specialize h h_G
     simp_rw [Set.not_subset_iff_exists_mem_notMem, Set.mem_image] at h
@@ -489,10 +510,14 @@ theorem isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
     contrapose! hLTp with rfl
     simp
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero :=
+  iff_subset_ideal_and_isRemainder_zero
+
 @[deprecated "invertibility of leading coefficients is unnecesssary" +typeChanged
   (since := "2026-09-05")]
 alias isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero₀ :=
-  isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
+  iff_subset_ideal_and_isRemainder_zero
 
 /-- Remainder of any polynomial on division by a Gröbner basis exists and is unique.
 
@@ -549,7 +574,7 @@ set_option maxHeartbeats 400000 in
 -- proof can pass with default max heart beats.
 /-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if 0 is a
 remainder of echo sPolynomial between two polynomials on the basis. -/
-theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
+theorem iff_isRemainder_sPolynomial_zero
     {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G (Ideal.span G) ↔
       ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ R) G 0 := by
@@ -565,7 +590,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   constructor
   · /- (→) Easy to prove. -/
     intro h _ _
-    rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero] at h
+    rw [iff_subset_ideal_and_isRemainder_zero] at h
     apply h.2
     apply m.sPolynomial_mem_ideal <;> exact Set.mem_of_mem_of_subset (by simp) h.1
   /- (←)
@@ -580,7 +605,7 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
   have hG₀ {g} := (@hG₁ g).mem_nonZeroDivisors
   -- `rfl` doens't rewrite the goal?
   intro hsPoly
-  rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero]
+  rw [iff_subset_ideal_and_isRemainder_zero]
   exists Ideal.subset_span
   intro p hp
   wlog! hpne0 : p ≠ 0
@@ -861,12 +886,15 @@ theorem isGroebnerBasis_iff_isRemainder_sPolynomial_zero
       degree_mul_of_right_mem_nonZeroDivisors this hG₀,
       m.degree_sub_leadingTerm_lt_degree (m.degree_ne_zero_of_sub_leadingTerm_ne_zero hLTgg')]
 
-lemma isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_isRemainder_sPolynomial_zero := iff_isRemainder_sPolynomial_zero
+
+lemma iff_isRemainder_sPolynomial_zero₀
     {G : Set (MvPolynomial σ R)} (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g) ∨ g = 0) :
     m.IsGroebnerBasis G (Ideal.span G) ↔
       ∀ (g₁ g₂ : G), m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ R) G 0 := by
   rw [← isGroebnerBasis_sdiff_singleton_zero, ← Ideal.span_sdiff_singleton_zero,
-    isGroebnerBasis_iff_isRemainder_sPolynomial_zero (G := G \ {0})
+    iff_isRemainder_sPolynomial_zero (G := G \ {0})
       (by simp_intro _ _ [or_iff_not_imp_right.mp (hG _ _)])]
   simp? [imp_forall_iff, imp.swap (a := ¬(_ : MvPolynomial σ R) = 0) (b := _ ∈ G)] says
     simp only [isRemainder_sdiff_singleton_zero_iff_isRemainder, Subtype.forall, Set.mem_sdiff,
@@ -877,12 +905,15 @@ lemma isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀
   · rcases h with h | h <;> simp [h]
   simp [h]
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀ := iff_isRemainder_sPolynomial_zero₀
+
 /-- Buchberger Criterion: a basis of an ideal is a Gröbner basis of it if and only if any
 remainder of echo sPolynomial between two polynomials on the basis is 0.
 
 It is a variant of
-`MonomialOrder.IsGroebnerBasis.isGroebnerBasis_iff_isRemainder_sPolynomial_zero`. -/
-theorem isGroebnerBasis_iff_forall_isRemainder_sPolynomial_zero {G : Set (MvPolynomial σ R)}
+`MonomialOrder.IsGroebnerBasis.iff_isRemainder_sPolynomial_zero`. -/
+theorem iff_forall_isRemainder_sPolynomial_zero {G : Set (MvPolynomial σ R)}
     (hG : ∀ g ∈ G, IsUnit (m.leadingCoeff g)) :
     m.IsGroebnerBasis G (Ideal.span G) ↔
     ∀ (g₁ g₂ : G) (r : MvPolynomial σ R),
@@ -890,13 +921,17 @@ theorem isGroebnerBasis_iff_forall_isRemainder_sPolynomial_zero {G : Set (MvPoly
   constructor
   · intro h g₁ g₂ r hr
     apply (remainder_eq_zero_iff_mem_ideal h hr).mpr
-    rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero] at h
+    rw [iff_subset_ideal_and_isRemainder_zero] at h
     apply m.sPolynomial_mem_ideal
     <;> exact Set.mem_of_subset_of_mem h.1 (by simp)
-  · rw [isGroebnerBasis_iff_isRemainder_sPolynomial_zero (hG := hG)]
+  · rw [iff_isRemainder_sPolynomial_zero (hG := hG)]
     intro h g₁ g₂
     obtain ⟨r, hr⟩ := exists_isRemainder hG (m.sPolynomial (R := R) ↑g₁ ↑g₂)
     rwa [h g₁ g₂ r hr] at hr
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_forall_isRemainder_sPolynomial_zero :=
+  iff_forall_isRemainder_sPolynomial_zero
 
 -- todo: avoid requiring `hG`
 lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename {σ'}
@@ -907,10 +942,9 @@ lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename 
     m'.IsGroebnerBasis G I ↔
       m.IsGroebnerBasis (MvPolynomial.rename e '' G) (I.map (MvPolynomial.rename e)) := by
   classical
-  rw [isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span,
-    isGroebnerBasis_iff_isRemainder_sPolynomial_zero (hG := hG),
-    isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span,
-    isGroebnerBasis_iff_isRemainder_sPolynomial_zero (hG := by simpa using hG),
+  rw [iff_ideal_eq_span_and_isGroebnerBasis_span, iff_isRemainder_sPolynomial_zero (hG := hG),
+    iff_ideal_eq_span_and_isGroebnerBasis_span,
+    iff_isRemainder_sPolynomial_zero (hG := by simpa using hG),
     and_congr]
   · constructor
     · intro rfl
@@ -961,7 +995,7 @@ variable {k : Type*} [Field k] {σ : Type*} {m : MonomialOrder σ}
 @[deprecated "invertibility of leading coefficients is no longer required in `CommRing` version, \
   so there is no longer the need of a variant for `Field`." +typeChanged (since := "2026-09-05")]
 alias isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero' :=
-  isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero
+  iff_subset_ideal_and_isRemainder_zero
 
 @[deprecated "invertibility of leading coefficients is no longer required in `CommRing` version, \
   so there is no longer the need of a variant for `Field`." +typeChanged (since := "2026-09-05")]
@@ -972,32 +1006,39 @@ alias isRemainder_zero_iff_mem_ideal' :=
 remainder of echo sPolynomial between two polynomials on the basis is 0.
 
 It is a variant of
-`MonomialOrder.IsGroebnerBasis.isGroebnerBasis_iff_isRemainder_sPolynomial_zero`. -/
-lemma isGroebnerBasis_iff_isRemainder_sPolynomial_zero' (G : Set (MvPolynomial σ k)) :
+`MonomialOrder.IsGroebnerBasis.isRemainder_sPolynomial_zero`. -/
+lemma iff_isRemainder_sPolynomial_zero' (G : Set (MvPolynomial σ k)) :
     m.IsGroebnerBasis G (Ideal.span G) ↔
     ∀ (g₁ g₂ : G) (r : MvPolynomial σ k),
       m.IsRemainder (m.sPolynomial g₁ g₂ : MvPolynomial σ k) G r → r = 0 := by
   constructor
   · intro h g₁ g₂ r hr
     apply (remainder_eq_zero_iff_mem_ideal h hr).mpr
-    rw [isGroebnerBasis_iff_subset_ideal_and_isRemainder_zero] at h
+    rw [iff_subset_ideal_and_isRemainder_zero] at h
     apply m.sPolynomial_mem_ideal
     <;> exact Set.mem_of_subset_of_mem h.1 (by simp)
-  · rw [isGroebnerBasis_iff_isRemainder_sPolynomial_zero₀ (hG := by simp [em'])]
+  · rw [iff_isRemainder_sPolynomial_zero₀ (hG := by simp [em'])]
     intro h g₁ g₂
     obtain ⟨r, hr⟩ := exists_isRemainder' G (m.sPolynomial (R := k) ↑g₁ ↑g₂)
     rwa [h g₁ g₂ r hr] at hr
 
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_isRemainder_sPolynomial_zero' := iff_isRemainder_sPolynomial_zero'
+
 @[deprecated "invertibility of leading coefficients is no longer required in `CommRing` version, \
   so there is no longer the need of a variant for `Field`." +typeChanged (since := "2026-09-05")]
 alias isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span' :=
-  isGroebnerBasis_iff_ideal_eq_span_and_isGroebnerBasis_span
+  iff_ideal_eq_span_and_isGroebnerBasis_span
 
-lemma isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'
+lemma iff_subset_and_degree_le_eq_and_degree_le'
     (G : Set (MvPolynomial σ k)) (I : Ideal (MvPolynomial σ k)) :
     m.IsGroebnerBasis G I ↔
       G ⊆ I ∧ ∀ p ∈ I, p ≠ 0 → ∃ g ∈ G, g ≠ 0 ∧ m.degree g ≤ m.degree p :=
-  isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le₀ I (by simp [em'])
+  iff_subset_and_degree_le_eq_and_degree_le₀ I (by simp [em'])
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le' :=
+  iff_subset_and_degree_le_eq_and_degree_le'
 
 --- lemma _root_.MonomialOrder.Embedding.isGroebnerBasis_iff_isGroebnerBasis_rename {σ'}
 ---     {m' : MonomialOrder σ'} {m : MonomialOrder σ}
@@ -1043,13 +1084,17 @@ lemma exists_isGroebnerBasis_finite_of_exists_span_finite
   rw [Embedding.coe_ofInjective, Subtype.range_coe, SetLike.coe_subset_coe]
   apply Finset.subset_biUnion_of_mem vars (hB.mem_toFinset.mpr hpB)
 
-lemma isGroebnerBasis_of_forall_finite_isGroebnerBasis' {G : Set (MvPolynomial σ k)}
+lemma of_forall_finite_isGroebnerBasis' {G : Set (MvPolynomial σ k)}
     {I : Ideal (MvPolynomial σ k)}
     (h : ∀ s : Finset σ,
       ∃ (σ' : Type*), ∃ m' : MonomialOrder σ', ∃ e : m'.Embedding m,
         ↑s ⊆ Set.range e ∧ m'.IsGroebnerBasis (rename e ⁻¹' G) (I.comap (rename e))) :
     m.IsGroebnerBasis G I :=
-  isGroebnerBasis_of_forall_finite_isGroebnerBasis₀ (hG := by simp_intro .. [em']) h
+  of_forall_finite_isGroebnerBasis₀ (hG := by simp_intro .. [em']) h
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_of_forall_finite_isGroebnerBasis' :=
+  of_forall_finite_isGroebnerBasis'
 
 lemma isGroebnerBasis_union_of_forall_finite_isGroebnerBasis'
     {I : Ideal (MvPolynomial σ k)} {σ' : Finset σ → Type*}
@@ -1062,7 +1107,7 @@ lemma isGroebnerBasis_union_of_forall_finite_isGroebnerBasis'
   isGroebnerBasis_union_of_forall_finite_isGroebnerBasis₀ (by simp_intro .. [em']) h h'
 
 -- todo: generalize to ring?
-lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
+lemma iff_minimal (I : Ideal (MvPolynomial σ k))
     {G : Set (MvPolynomial σ k)} :
     m.IsGroebnerBasis G I ↔ G ⊆ I ∧
       {a | Minimal (· ∈ m.degree '' ((I : Set (MvPolynomial σ k)) \ {0})) a} ⊆
@@ -1070,7 +1115,7 @@ lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
   classical
   constructor
   · intro h
-    rw [IsGroebnerBasis.isGroebnerBasis_iff_subset_and_degree_le_eq_and_degree_le'] at h
+    rw [iff_subset_and_degree_le_eq_and_degree_le'] at h
     exists h.1
     intro a ha
     -- by_contra! h'
@@ -1080,7 +1125,7 @@ lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
     refine ⟨g, ⟨hg.1, hg.2.1⟩, ?_⟩
     exact ha.eq_of_le ⟨g, ⟨h.1 hg.1, hg.2.1⟩, rfl⟩ hg.2.2
   · intro h
-    rw [isGroebnerBasis_iff]
+    rw [iff_subset]
     exists h.1
     rw [--← span_leadingTerm_sdiff_singleton_zero, ← span_leadingTerm_sdiff_singleton_zero (B := G),
       ← Ideal.span_le,
@@ -1097,6 +1142,9 @@ lemma isGroebnerBasis_iff_minimal (I : Ideal (MvPolynomial σ k))
     obtain ⟨p, ⟨hp, rfl⟩⟩ := h.2 ha
     simp [support_monomial]
     exact ⟨p, And.intro hp (le_refl (m.degree p))⟩
+
+@[deprecated (since := "2026-09-06")]
+alias isGroebnerBasis_iff_minimal := iff_minimal
 
 end Field
 

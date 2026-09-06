@@ -83,7 +83,7 @@ lemma IsGroebnerBasis.isGroebnerBasis_minimal (hG : m.IsGroebnerBasis G I)
     {G' : Set (MvPolynomial σ R)} (h : G' ⊆ I) (hG' : ∀ g ∈ G', IsUnit (m.leadingCoeff g))
     (h' : {a | Minimal (· ∈ m.degree '' (G \ {0})) a} ⊆ m.degree '' G') :
     m.IsGroebnerBasis G' I := by
-  rw [isGroebnerBasis_iff, m.span_leadingTerm_eq_span_monomial hG']
+  rw [iff_subset, m.span_leadingTerm_eq_span_monomial hG']
   exists h
   have := hG.span_leadingTerm_image
   apply (le_of_eq_of_le · <| m.span_leadingTerm_le_span_monomial ..) at this
@@ -708,7 +708,7 @@ lemma isGroebnerBasis_minimalFor {k} [Field k] (I : Ideal (MvPolynomial σ k)) :
     m.IsGroebnerBasis ({g | m.Monic g ∧
       MinimalFor (fun p ↦ p ∈ (I : Set (MvPolynomial σ k)) \ {0}) (m.degree ·) g ∧
       ∀ p ∈ I, p ≠ 0 → m.degree p ≠ m.degree g → ∀ a ∈ g.support, ¬ m.degree p ≤ a}) I := by
-  rw [IsGroebnerBasis.isGroebnerBasis_iff_minimal]
+  rw [iff_minimal]
   split_ands
   · intro p hp
     simp at hp

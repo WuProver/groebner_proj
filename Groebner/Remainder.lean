@@ -631,7 +631,7 @@ lemma leadingTerm_mem_span_leadingTerm
     m.withBotDegree_eq_coe_degree_iff .. |>.mpr hgb0,
     m.withBotDegree_eq_coe_degree_iff .. |>.mpr hf0, add_comm,
     ← map_add, ← WithBot.coe_add, m.toWithBotSyn.apply_eq_iff_eq, WithBot.coe_eq_coe] at heq
-  rw [heq, coeff_mul_of_degree_add, ← monomial_mul, ← leadingTerm.eq_1 m b]
+  rw [heq, coeff_mul_of_degree_add, ← monomial_mul_monomial, ← leadingTerm.eq_1 m b]
   apply Ideal.mul_mem_left
   apply Ideal.subset_span
   exact Set.mem_image_of_mem _ <| hB hb
