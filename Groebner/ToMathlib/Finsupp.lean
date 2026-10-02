@@ -102,7 +102,7 @@ lemma mapDomain_tsub_mapDomain._mathlib_ {σ α κ}
   wlog h : y ∈ Set.range f
   · simp [mapDomain_of_notMem_range _ _ h]
   obtain ⟨x, rfl⟩ := h
-  simp [mapDomain_apply h _ x]
+  simp [mapDomain_apply_of_injective h _ x]
 
 -- merged: https://github.com/leanprover-community/mathlib4/pull/34872
 -- @[simp]

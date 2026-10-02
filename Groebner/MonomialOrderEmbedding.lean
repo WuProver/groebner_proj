@@ -18,7 +18,8 @@ def RelHom.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → 
 
 instance _root_.IsWellFounded.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → β)
     [wfl : IsWellFounded β r] :
-    IsWellFounded α (Function.onFun r f) := RelHomClass.isWellFounded (RelHom.onFun r f)
+    IsWellFounded α (Function.onFun r f) :=
+  ⟨RelHomClass.wellFounded (RelHom.onFun r f) wfl.wf⟩
 
 namespace MonomialOrder
 
@@ -68,7 +69,7 @@ noncomputable def ofInjective {σ' : Type*} {f : σ' → σ} (hf : f.Injective) 
     wellFoundedLT_syn := -- show WellFoundedLT (Syn m f) from
       by set_option backward.isDefEq.respectTransparency false in
         -- why it doesn't work without `show` or `by exact`?
-        exact inferInstanceAs <| IsWellFounded (Syn m f) fun x1 x2 ↦ map x1 < map x2
+        exact (wellFounded_lt (α := m.syn)).onFun (f := map)
   }
 
 /-- An embedding from a monomial order `m' : MonomialOrder σ'` and `m : MonomialOrder σ` consists:
