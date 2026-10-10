@@ -798,7 +798,8 @@ lemma _root_.MonomialOrder.Embedding.isRemainder_rename_of_isRemainder {σ' σ}
         Finsupp.sum_mapDomain_index_inj <| rename_injective _ e.coe_injective]
       simp_rw [← map_mul, map_finsuppSum]
     · set_option backward.isDefEq.respectTransparency false in
-      simpa [← map_mul, Finsupp.mapDomain_apply (rename_injective _ e.coe_injective)] using hdeg
+      simpa [← map_mul,
+        Finsupp.mapDomain_apply_of_injective (rename_injective _ e.coe_injective)] using hdeg
   · simpa [e.coe_injective, MvPolynomial.support_rename_of_injective, Embedding.degree_rename,
       Finsupp.mapDomain_le_mapDomain_iff_le] using hdeg'
 
