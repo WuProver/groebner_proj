@@ -407,39 +407,17 @@ theorem isRemainder_zero_iff_mem_ideal {p : MvPolynomial σ R}
     suffices r = 0 by
       subst this
       refine ⟨⟨g, by grind⟩, by simp⟩
-    contrapose! hdeg' with hr0
-    refine ⟨m.degree r, m.degree_mem_support hr0, ?_⟩
-    -- todo: generalize into lemmas, and clean up?
-    unfold IsGroebnerBasis at h
     have : r ∈ I := by
       rw [← sub_eq_iff_eq_add'] at hsum
       subst hsum
       apply Ideal.sub_mem _ hp
-      simp [Finsupp.linearCombination_apply]
-      apply Submodule.finsuppSum_mem
-      intro b _
-      exact I.mul_mem_left _ <| h.1 b.prop
-    apply Set.mem_image_of_mem m.leadingTerm at this
-    apply Ideal.subset_span at this
-    rw [h.2, SetLike.mem_coe] at this
-    convert_to _ ∈ Ideal.span (Set.range (m.leadingTerm ∘ Subtype.val : G → _)) at this
-    · simp [Set.range_comp]
-    rw [Finsupp.mem_ideal_span_range_iff_exists_finsupp] at this
-    rcases this with ⟨g', hg'⟩
-    simp at hg'
-    use Finsupp.onFinset g'.support
-      (fun b ↦ (g' b * monomial (m.degree b.val) 1).coeff (m.degree r))
-      (fun _ ↦ not_imp_not.mp <| by simp_intro _)
-    constructor
-    · simp [coeff_mul_monomial']
-      grind
-    apply_fun (·.coeff (m.degree r)) at hg'
-    simp [Finsupp.sum, leadingCoeff] at hg'
-    simp [Finsupp.linearCombination_apply, ← hg']
-    apply Finset.sum_congr rfl
-    intro b hb
-    simp [mul_comm _ (m.leadingCoeff _), ← MvPolynomial.coeff_C_mul]
-    grind [leadingTerm, C_mul_monomial]
+      suffices (Finsupp.linearCombination (α := G) _ (↑)).range ≤ I from this (Set.mem_range_self g)
+      simpa [Finsupp.range_linearCombination, Submodule.span_le] using h.1
+    contrapose! hdeg' with hr0
+    use m.degree r, m.degree_mem_support hr0
+    rw [← h.2]
+    apply Ideal.subset_span
+    exact ⟨r, this, rfl⟩
 
 @[deprecated "invertibility of leading coefficients is unnecesssary" +typeChanged
   (since := "2026-09-05")]

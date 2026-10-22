@@ -198,18 +198,157 @@ lemma span_leadingTerm_eq_span_monomial._replace_ {B : Set (MvPolynomial σ R)}
 
 end MonomialOrder
 
--- instance {α} [CommMonoidWithZero α] : CommMonoidWithZero αᵐᵒᵖ where
+namespace MonoidAlgebra
 
--- instance {α} [CommMonoidWithZero α] [WfDvdMonoid α] : WfDvdMonoid αᵐᵒᵖ where
---   wf := by
---     sorry
+#check MonoidAlgebra.mem_ideal_span_of_image
+variable {k A G : Type*}
 
--- #check 1 ∣ 2
--- #check DivisibleBy
--- #synth WfDvdMonoid (MvPolynomial ℚ ℚ)ᵐᵒᵖ
--- #check Submodule.generators
--- #check Multiplicative
--- #check MvPolynomial.mem_ideal_span_monomial_image
--- -- #check toMultiplicative
--- end MonoidAlgebra
--- #check Finset.sum_eq_
+theorem mem_ideal_span_single_image_ [Monoid G] [Semiring k] {s : Set (k × G)}
+    {x : MonoidAlgebra k G} :
+    x ∈ Ideal.span ((fun cm ↦ MonoidAlgebra.single cm.2 cm.1) '' s) ↔
+      ∀ m, x.coeff m ∈ Ideal.span (Prod.fst '' {cm ∈ s | ∃ d, m = d * cm.snd}) := by
+  classical
+  let RHS : Ideal k[G] := {
+    carrier := {x | ∀ m, x.coeff m ∈ Ideal.span (Prod.fst '' {cm ∈ s | ∃ d, m = d * cm.2})},
+    add_mem' ha hb m := Ideal.add_mem _ (ha m) (hb m),
+    zero_mem' := by simp
+    smul_mem' a b hb m := by
+      simp only [smul_eq_mul, coeff_mul]
+      refine Ideal.sum_mem _ fun m' hm' ↦ Ideal.sum_mem _ fun m'' hm'' ↦ ?_
+      simp only [apply_ite, zero_mem, ite_true_right]
+      rintro rfl
+      refine Ideal.mul_mem_left _ _ <| Ideal.span_mono ?_ <| hb m''
+      apply Set.image_mono
+      rintro cm ⟨hcms, ⟨d, rfl⟩⟩
+      exact ⟨hcms, ⟨m' * d, (mul_assoc ..).symm⟩⟩
+  }
+  change _ ↔ x ∈ RHS
+  constructor
+  · apply Ideal.span_le.mpr
+    rintro _ ⟨cm, ⟨hcm, rfl⟩⟩
+    simpa [Finsupp.single_apply, apply_ite, RHS, ← Submodule.carrier_eq_coe] using
+      Ideal.subset_span <| Set.mem_image_of_mem _ <| by exact ⟨hcm, ⟨1, by simp⟩⟩
+  · intro h
+    rw [← x.sum_coeff_single]
+    apply Ideal.sum_mem
+    rintro m -
+    specialize h m
+    apply Submodule.mem_map_of_mem (f := lsingle (R := k) m) at h
+    rw [Submodule.map_span] at h
+    refine Ideal.span_le.mpr ?_ (Submodule.span_subset_span k k[G] (M := k[G]) _ h)
+    rintro _ ⟨_, ⟨cm, ⟨hcm, ⟨d, rfl⟩⟩, rfl⟩, rfl⟩
+    rw [lsingle_apply, ← one_mul cm.1, ← single_mul_single d cm.2 1 cm.1]
+    exact Ideal.mul_mem_left _ _ <| Ideal.subset_span <| Set.mem_image_of_mem _ hcm
+
+end MonoidAlgebra
+
+section AddMonoidAlgebra
+
+variable {k A G : Type*}
+
+#check MvPolynomial.homogeneousComponent
+
+-- #check Set.filterIm
+
+-- theorem mem_ideal_span_single_image [AddMonoid G] [Semiring k] {s : Set _}
+--     {m : G} {c : k} :
+--     single m c ∈ Ideal.span ((fun ⟨c, m⟩ ↦ single m c) '' s) ↔
+--       c ∈ Ideal.span (Prod.fst '' {cm ∈ s | ∃ d, m = d + cm.snd}) := by
+--   -- have := singleHom
+--   simp
+--   sorry
+-- #check mem_ideal_span_of'_image
+-- #synth Module (AddMonoidAlgebra Int Int) (AddMonoidAlgebra Rat Int)
+-- #check SkewPolynomial
+
+open AddMonoidAlgebra in
+lemma coeff_toMultiplicative_apply_ofAdd {R M} [Semiring R] [Add M] (x : R[M]) (m : M) :
+    (toMultiplicative R M x).coeff (Multiplicative.ofAdd m) = x.coeff m := by
+  rw [AddMonoidAlgebra.coeff_toMultiplicative_apply,
+    Finsupp.mapDomain_apply_of_injective Multiplicative.ofAdd.injective]
+
+lemma _root_.Set.image_ofPred {α β} {p : α → Prop} {f : β → α} (hf : f.Surjective) :
+    f '' {b | p (f b)} = {a | p a} := by
+  rw [← Set.preimage_ofPred_eq (f := f), Set.image_preimage_eq _ hf]
+
+lemma _root_.Set.image_ofPred_comp {α β} {p : α → Prop} {f : β → α} (hf : f.Surjective) :
+    f '' Set.ofPred (p ∘ f) = {a | p a} := Set.image_ofPred hf
+
+theorem MonoidAlgebra.mem_ideal_span_single_image' {ι} [Monoid G] [Semiring k] {s : Set ι}
+    {fm : ι → G} {fc : ι → k} {x : MonoidAlgebra k G} :
+    x ∈ Ideal.span ((fun i ↦ MonoidAlgebra.single (fm i) (fc i)) '' s) ↔
+      ∀ m, x.coeff m ∈ Ideal.span (fc '' {i ∈ s | ∃ d, m = d * (fm i)}) := by
+  classical
+  let RHS : Ideal (MonoidAlgebra k G) := {
+    carrier := {x | ∀ m, x.coeff m ∈ Ideal.span (fc '' {i ∈ s | ∃ d, m = d * (fm i)})},
+    add_mem' ha hb m := Ideal.add_mem _ (ha m) (hb m),
+    zero_mem' := by simp
+    smul_mem' a b hb m := by
+      simp only [smul_eq_mul, coeff_mul]
+      refine Ideal.sum_mem _ fun m' hm' ↦ Ideal.sum_mem _ fun m'' hm'' ↦ ?_
+      simp only [apply_ite, zero_mem, ite_true_right]
+      rintro rfl
+      refine Ideal.mul_mem_left _ _ <| Ideal.span_mono ?_ <| hb m''
+      apply Set.image_mono
+      rintro i ⟨his, ⟨d, rfl⟩⟩
+      exact ⟨his, ⟨m' * d, (mul_assoc ..).symm⟩⟩
+  }
+  change _ ↔ x ∈ RHS
+  constructor
+  · apply Ideal.span_le.mpr
+    rintro _ ⟨i, ⟨hi, rfl⟩⟩
+    simpa [Finsupp.single_apply, apply_ite, RHS, ← Submodule.carrier_eq_coe] using
+      Ideal.subset_span <| Set.mem_image_of_mem _ <| by exact ⟨hi, ⟨1, by simp⟩⟩
+  · intro h
+    rw [← x.sum_coeff_single]
+    apply Ideal.sum_mem
+    rintro m -
+    specialize h m
+    apply Submodule.mem_map_of_mem (f := MonoidAlgebra.lsingle (R := k) m) at h
+    rw [Submodule.map_span] at h
+    refine Ideal.span_le.mpr ?_ (Submodule.span_subset_span k _ (M := MonoidAlgebra k G) _ h)
+    rintro _ ⟨_, ⟨i, ⟨hi, ⟨d, rfl⟩⟩, rfl⟩, rfl⟩
+    rw [lsingle_apply, ← one_mul (fc i), ← single_mul_single d (fm i) 1 (fc i)]
+    exact Ideal.mul_mem_left _ _ <| Ideal.subset_span <| Set.mem_image_of_mem _ hi
+
+theorem MonoidAlgebra.mem_ideal_span_single_image {ι} [Monoid G] [Semiring k] {s : Set ι}
+    {fm : ι → G} {fc : ι → k} {x : MonoidAlgebra k G} :
+    x ∈ Ideal.span ((fun i ↦ MonoidAlgebra.single (fm i) (fc i)) '' s) ↔
+      ∀ m ∈ x.coeff.support,
+        x.coeff m ∈ Ideal.span (fc '' {i ∈ s | ∃ d, m = d * (fm i)}) := by
+  convert x.mem_ideal_span_single_image' with m
+  by_cases h : x.coeff m = 0 <;> simp [h]
+
+open Multiplicative in
+theorem AddMonoidAlgebra.mem_ideal_span_single_image' {ι} [AddMonoid G] [Semiring k] {s : Set ι}
+    {fm : ι → G} {fc : ι → k} {x : AddMonoidAlgebra k G} :
+    x ∈ Ideal.span ((fun i ↦ AddMonoidAlgebra.single (fm i) (fc i)) '' s) ↔
+      ∀ m, x.coeff m ∈ Ideal.span (fc '' {i ∈ s | ∃ d, m = d + (fm i)}) := by
+  convert
+    (toMultiplicative _ _ x).mem_ideal_span_single_image' (s := s) (fm := ofAdd ∘ fm) (fc := fc)
+  · simp_rw [Function.comp, ← AddMonoidAlgebra.toMultiplicative_single,
+      ← Set.image_image, ← Ideal.map_span, Ideal.apply_mem_of_equiv_iff]
+  · simp_rw [ofAdd.surjective.forall, ofAdd.surjective.exists, coeff_toMultiplicative_apply_ofAdd,
+      Function.comp, ← ofAdd_add, ofAdd.apply_eq_iff_eq]
+
+theorem AddMonoidAlgebra.mem_ideal_span_single_image {ι} [AddMonoid G] [Semiring k] {s : Set ι}
+    {fm : ι → G} {fc : ι → k} {x : AddMonoidAlgebra k G} :
+    x ∈ Ideal.span ((fun i ↦ AddMonoidAlgebra.single (fm i) (fc i)) '' s) ↔
+      ∀ m ∈ x.coeff.support,
+        x.coeff m ∈ Ideal.span (fc '' {i ∈ s | ∃ d, m = d + (fm i)}) := by
+  convert x.mem_ideal_span_single_image' with m
+  by_cases h : x.coeff m = 0 <;> simp [h]
+
+-- theorem MvPolynomial.mem_ideal_span_monomial_image_' {σ R ι} [CommSemiring R]
+--     {x : MvPolynomial σ R} {s : Set ι} {fm : ι → σ →₀ ℕ} {fc : ι → R} :
+--     x ∈ Ideal.span ((fun i => monomial (fm i) (fc i)) '' s) ↔
+--       ∀ xi, x.coeff xi ∈ Ideal.span (fc '' {i ∈ s | fm i ≤ xi}) := by
+--   simpa [le_iff_exists_add', monomial] using x.mem_ideal_span_single_image' (fm := fm) (fc := fc)
+
+theorem MvPolynomial.mem_ideal_span_monomial_image' {σ R ι} [CommSemiring R]
+    {x : MvPolynomial σ R} {s : Set ι} {fm : ι → σ →₀ ℕ} {fc : ι → R} :
+    x ∈ Ideal.span ((fun i => monomial (fm i) (fc i)) '' s) ↔
+      ∀ xi ∈ x.support, x.coeff xi ∈ Ideal.span (fc '' {i ∈ s | fm i ≤ xi}) := by
+  simpa [le_iff_exists_add', monomial] using x.mem_ideal_span_single_image (fm := fm) (fc := fc)
+
+end AddMonoidAlgebra
