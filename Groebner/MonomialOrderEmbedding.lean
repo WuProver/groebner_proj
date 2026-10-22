@@ -16,11 +16,6 @@ def RelHom.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → 
 @[simp] lemma RelHom.coe_onFun {α : Type*} {β : Type*} {r : β → β → Prop} (f : α → β) :
     RelHom.onFun r f = f := rfl
 
-instance _root_.IsWellFounded.onFun {α : Type*} {β : Type*} (r : β → β → Prop) (f : α → β)
-    [wfl : IsWellFounded β r] :
-    IsWellFounded α (Function.onFun r f) :=
-  ⟨RelHomClass.wellFounded (RelHom.onFun r f) wfl.wf⟩
-
 namespace MonomialOrder
 
 open MvPolynomial
